@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="14" fill="#1c1917" />
+  <!-- Sacred Alchemy / Cyberpunk Synthesis Geometry -->
+  <!-- Outer diamond -->
+  <polygon points="32,10 52,32 32,54 12,32" fill="none" stroke="#d6c7b2" stroke-width="2.5" stroke-linejoin="round" />
+  <!-- Inner inverted triangle -->
+  <polygon points="32,46 19,23 45,23" fill="none" stroke="#f2ede4" stroke-width="2" stroke-linejoin="round" />
+  <!-- Core nexus circle / spark -->
+  <circle cx="32" cy="32" r="3.5" fill="#e8dfd3" />
+  <!-- Upper apex glow dot -->
+  <circle cx="32" cy="19" r="1.5" fill="#d6c7b2" />
+</svg>
