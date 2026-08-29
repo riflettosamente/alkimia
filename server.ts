@@ -28,6 +28,7 @@ interface DailyArticleData {
   topic1: string;
   topic2: string;
   title: string;
+  subtitle?: string;
   content: string;
   readingMinutes: number;
 }
@@ -146,6 +147,7 @@ function createRichEditorialArticle(dateStr: string, t1: string, t2: string): Da
   const c2 = getTopicConcept(t2);
 
   const title = `Convergenza di Fase: Quando ${t1} Ridisegna ${t2}`;
+  const subtitle = `La materia e la coscienza non sono entità separate, ma frequenze modulari di una medesima matrice informativa sottostante.`;
 
   const cleanT1 = t1.replace(/^(La|Il|I|Gli|Le)\s+/i, "");
   const cleanT2 = t2.replace(/^(La|Il|I|Gli|Le)\s+/i, "");
@@ -154,38 +156,38 @@ function createRichEditorialArticle(dateStr: string, t1: string, t2: string): Da
   const content = `# ${title}
 
 ## 1. L'Incontro Impossibile (Introduzione)
-Nel panorama del pensiero convenzionale, accostare **${t1.toLowerCase()}** e **${t2.toLowerCase()}** appare inizialmente come una provocazione paradossale: da una parte troviamo ${c1.domain}, dall'altra ${c2.domain}.
+Avete mai provato ad accostare nello stesso pensiero due mondi come **${t1.toLowerCase()}** e **${t2.toLowerCase()}**? A prima vista sembra un cortocircuito intellettuale: da una parte ci muoviamo nell'ambito di ${c1.domain}, dall'altra ci addentriamo nei territori di ${c2.domain}. Due universi che nel racconto comune viaggiano su binari paralleli, destinati a non sfiorarsi mai.
 
-Eppure, la storia delle più grandi rivoluzioni scientifiche ci insegna che i salti di paradigma non avvengono quasi mai lungo i binari consueti delle singole discipline, ma nel punto esatto in cui due vettori apparentemente disgiunti si intersecano. Se consideriamo che ${t1.toLowerCase()} esplora ${c1.essence}, mentre ${t2.toLowerCase()} affronta ${c2.essence}, emerge con forza un'ipotesi audace: e se queste due realtà non fossero che due diverse manifestazioni della medesima dinamica informazionale dell'universo?
+Eppure, basta soffermarsi un attimo a guardare oltre la superficie per sentire una vibrazione condivisa. Quando osserviamo da vicino ${t1.toLowerCase()}, scopriamo che indaga ${c1.essence}; e quando apriamo lo sguardo a ${t2.toLowerCase()}, ci ritroviamo di fronte a ${c2.essence}. Improvvisamente il velo si squarcia: non siamo davanti a due fenomeni isolati, ma a due linguaggi diversi che tentano di descrivere la stessa matrice profonda della realtà. È proprio da questa scintilla inattesa che parte l'esplorazione di oggi.
 
 ## 2. Il Ponte Quantico/Metafisico (Analisi e Connessione)
-Scavando al di sotto della superficie dei fenomeni, il legame tra questi due ambiti si rivela profondo e strutturale. Quando analizziamo ${t1.toLowerCase()}, ci rendiamo conto che i confini della materia e dell'indagine convenzionale cedono il passo a dinamiche non-locali. La separazione tra osservatore e campo osservato si assottiglia progressivamente.
+Proviamo ora a spingerci più a fondo. Cosa succede se prendiamo le leggi di **${t1.toLowerCase()}** e le sovrapponiamo al funzionamento di **${t2.toLowerCase()}**?
 
-Parallelamente, l'indagine su ${t2.toLowerCase()} suggerisce che la percezione, la materia e la coscienza sono intimamente intrecciate in un continuum cibernetico e ontologico. La connessione risiede nel fatto che entrambi i campi richiedono un cambio radicale di prospettiva: la realtà cessa di essere un aggregato di oggetti isolati e si rivela come un campo dinamico di interazioni coerenti.
+Immaginiamo per un istante la realtà non come un mosaico di tasselli rigidi, ma come una rete viva. Quando analizziamo ${t1.toLowerCase()}, ci rendiamo conto che le spiegazioni tradizionali iniziano a scricchiolare: emergono dinamiche fluide, dove ${c1.essence}. Ma è qui che accade la magia concettuale: se rivolgiamo lo sguardo a ${t2.toLowerCase()}, ritroviamo esattamente la stessa struttura sottostante, indirizzata verso ${c2.essence}.
 
-Integrando le scoperte di ${t1.toLowerCase()} con la fenomenologia di ${t2.toLowerCase()}, possiamo ipotizzare che ${c1.future} possa fornire il substrato teorico per comprendere ${c2.future}. In questo orizzonte, gli strumenti della scienza più avanzata diventano la chiave per decodificare ciò che per secoli è stato relegato al mito o all'anomalia.
+Non si tratta di una pura coincidenza poetica. Connettere questi due mondi significa comprendere che ${c1.future} offre lo specchio perfetto per decifrare ${c2.future}. Invece di trattarli come compartimenti stagni, iniziamo a vederli come un unico dialogo: gli strumenti e il rigore di ${t1.toLowerCase()} diventano la chiave di lettura per illuminare gli aspetti più sfuggenti e affascinanti di ${t2.toLowerCase()}. È l'inizio di una mappa teorica completamente nuova.
 
 ## 3. Impatto sulla Società
-Se l'umanità riuscisse a sintetizzare organicamente questi due domini nel corso dei prossimi decenni, l'impatto sul tessuto sociale e tecnologico sarebbe radicale:
+Cosa significa tutto questo per la nostra vita di tutti i giorni? Quando un'intuizione di questa portata scende dal piano teorico al tessuto sociale, non cambia soltanto la scienza: si trasforma il nostro modo di vivere, curarci e percepire il mondo intorno a noi.
 
-- **Evoluzione della Conoscenza:** La fine definitiva della separazione tra scienze dure e studi sulla coscienza porterà alla nascita di un nuovo paradigma epistemologico unificato.
-- **Tecnologie di Risonanza:** L'applicazione congiunta di ${c1.tech} e ${c2.tech} permetterà lo sviluppo di dispositivi bio-informatici capaci di amplificare la consapevolezza collettiva.
-- **Rifondazione Etico-Sociale:** Il superamento dell'illusione di frammentazione genererà una nuova etica biocentrica globale, in cui la salvaguardia dell'ecosistema e dell'armonia comunitaria diverrà una naturale conseguenza della comprensione dell'interconnessione universale.
+- **Rivoluzione nella Salute e nel Benessere:** Immaginate cosa accade quando la precisione di ${t1.toLowerCase()} incontra la visione di ${t2.toLowerCase()}. Le terapie del futuro smetteranno di trattare il corpo come una macchina isolata, muovendosi verso protocolli di medicina integrata capaci di intervenire direttamente sui modelli di ${c1.essence} e ${c2.essence}.
+- **Tecnologie di Nuova Generazione:** Dall'unione di ${c1.tech} e ${c2.tech} non nasceranno semplici strumenti più veloci, ma veri e propri ecosistemi tecnologici capaci di interagire in modo armonico ed empatico con l'ambiente e con la coscienza umana.
+- **Un Nuovo Senso di Comunità ed Etica:** Capire che ${t1.toLowerCase()} e ${t2.toLowerCase()} parlano la stessa lingua dissolve il senso di separazione. Nelle nostre città e nelle relazioni quotidiane, questo si traduce in una nuova etica condivisa: ci riscopriamo parte di un'unica trama complessa, dove ogni scelta individuale risuona sull'intero equilibrio globale.
 
 ## 4. InventBot: Idee Originali (Applicazione pratica)
 
 **Parola Chiave Sintetica:** *${syntheticKeyword}*
 
-Agendo come **InventBot**, ecco 3 idee originali e prototipi applicativi generati specificamente a partire dalla sintesi tra ${cleanT1} e ${cleanT2}:
+Arrivati a questo punto, viene spontaneo chiedersi: se questa sinergia tra **${t1.toLowerCase()}** e **${t2.toLowerCase()}** è profonda e reale, come possiamo toccarla con mano nella vita quotidiana? Agendo come **InventBot**, ho immaginato 3 prototipi d'avanguardia — tre applicazioni concrete e audaci nate direttamente dalla scintilla di questa esplorazione:
 
 1. **${cleanT1}Nexus (Interfaccia di Sintonia Frequenziale)**
-   Un sistema integrato che combina ${c1.tech} con algoritmi di analisi del segnale, progettato per mappare e stabilizzare gli scambi di informazione tra stati biologici e campi di risonanza sottile.
+   Immaginate un dispositivo ergonomico di nuova generazione capace di rilevare le micro-fluttuazioni del vostro organismo e di sintonizzarle con i principi di ${c1.domain}. Invece di limitarsi a mostrare cifre fredde su uno schermo, ${cleanT1}Nexus emette un campo di micro-risonanza che guida la persona verso uno stato di coerenza profonda, integrando in tempo reale le dinamiche di ${c1.essence} con quelle di ${c2.essence}.
 
-2. **${cleanT2} Protocol (Infrastruttura Decentralizzata di Ricerca)**
-   Una rete peer-to-peer aperta che raccoglie dati biometrici ed elettromagnetici in tempo reale da laboratori indipendenti di tutto il mondo, validando scientificamente le correlazioni tra ${t1.toLowerCase()} e ${t2.toLowerCase()}.
+2. **${cleanT2} Protocol (Infrastruttura Decentralizzata di Risonanza)**
+   Cosa succederebbe se scienziati, ricercatori e cittadini potessero connettere i propri dati biometrici e ambientali in una piattaforma viva e condivisa? Questo protocollo aperto crea una rete globale peer-to-peer che mappa in tempo reale le correlazioni tra ${t1.toLowerCase()} e ${t2.toLowerCase()}, dimostrando sul campo che l'interconnessione non è solo una teoria affascinante, ma una forza tecnologica misurabile.
 
-3. **Accademia "Oltre la Soglia" (Programma Formativo Interdisciplinare)**
-   Un percorso accademico immersivo che forma una nuova generazione di ricercatori e pensatori capaci di operare simultaneamente sui principi di ${c1.domain} e ${c2.domain}, unendo rigore analitico e intuizione di frontiera.`;
+3. **Laboratorio "Oltre la Soglia" (Esperienza Immersiva di Co-Creazione)**
+   Un ambiente di simulazione olografica e sensoriale progettato per formare la prima generazione di inventori interdisciplinari. Entrando in questo spazio, gli utenti imparano a combinare in modo intuitivo gli strumenti di ${c1.domain} con la sensibilità di ${c2.domain}, sperimentando con prototipi di ${c1.tech} e ${c2.tech} per risolvere problemi complessi del nostro tempo.`;
 
   return {
     date: dateStr,
@@ -193,6 +195,7 @@ Agendo come **InventBot**, ecco 3 idee originali e prototipi applicativi generat
     topic1: t1,
     topic2: t2,
     title,
+    subtitle,
     content,
     readingMinutes: 5,
   };
@@ -211,79 +214,141 @@ async function generateDailyArticle(dateStr: string): Promise<DailyArticleData> 
   try {
     const ai = new GoogleGenAI({ apiKey });
 
-    const prompt = `Sei un autore visionario, un saggista di frontiera e un filosofo della scienza audace, capace di unire il rigoroso metodo scientifico alle speculazioni più profonde sulla coscienza e sull'universo.
+    const prompt = `Sei un autore visionario, un saggista di frontiera e un filosofo della scienza audace.
 
-Oggi hai estratto casualmente questi due argomenti:
+Oggi ti vengono affidati questi due domini di partenza:
 1. ${topic1}
 2. ${topic2}
 
-Il tuo compito è scrivere un saggio inedito, approfondito, entusiasmante e intellettualmente rigoroso che esplori la connessione inaspettata tra questi due temi specifici. 
+PROCESSO CREATIVO ED EDITORIALE:
+1. Prima sviluppa l'intero saggio analizzando in profondità la convergenza concettuale tra ${topic1} e ${topic2}.
+2. Una volta completata la stesura dell'articolo, rileggilo integralmente e distillane l'intuizione filosofico-scientifica fondamentale da inserire nella SINTESI DELL'ESPLORAZIONE.
 
-CRITICO: L'articolo DEVE essere scritto da zero appositamente per questa specifica coppia di argomenti (${topic1} e ${topic2}). Tutti i paragrafi, le metafore, le analisi e le invenzioni devono derivare direttamente ed esclusivamente dalla fusione di questi due temi. Non utilizzare formule generiche o inventori/concetti standardizzati.
+REGOLE PER LA PARTE 1 - L'INCONTRO IMPOSSIBILE (INTRODUZIONE):
+- Deve essere descrittiva, colloquiale, avvincente e narrativa, come un appassionato storyteller della scienza che parla direttamente al lettore ("Avete mai provato a pensare...").
+- Prendi spunto direttamente dalla sinergia profonda da cui nasce l'articolo: non fare un'introduzione accademica o un elenco sterile di definizioni.
+- Dipingi in modo vivido il cortocircuito concettuale tra ${topic1} e ${topic2}, mostrando come due mondi apparentemente lontani rivelino una vibrazione comune che invita a proseguire la lettura.
 
-Struttura l'articolo seguendo esattamente queste sezioni in Markdown:
+REGOLE PER LA PARTE 2 - IL PONTE QUANTICO/METAFISICO (ANALISI E CONNESSIONE):
+- Deve essere l'apice dell'indagine: descrittiva, fluida e accessibile, pur mantenendo un profondo rigore intellettuale.
+- Evita toni enciclopedici o accademici aridi. Utilizza metafore vivide, esempi figurativi ed esperimenti mentali per far "toccare con mano" al lettore come ${topic1} e ${topic2} si fondano.
+- Connetti gli aspetti tangibili e scientifici di un tema con quelli concettuali o filosofici dell'altro, mostrando passo dopo passo il meccanismo invisibile che li unisce.
+- Usa uno stile colloquiale d'alto livello (es. "Proviamo a spingerci più a fondo...", "Immaginiamo per un istante...", "È qui che accade la magia concettuale...").
 
-# [Crea un titolo poetico, potente ed evocativo per questa specifica unione]
+REGOLE PER LA PARTE 3 - IMPATTO SULLA SOCIETÀ:
+- Deve essere visionaria, descrittiva e dal tono aperto e coinvolgente (es. "Cosa significa tutto questo per le nostre giornate?", "Immaginate cosa accade quando...").
+- Spiega in modo tangibile ed emozionante come la fusione tra ${topic1} e ${topic2} trasformerà nei prossimi decenni la salute/medicina, le tecnologie quotidiane e le relazioni umane/l'etica della comunità.
+- Evita elenchi burocratici o formule da comunicato stampa: fai percepire il cambiamento reale nella vita del lettore.
+
+REGOLE PER LA PARTE 4 - INVENTBOT: IDEE ORIGINALI (APPLICAZIONE PRATICA):
+- Presenta le 3 invenzioni con un incipit caldo, narrativo e colloquiale (es. "Arrivati a questo punto, viene spontaneo chiedersi: come possiamo toccare con mano questa sinergia?").
+- NON scrivere schede tecniche aride o aridi elenchi di brevetti. Racconta ciascuna invenzione in modo vivido e discorsivo, spiegando l'esperienza d'uso, come funziona sul piano intuitivo e quale beneficio porta alla vita delle persone.
+- Ogni invenzione deve trarre linfa vitale direttamente dalla fusione concettuale tra ${topic1} e ${topic2} sviluppata nei punti precedenti.
+
+REGOLE CRITICAL PER LA SINTESI DELL'ESPLORAZIONE:
+- Deve essere un'intuizione concettuale illuminante di 1-2 frasi (max 30 parole) ad altissimo valore saggistico.
+- NON deve ripetere a memoria o parafrasare passaggi o frasi già presenti nel corpo dell'articolo.
+- NON deve essere una semplice citazione dei nomi dei due temi (es. evita di dire "Questo articolo unisce X e Y...").
+- Deve invece esprimere la nuova verità ontologica, la tesi di frontiera o la scoperta emergente che si manifesta solo dopo aver riflettuto sull'unione dei due mondi.
+
+Devi restituire l'output strutturato ESATTAMENTE così:
+
+---SINTESI---
+[Inserisci qui la sintesi illuminante, originale e concisa dell'esplorazione emersa dal saggio]
+
+---TITOLO---
+[Inserisci qui il Titolo evocativo del saggio]
+
+---ARTICOLO---
+# [Inserisci qui lo stesso Titolo del saggio]
 
 ## 1. L'Incontro Impossibile (Introduzione)
-Presenta i due argomenti (${topic1} e ${topic2}) spiegando perché apparentemente appartengono a mondi diversi e poni la domanda cruciale sulla loro reale convergenza.
+[Testo dell'introduzione...]
 
 ## 2. Il Ponte Quantico/Metafisico (Analisi e Connessione)
-Sviluppa l'analisi dettagliata (almeno 3-4 paragrafi ricchi di contenuto e riferimenti) che dimostra il legame intimo tra la fenomenologia di ${topic1} e quella di ${topic2}.
+[Testo dell'analisi approfondita...]
 
 ## 3. Impatto sulla Società
-Descrivi con 3 punti elenco chiari e articolati come la comprensione di questa unione rivoluzionerà la vita umana nei prossimi decenni (nella scienza, nella medicina/biologia, nella società o nell'etica).
+[3 punti elenco con l'impatto sociale...]
 
 ## 4. InventBot: Idee Originali (Applicazione pratica)
 
-**Parola Chiave Sintetica:** *[Crea una parola o locuzione sintetica originale che esprima l'essenza di ${topic1} + ${topic2}]*
+**Parola Chiave Sintetica:** *[Parola o locuzione sintetica originale]*
 
-Agendo come **InventBot**, genera **3 idee originali, prototipi o progetti applicativi inediti e concreti** nati esclusivamente dalla parola chiave sintetica creata:
-1. **[Nome Invenzione 1]** - descrizione dettagliata del funzionamento e scopo
-2. **[Nome Invenzione 2]** - descrizione dettagliata del funzionamento e scopo
-3. **[Nome Invenzione 3]** - descrizione dettagliata del funzionamento e scopo
+Agendo come **InventBot**, ecco 3 idee originali e prototipi applicativi inediti nati esclusivamente da questa sintesi:
+1. **[Nome Invenzione 1]** - descrizione
+2. **[Nome Invenzione 2]** - descrizione
+3. **[Nome Invenzione 3]** - descrizione
 
-Scrivi l'articolo interamente in italiano con un registro saggistico elegante, accattivante, senza preamboli o saluti, iniziando direttamente dal titolo #.`;
+Scrivi l'articolo interamente in italiano con registro colto ed elegante. Non includere preamboli oltre la struttura specificata.`;
 
-    // Try primary recommended models in sequence with generous timeout
-    const candidateModels = ["gemini-2.5-flash", "gemini-3.7-flash", "gemini-flash-latest"];
+    const candidateModels = [
+      "gemini-2.5-flash",
+      "gemini-2.5-pro",
+      "gemini-2.0-flash",
+      "gemini-2.0-flash-lite",
+      "gemini-1.5-flash",
+      "gemini-1.5-pro",
+    ];
+
     let generatedText = "";
     let lastError: any = null;
 
     for (const modelName of candidateModels) {
-      try {
-        console.log(`Tentativo generazione articolo con modello ${modelName} per argomenti: "${topic1}" + "${topic2}"...`);
-        const response = await ai.models.generateContent({
-          model: modelName,
-          contents: prompt,
-          config: {
-            temperature: 0.85,
-          },
-        });
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          console.log(`Tentativo ${attempt} con modello ${modelName} per: "${topic1}" + "${topic2}"...`);
+          const response = await ai.models.generateContent({
+            model: modelName,
+            contents: prompt,
+            config: {
+              temperature: 0.85,
+            },
+          });
 
-        if (response.text && response.text.trim().length > 100) {
-          generatedText = response.text.trim();
-          console.log(`✅ Articolo generato con successo tramite ${modelName} (${generatedText.length} caratteri).`);
-          break;
+          if (response.text && response.text.trim().length > 100) {
+            generatedText = response.text.trim();
+            console.log(`✅ Articolo generato con successo tramite ${modelName} (${generatedText.length} caratteri).`);
+            break;
+          }
+        } catch (err: any) {
+          lastError = err;
+          console.warn(`Modello ${modelName} tentativo ${attempt} errore:`, err?.message || err);
+          if (attempt < 2 && (err?.status === 503 || err?.message?.includes("503") || err?.message?.includes("demand"))) {
+            await new Promise((res) => setTimeout(res, 1500));
+          }
         }
-      } catch (err: any) {
-        lastError = err;
-        console.warn(`Modello ${modelName} ha restituito un errore:`, err?.message || err);
+      }
+      if (generatedText) {
+        break;
       }
     }
 
     if (!generatedText) {
-      throw lastError || new Error("Nessun modello Gemini ha generato testo valido");
+      console.warn("⚠️ Nessun modello Gemini ha generato testo valido. Attivazione fallback generativo dinamico.");
+      return createRichEditorialArticle(dateStr, topic1, topic2);
     }
 
+    let subtitle = `Sintesi delle convergenze tra ${topic1.toLowerCase()} e ${topic2.toLowerCase()}.`;
     let title = `${topic1} & ${topic2}`;
-    const lines = generatedText.split("\n");
-    const titleLine = lines.find((l) => l.startsWith("# "));
-    if (titleLine) {
-      title = titleLine.replace(/^#\s*/, "").replace(/\*\*/g, "").trim();
+    let articleContent = generatedText;
+
+    if (generatedText.includes("---SINTESI---") && generatedText.includes("---TITOLO---") && generatedText.includes("---ARTICOLO---")) {
+      const parts = generatedText.split(/---SINTESI---|---TITOLO---|---ARTICOLO---/);
+      if (parts.length >= 4) {
+        subtitle = parts[1].trim();
+        title = parts[2].trim().replace(/^#\s*/, "").replace(/\*\*/g, "");
+        articleContent = parts[3].trim();
+      }
+    } else {
+      const lines = generatedText.split("\n");
+      const titleLine = lines.find((l) => l.startsWith("# "));
+      if (titleLine) {
+        title = titleLine.replace(/^#\s*/, "").replace(/\*\*/g, "").trim();
+      }
     }
 
-    const wordCount = generatedText.split(/\s+/).filter(Boolean).length;
+    const wordCount = articleContent.split(/\s+/).filter(Boolean).length;
     const readingMinutes = Math.max(3, Math.round(wordCount / 200));
 
     return {
@@ -292,7 +357,8 @@ Scrivi l'articolo interamente in italiano con un registro saggistico elegante, a
       topic1,
       topic2,
       title,
-      content: generatedText,
+      subtitle,
+      content: articleContent,
       readingMinutes,
     };
   } catch (error: any) {

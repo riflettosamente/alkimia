@@ -117,18 +117,18 @@ export default function App() {
                 </span>
               </div>
 
-              {/* Topic Focus Badge */}
+              {/* Topic Focus Banner */}
               <div
                 id="article-topics-banner"
-                className="bg-[#f4efe6] rounded-md px-3.5 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-sans-ui text-[#544b3f] flex items-start sm:items-center gap-2 border border-[#e8dfd2]"
+                className="bg-[#f4efe6] rounded-md p-4 sm:p-5 text-xs sm:text-sm font-sans-ui text-[#544b3f] space-y-2 border border-[#e8dfd2]"
               >
-                <Sparkles className="w-4 h-4 text-[#8a7a65] shrink-0 mt-0.5 sm:mt-0" />
-                <div className="leading-relaxed">
-                  <span className="font-semibold text-[#3b342b]">Esplorazione del giorno:</span>{" "}
-                  <span className="italic">{article.topic1}</span>{" "}
-                  <span className="text-[#8c8273] font-normal">&amp;</span>{" "}
-                  <span className="italic">{article.topic2}</span>
+                <div className="flex items-center gap-2 text-[#7d6c57] font-semibold text-xs uppercase tracking-wider">
+                  <Sparkles className="w-4 h-4 text-[#8a7a65] shrink-0" />
+                  <span>Esplorazione del giorno</span>
                 </div>
+                <p className="text-base sm:text-lg font-editorial italic text-[#2c251e] leading-relaxed font-medium">
+                  "{article.subtitle || `Sintesi delle convergenze concettuali emorse dall'indagine di oggi.`}"
+                </p>
               </div>
             </header>
 
