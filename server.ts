@@ -71,46 +71,121 @@ function getDeterministicTopics(dateStr: string): [string, string] {
   return [argomenti[idx1], argomenti[idx2]];
 }
 
-// Rich domain-aware synthesis database for robust generation
+// Domain knowledge generator for fallback resilience
+function getTopicConcept(topic: string): { domain: string; essence: string; tech: string; future: string } {
+  const t = topic.toLowerCase();
+  if (t.includes("quantistica")) {
+    return {
+      domain: "meccanica quantistica e teoria dell'informazione fondamentale",
+      essence: "la natura non-locale della realtà, il principio di indeterminazione e l'effetto dell'osservatore che collassa la funzione d'onda",
+      tech: "dispositivi di coerenza quantistica e sensori a superconduttività",
+      future: "la comprensione che la materia è uno stato condensato di pura probabilità informativa interconnessa",
+    };
+  }
+  if (t.includes("transcomunicazione")) {
+    return {
+      domain: "transcomunicazione strumentale e ponti di segnale frequenziale",
+      essence: "l'interazione tra onde elettromagnetiche, rumore bianco stocastico e modulazioni di coscienza extra-corporee",
+      tech: "ricevitori ad eterodina a banda ultralarga e analizzatori di spettro a risonanza scalare",
+      future: "lo sviluppo di canali di comunicazione stabili attraverso le soglie dimensionali dell'etere",
+    };
+  }
+  if (t.includes("crispr")) {
+    return {
+      domain: "editing genomico di precisione e biologia sintetica",
+      essence: "la riprogrammazione dell'architettura del DNA come codice sorgente vivente suscettibile a modifiche epigenetiche",
+      tech: "vettori molecolari guidati da RNA e sintetizzatori di sequenze biologiche programmate",
+      future: "l'evoluzione auto-diretta del veicolo biologico per ampliare la gamma di frequenze percettive umane",
+    };
+  }
+  if (t.includes("pineale")) {
+    return {
+      domain: "neuro-endocrinologia esoterica e piezoelettricità biologica",
+      essence: "l'attività dei microcristalli di calcite nella ghiandola pineale capaci di trasduzione elettromagnetica e rilascio di molecole enteogeniche",
+      tech: "risonatori a campo magnetico pulsato focalizzati sulla regione epifisaria",
+      future: "il risveglio consapevole dell'organo di senso trans-dimensionale innato nella fisiologia umana",
+    };
+  }
+  if (t.includes("spirituale")) {
+    return {
+      domain: "metafisica non-dualistica e piani sottili dell'esistenza",
+      essence: "l'esistenza di gerarchie di densità vibrazionale e campi di coscienza pura non vincolati alle coordinate spaziotemporali",
+      tech: "camere di isolamento sensoriale a schermatura di Faraday con bio-risonatori di Schumann",
+      future: "l'unificazione definitiva tra indagine empirica e ontologia mistica della consapevolezza",
+    };
+  }
+  if (t.includes("morte") || t.includes("aldilà")) {
+    return {
+      domain: "tanatologia di frontiera e continuità della coscienza oltre la transizione biologica",
+      essence: "l'esperienza di premorte (NDE) e la persistenza del campo di memoria identitaria oltre la cessazione delle funzioni neurovegetative",
+      tech: "monitor di coerenza sinaptica profonda e rilevatori di campo bio-fotonico post-mortem",
+      future: "la demistificazione scientifica del passaggio tra incarnazione biologica e stato di pura energia cosciente",
+    };
+  }
+  if (t.includes("ufo")) {
+    return {
+      domain: "fenomenologia aerea non identificata e aerospazio iperdimensionale",
+      essence: "il controllo delle metriche gravitazionali, la distorsione dello spaziotempo e le propulsioni magneto-idrodinamiche avanzate",
+      tech: "interferometri gravitazionali differenziali e rilevatori di flussi tachionici",
+      future: "la scoperta di tecnologie in grado di piegare la curvatura locale dell'universo eludendo le forze d'inerzia",
+    };
+  }
+  // Default extraterrestri / altro
+  return {
+    domain: "esobiologia avanzata e intelligenze coscienti non-terrestri",
+    essence: "l'interazione con civiltà esogene a differente stadio di evoluzione tecnologica e frequenziale",
+    tech: "array di radiotelescopi quantistici a correlazione di fase e linguaggi simbolici universali",
+    future: "l'integrazione della specie umana in una comunità di intelligenze galattiche interconnesse",
+  };
+}
+
+// Generates dynamic, unique text even in offline/fallback conditions
 function createRichEditorialArticle(dateStr: string, t1: string, t2: string): DailyArticleData {
   const formattedDate = getFormattedItalianDate(dateStr);
-  const title = `Il Velo Sottile: Tra ${t1} e ${t2}`;
+  const c1 = getTopicConcept(t1);
+  const c2 = getTopicConcept(t2);
+
+  const title = `Convergenza di Fase: Quando ${t1} Ridisegna ${t2}`;
+
+  const cleanT1 = t1.replace(/^(La|Il|I|Gli|Le)\s+/i, "");
+  const cleanT2 = t2.replace(/^(La|Il|I|Gli|Le)\s+/i, "");
+  const syntheticKeyword = `${cleanT1.split(" ")[0]}-${cleanT2.split(" ")[0]} Risonante`;
 
   const content = `# ${title}
 
 ## 1. L'Incontro Impossibile (Introduzione)
-A prima vista, accostare **${t1.toLowerCase()}** e **${t2.toLowerCase()}** appare come una vertigine intellettuale: da una parte gli strumenti rigorosi dell'indagine scientifica e della materia, dall'altra le dimensioni liminali dell'ignoto cosmico e della coscienza. 
+Nel panorama del pensiero convenzionale, accostare **${t1.toLowerCase()}** e **${t2.toLowerCase()}** appare inizialmente come una provocazione paradossale: da una parte troviamo ${c1.domain}, dall'altra ${c2.domain}.
 
-Eppure, le rivoluzioni concettuali non nascono mai al centro delle certezze consolidate, bensì lungo le faglie sismiche in cui due linguaggi apparentemente inconciliabili scoprono di descrivere la medesima architettura invisibile. Che cosa accade se le leggi che governano l'intreccio quantistico, la decodifica genetica o la biologia percettiva non fossero che l'alfabeto con cui la realtà comunica con se stessa attraverso molteplici densità dimensionali?
+Eppure, la storia delle più grandi rivoluzioni scientifiche ci insegna che i salti di paradigma non avvengono quasi mai lungo i binari consueti delle singole discipline, ma nel punto esatto in cui due vettori apparentemente disgiunti si intersecano. Se consideriamo che ${t1.toLowerCase()} esplora ${c1.essence}, mentre ${t2.toLowerCase()} affronta ${c2.essence}, emerge con forza un'ipotesi audace: e se queste due realtà non fossero che due diverse manifestazioni della medesima dinamica informazionale dell'universo?
 
 ## 2. Il Ponte Quantico/Metafisico (Analisi e Connessione)
-Nel cuore di questa convergenza risiede il concetto di *non-località informativa*. Quando analizziamo in profondità ${t1.toLowerCase()}, l'illusione cartesiana di un osservatore separato dall'oggetto osservato si dissolve: la materia si rivela uno stato coerente di informazione pura in continua oscillazione probabilistica.
+Scavando al di sotto della superficie dei fenomeni, il legame tra questi due ambiti si rivela profondo e strutturale. Quando analizziamo ${t1.toLowerCase()}, ci rendiamo conto che i confini della materia e dell'indagine convenzionale cedono il passo a dinamiche non-locali. La separazione tra osservatore e campo osservato si assottiglia progressivamente.
 
-Parallelamente, l'indagine su ${t2.toLowerCase()} demolisce il dogma materialistico riduzionista, suggerendo che la coscienza non sia un mero sottoprodotto biologico isolato nel cranio, ma un campo fondamentale trans-spaziale in grado di risuonare con ordini impliciti della realtà (per riprendere l'intuizione del fisico David Bohm). 
+Parallelamente, l'indagine su ${t2.toLowerCase()} suggerisce che la percezione, la materia e la coscienza sono intimamente intrecciate in un continuum cibernetico e ontologico. La connessione risiede nel fatto che entrambi i campi richiedono un cambio radicale di prospettiva: la realtà cessa di essere un aggregato di oggetti isolati e si rivela come un campo dinamico di interazioni coerenti.
 
-La nostra fisiologia biologica e i nostri sensori tecnologici non sono meri contenitori, ma sofisticati *trasduttori di fase*. La transizione tra misurabile empirico ed esperienza metafisica non costituisce una frattura ontologica, bensì una differenza di frequenza vibrazionale e di risoluzione percettiva nel tessuto dello spaziotempo.
+Integrando le scoperte di ${t1.toLowerCase()} con la fenomenologia di ${t2.toLowerCase()}, possiamo ipotizzare che ${c1.future} possa fornire il substrato teorico per comprendere ${c2.future}. In questo orizzonte, gli strumenti della scienza più avanzata diventano la chiave per decodificare ciò che per secoli è stato relegato al mito o all'anomalia.
 
 ## 3. Impatto sulla Società
-Se l'umanità integrasse pienamente questa sintesi scientifico-filosofica nei prossimi decenni, le fondamenta della nostra civiltà verrebbero ripensate da zero:
+Se l'umanità riuscisse a sintetizzare organicamente questi due domini nel corso dei prossimi decenni, l'impatto sul tessuto sociale e tecnologico sarebbe radicale:
 
-- **Medicina e Cura Olistica:** La salute umana non verrebbe più intesa come mera manutenzione meccanica, ma come riarmonizzazione biocentrica dei campi di coerenza quantica e delle risonanze sottili dell'organismo.
-- **Etica ed Ecologia Sistemica:** Il superamento dell'illusione della frammentazione e della solitudine cosmica sradicherebbe l'iper-individualismo contemporaneo, instaurando un'etica biocentrica fondata sull'interdipendenza universale di tutte le forme di vita e di coscienza.
-- **Istituzioni Educative del Futuro:** Le accademie introdurranno l'allenamento della percezione intuitiva e della coerenza cardiaca accanto al calcolo formale, inaugurando un vero Rinascimento della Conoscenza Unificata.
+- **Evoluzione della Conoscenza:** La fine definitiva della separazione tra scienze dure e studi sulla coscienza porterà alla nascita di un nuovo paradigma epistemologico unificato.
+- **Tecnologie di Risonanza:** L'applicazione congiunta di ${c1.tech} e ${c2.tech} permetterà lo sviluppo di dispositivi bio-informatici capaci di amplificare la consapevolezza collettiva.
+- **Rifondazione Etico-Sociale:** Il superamento dell'illusione di frammentazione genererà una nuova etica biocentrica globale, in cui la salvaguardia dell'ecosistema e dell'armonia comunitaria diverrà una naturale conseguenza della comprensione dell'interconnessione universale.
 
 ## 4. InventBot: Idee Originali (Applicazione pratica)
 
-**Parola Chiave Sintetica:** *Entanglement Noosferico Multidimensionale*
+**Parola Chiave Sintetica:** *${syntheticKeyword}*
 
-Agendo come **InventBot**, ecco 3 idee originali, innovative e prototipi applicativi generati unicamente a partire da questo concetto:
+Agendo come **InventBot**, ecco 3 idee originali e prototipi applicativi generati specificamente a partire dalla sintesi tra ${cleanT1} e ${cleanT2}:
 
-1. **SynapseMatrix (Piattaforma di Biofeedback di Coerenza Quantica)**
-   Un dispositivo biometrico non invasivo che rileva i micro-stati di coerenza dei microtubuli neurali e dei ritmi circadiani, traducendoli in paesaggi di risonanza armonica binaurale per indurre stati stabili di lucidità percettiva e sintonizzazione non-locale.
+1. **${cleanT1}Nexus (Interfaccia di Sintonia Frequenziale)**
+   Un sistema integrato che combina ${c1.tech} con algoritmi di analisi del segnale, progettato per mappare e stabilizzare gli scambi di informazione tra stati biologici e campi di risonanza sottile.
 
-2. **NooSphere Commons (Protocollo Open-Source di Rilevazione Fenomenologica)**
-   Un'infrastruttura decentralizzata che aggrega misurazioni di rumore quantistico casuale (QRNG) distribuite globalmente e marker biometrici durante meditazioni collettive ed eventi astronomici, verificando correlazioni empiriche tra stati di coscienza sincronizzata e fluttuazioni del continuum spaziotemporale.
+2. **${cleanT2} Protocol (Infrastruttura Decentralizzata di Ricerca)**
+   Una rete peer-to-peer aperta che raccoglie dati biometrici ed elettromagnetici in tempo reale da laboratori indipendenti di tutto il mondo, validando scientificamente le correlazioni tra ${t1.toLowerCase()} e ${t2.toLowerCase()}.
 
-3. **Curriculum "Frontiere della Coscienza" (Format Educativo Interdisciplinare)**
-   Un modulo accademico immersivo che fonde fisica teorica, biologia di frontiera e filosofia della mente, fornendo agli studenti simulazioni interattive e metodologie sperimentali per indagare scientificamente i confini tra materia, informazione e percezione trascendente.`;
+3. **Accademia "Oltre la Soglia" (Programma Formativo Interdisciplinare)**
+   Un percorso accademico immersivo che forma una nuova generazione di ricercatori e pensatori capaci di operare simultaneamente sui principi di ${c1.domain} e ${c2.domain}, unendo rigore analitico e intuizione di frontiera.`;
 
   return {
     date: dateStr,
@@ -129,65 +204,76 @@ async function generateDailyArticle(dateStr: string): Promise<DailyArticleData> 
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
+    console.warn("⚠️ GEMINI_API_KEY non trovata nelle variabili d'ambiente. Uso il generatore editoriale strutturato.");
     return createRichEditorialArticle(dateStr, topic1, topic2);
   }
 
   try {
-    const ai = new GoogleGenAI({
-      apiKey,
-      httpOptions: {
-        headers: {
-          "User-Agent": "aistudio-build",
-        },
-      },
-    });
+    const ai = new GoogleGenAI({ apiKey });
 
-    const prompt = `Sei un autore visionario, un saggista di frontiera e un divulgatore audace, capace di unire il rigoroso metodo scientifico alle speculazioni più profonde sulla coscienza e sull'universo.
+    const prompt = `Sei un autore visionario, un saggista di frontiera e un filosofo della scienza audace, capace di unire il rigoroso metodo scientifico alle speculazioni più profonde sulla coscienza e sull'universo.
 
 Oggi hai estratto casualmente questi due argomenti:
 1. ${topic1}
 2. ${topic2}
 
-Il tuo compito è scrivere un articolo approfondito, originale e stimolante che esplori la connessione inaspettata, profonda e "con mente aperta" tra di essi. 
+Il tuo compito è scrivere un saggio inedito, approfondito, entusiasmante e intellettualmente rigoroso che esplori la connessione inaspettata tra questi due temi specifici. 
 
-Struttura l'articolo seguendo rigorosamente queste sezioni (usa la formattazione Markdown con i titoli ##):
+CRITICO: L'articolo DEVE essere scritto da zero appositamente per questa specifica coppia di argomenti (${topic1} e ${topic2}). Tutti i paragrafi, le metafore, le analisi e le invenzioni devono derivare direttamente ed esclusivamente dalla fusione di questi due temi. Non utilizzare formule generiche o inventori/concetti standardizzati.
 
-# [Titolo Suggestivo, Elegante e Coinvolgente]
+Struttura l'articolo seguendo esattamente queste sezioni in Markdown:
+
+# [Crea un titolo poetico, potente ed evocativo per questa specifica unione]
 
 ## 1. L'Incontro Impossibile (Introduzione)
-Presenta i due argomenti e lancia la provocazione o l'interrogativo di fondo sulla loro connessione.
+Presenta i due argomenti (${topic1} e ${topic2}) spiegando perché apparentemente appartengono a mondi diversi e poni la domanda cruciale sulla loro reale convergenza.
 
 ## 2. Il Ponte Quantico/Metafisico (Analisi e Connessione)
-Sviluppa il cuore dell'articolo esplorando le implicazioni nascoste, fondendo scienza di frontiera e ipotesi di confine con un tono serio, intellettualmente stimolante e non banale.
+Sviluppa l'analisi dettagliata (almeno 3-4 paragrafi ricchi di contenuto e riferimenti) che dimostra il legame intimo tra la fenomenologia di ${topic1} e quella di ${topic2}.
 
 ## 3. Impatto sulla Società
-Fornisci un esempio concreto e dettagliato di come questa connessione concettuale, se applicata o compresa nel prossimo futuro, potrebbe trasformare radicalmente la società umana (es. nell'etica, nella medicina, nella cultura o nella percezione collettiva della realtà).
+Descrivi con 3 punti elenco chiari e articolati come la comprensione di questa unione rivoluzionerà la vita umana nei prossimi decenni (nella scienza, nella medicina/biologia, nella società o nell'etica).
 
 ## 4. InventBot: Idee Originali (Applicazione pratica)
-Estrai una **Parola Chiave Sintetica** o un concetto chiave dall'elaborazione dei due argomenti. 
-Poi, agendo come "InventBot", genera **3 idee originali, innovative o prototipi applicativi** basati unicamente su questa parola chiave risultante (es. startup, strumenti tecnologici, format educativi o filosofici).
 
-Scrivi l'articolo direttamente in lingua italiana con un registro colto, fluido, poetico e rigoroso. Non includere preamboli meta né saluti all'inizio o alla fine, solo il testo dell'articolo formattato in Markdown a partire dal titolo #.`;
+**Parola Chiave Sintetica:** *[Crea una parola o locuzione sintetica originale che esprima l'essenza di ${topic1} + ${topic2}]*
 
-    // Timeout after 6.5 seconds to guarantee instant HTTP response without Cloud Run timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6500);
+Agendo come **InventBot**, genera **3 idee originali, prototipi o progetti applicativi inediti e concreti** nati esclusivamente dalla parola chiave sintetica creata:
+1. **[Nome Invenzione 1]** - descrizione dettagliata del funzionamento e scopo
+2. **[Nome Invenzione 2]** - descrizione dettagliata del funzionamento e scopo
+3. **[Nome Invenzione 3]** - descrizione dettagliata del funzionamento e scopo
 
-    const generatePromise = ai.models.generateContent({
-      model: "gemini-3.7-flash",
-      contents: prompt,
-      config: {
-        temperature: 0.85,
-        abortSignal: controller.signal,
-      },
-    });
+Scrivi l'articolo interamente in italiano con un registro saggistico elegante, accattivante, senza preamboli o saluti, iniziando direttamente dal titolo #.`;
 
-    const response = await generatePromise;
-    clearTimeout(timeoutId);
+    // Try primary recommended models in sequence with generous timeout
+    const candidateModels = ["gemini-2.5-flash", "gemini-3.7-flash", "gemini-flash-latest"];
+    let generatedText = "";
+    let lastError: any = null;
 
-    const generatedText = response.text || "";
-    if (!generatedText.trim()) {
-      throw new Error("Risposta vuota da Gemini");
+    for (const modelName of candidateModels) {
+      try {
+        console.log(`Tentativo generazione articolo con modello ${modelName} per argomenti: "${topic1}" + "${topic2}"...`);
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt,
+          config: {
+            temperature: 0.85,
+          },
+        });
+
+        if (response.text && response.text.trim().length > 100) {
+          generatedText = response.text.trim();
+          console.log(`✅ Articolo generato con successo tramite ${modelName} (${generatedText.length} caratteri).`);
+          break;
+        }
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`Modello ${modelName} ha restituito un errore:`, err?.message || err);
+      }
+    }
+
+    if (!generatedText) {
+      throw lastError || new Error("Nessun modello Gemini ha generato testo valido");
     }
 
     let title = `${topic1} & ${topic2}`;
@@ -209,8 +295,8 @@ Scrivi l'articolo direttamente in lingua italiana con un registro colto, fluido,
       content: generatedText,
       readingMinutes,
     };
-  } catch (error) {
-    // Graceful fallback whenever API network is slow or unavailable
+  } catch (error: any) {
+    console.error("❌ Errore durante la generazione Gemini:", error?.message || error);
     return createRichEditorialArticle(dateStr, topic1, topic2);
   }
 }
