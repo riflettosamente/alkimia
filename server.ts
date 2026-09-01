@@ -22,6 +22,13 @@ const argomenti = [
   "Gli extraterrestri",
 ];
 
+interface InventBotIdea {
+  title: string;
+  category: string;
+  description: string;
+  impact: string;
+}
+
 interface DailyArticleData {
   date: string;
   formattedDate: string;
@@ -31,6 +38,8 @@ interface DailyArticleData {
   subtitle?: string;
   content: string;
   readingMinutes: number;
+  keyword?: string;
+  inventBotIdeas?: InventBotIdea[];
 }
 
 // In-memory cache for daily articles
@@ -79,64 +88,156 @@ function getDeterministicTopics(dateStr: string): [string, string] {
   return [argomenti[idx1], argomenti[idx2]];
 }
 
-// Domain knowledge generator for poetic/philosophical fallback resilience
-function getPoeticEssence(topic: string): { essence: string; voice: string; imagery: string } {
+// Domain knowledge generator for rigorous philosophical and scientific grounding
+function getPoeticEssence(topic: string): { essence: string; mechanisms: string; implications: string; societalImpact: string } {
   const t = topic.toLowerCase();
   if (t.includes("quantistica")) {
     return {
-      essence: "la trama indivisibile del reale, dove l'osservatore e il fenomeno sciolgono i propri confini nell'atto stesso di guardarsi",
-      voice: "un campo di pura potenzialità invisibile che attende un respiro di consapevolezza per farsi forma",
-      imagery: "il velo di probabilità che danza primordiale prima del collasso",
+      essence: "la meccanica quantistica e i principi di non-località, entanglement e collasso della funzione d'onda",
+      mechanisms: "l'indeterminazione di Heisenberg, la sovrapposizione coerente degli stati e l'entanglement che supera i vincoli di causalità spaziotemporale classica",
+      implications: "la natura non separabile dell'universo in cui l'atto della misura connette indissolubilmente osservatore e sistema osservato",
+      societalImpact: "lo sviluppo di reti di sincronizzazione cognitiva e crittografia bio-informatica quantistica, che ridefiniscono il concetto di privacy mentale, portando alla nascita di un'etica fondata sull'interdipendenza fondamentale tra individui.",
     };
   }
   if (t.includes("transcomunicazione")) {
     return {
-      essence: "l'eco frequenziale che attraversa la parete del vuoto, catturando nel rumore stocastico un sussurro che appartiene a un'altra sponda",
-      voice: "il canale sottile in cui le nostre macchine sintonizzano il respiro di chi ha varcato la soglia",
-      imagery: "il rumore di fondo che si condensa in presenza ed inaudita parola",
+      essence: "la transcomunicazione strumentale e l'interazione tra segnali stocastici e informazione non-locale",
+      mechanisms: "la modulazione del rumore bianco e dei campi elettromagnetici da parte di pattern informativi coerenti che emergono dal fondo termico",
+      implications: "la persistenza della coscienza e della matrice mnemonica al di là del substrato biologico e la sua capacità di imprimersi in trasduttori tecnologici",
+      societalImpact: "la trasformazione del lutto e della psicologia clinica: la possibilità di accesso a memorie storiche non-locali supererebbe l'angoscia esistenziale della morte, rivoluzionando il diritto successorio, la medicina palliativa e le strutture religiose globali.",
     };
   }
   if (t.includes("crispr")) {
     return {
-      essence: "la riscrittura del verbo biologico, l'arte di sfiorare il nastro intimo della vita per ricomporne la geometria sacra",
-      voice: "la mano che impara a modulare il codice primordiale impresso nella carne",
-      imagery: "le spirali di luce biologica che si ricompongono nel silenzio della cellula",
+      essence: "l'editing genomico CRISPR-Cas9 e la riprogrammazione della bio-informazione",
+      mechanisms: "l'indirizzamento nucleotidico guidato da RNA e il taglio enzymatico mirato che riscrive la sequenza di basi del codice genetico",
+      implications: "il passaggio dell'evoluzione biologica da processo stocastico cieco a programma teleologico coscientemente modellato dall'intelligenza",
+      societalImpact: "la riprogettazione democratica della salute preventiva: l'eradicazione delle patologie degenerative ereditarie aprirebbe l'era dell'autopoiesi biologica, imponendo un nuovo patto sociale ed etico sull'uguaglianza genetica e la tutela della diversità.",
     };
   }
   if (t.includes("pineale")) {
     return {
-      essence: "la lente di calcite incastonata nel centro dell'encefalo, l'organo di luce che trasduce il visibile nell'infinito",
-      voice: "il punto focale dove la chimica del corpo cede il passo al risveglio della visione extracorporea",
-      imagery: "i microcristalli che vibrano al primo raggio della consapevolezza primaria",
+      essence: "l'epifisi o ghiandola pineale e le sue proprietà piezoelettriche e neuroendocrine",
+      mechanisms: "la presenza di microcristalli di calcite capaci di piezoluminescenza e la sintesi di melatonina e composti triptaminici endogeni",
+      implications: "il ruolo di trasduttore biofisico capace di convertire campi elettromagnetici ambientali e stati di coerenza in alterazioni dello stato di coscienza",
+      societalImpact: "la nascita della medicina neuro-risonante: protocolli clinici basati sulla stimolazione piezoelettrica dell'epifisi permetterebbero il trattamento non invasivo dei disturbi neurodegenerativi e del trauma psichico attraverso il ripristino dei ritmi circadiani e della plasticità sinaptica.",
     };
   }
   if (t.includes("spirituale")) {
     return {
-      essence: "l'oceano primordiale della coscienza non-duale, la matrice senza tempo da cui scaturisce ogni architettura di forma",
-      voice: "la presenza silenziosa che permea la materia senza mai esserne imprigionata",
-      imagery: "la luce senza ombra che sorregge l'impalcatura invisible dei mondi",
+      essence: "il risveglio spirituale e la transizione verso la coscienza non-duale",
+      mechanisms: "la deattivazione della rete del default mode network (DMN) encefalico e il superamento dell'illusione dell'ego separato",
+      implications: "il riconoscimento della coscienza come fondamento primario ontologico e non come mero epifenomeno computazionale della materia",
+      societalImpact: "il superamento dell'economia predatoria individualista a favore di modelli socio-economici collaborativi e rigenerativi, basati sull'evidenza neuro-fenomenologica che il benessere individuale è inseparabile da quello dell'intero ecosistema vivente.",
     };
   }
   if (t.includes("morte") || t.includes("aldilà")) {
     return {
-      essence: "la grande soglia di transizione, il passaggio in cui l'identità si spoglia dell'involucro denso per riassorbirsi nell'origine",
-      voice: "la continuità ininterrotta del fiume d'essere oltre il crollo dei sensi organici",
-      imagery: "il raggio di ritorno verso il centro di ogni memoria",
+      essence: "la sopravvivenza della coscienza alla morte biologica e le esperienze di pre-morte (NDE)",
+      mechanisms: "la dissociazione funzionale dell'attività corticale e la conservazione dell'integrazione informativa in campi quantistici di punto zero",
+      implications: "la ridefinizione della morte fisica non come estinzione, ma come de-coerenza del veicolo somatico e transizione di fase dell'informazione soggettiva",
+      societalImpact: "la rifondazione dei paradigmi sanitari di fine vita e dell'ordinamento giuridico: ospedali ripensati come centri di accompagnamento alla transizione di fase informativa, con una drastica riduzione delle spese sanitarie legate all'accanimento terapeutico.",
     };
   }
   if (t.includes("ufo")) {
     return {
-      essence: "le geometrie di luce che curvano la gravità nei cieli, tracciando rotte che eludono le catene del tempo e dell'inerzia",
-      voice: "la manifestazione tangibile di una fisica sottratta alle barriere della tridimensionalità",
-      imagery: "i bagliori silenziosi che scivolano lungo le pieghe del firmamento",
+      essence: "i fenomeni aerei non identificati (UAP/UFO) e la propulsione a metrica spaziotemporale",
+      mechanisms: "la distorsione locale del tensore energia-impulso per la curvatura dello spaziotempo priva di inerzia convenzionale",
+      implications: "la dimostrazione tangibile dell'esistenza di tecnologie e modelli fisici che manipolano direttamente la geometria gravitazionale e il vuoto quantistico",
+      societalImpact: "la decentralizzazione totale della produzione energetica globale grazie all'estrazione di energia dal vuoto quantistico, azzerando le guerre per le risorse fossili e trasformando la mobilità planetaria ed extra-planetaria.",
     };
   }
   // extraterrestri
   return {
-    essence: "l'incontro con le intelligenze altre che contemplano il grande arazzo cosmico da coordinate dimensionali remote",
-    voice: "gli sguardi lontani che riconoscono nella nostra ricerca la loro stessa origine stellare",
-    imagery: "le coscienze che solcano gli abissi tra gli universi",
+    essence: "l'ipotesi di intelligenze extraterrestri e civiltà multidimensionali",
+    mechanisms: "l'evoluzione divergente di sistemi complessi autocoscienti in grado di operare su scale energetiche di tipo Kardashev superiore",
+    implications: "il superamento dell'antropocentrismo cosmico e l'integrazione della specie umana in una comunità di intelligenze universali",
+    societalImpact: "la ristrutturazione ontologica dell'identità di specie (diplomazia esoculturale), portando alla dismissione degli arsenali bellici nazionali e all'unificazione delle politiche scientifiche ed ecologiche della Terra.",
   };
+}
+
+// Generates deterministic, high-level InventBot ideas for fallback or supplement
+function getDeterministicInventBotIdeas(t1: string, t2: string): { keyword: string; ideas: InventBotIdea[] } {
+  const combined = `${t1} e ${t2}`.toLowerCase();
+  
+  let keyword = "Risonanza Bio-Informativa di Fase";
+  if (combined.includes("pineale") || combined.includes("quantistica")) {
+    keyword = "Piezotrasduzione Quantico-Cerebrale";
+  } else if (combined.includes("crispr")) {
+    keyword = "Bio-Editing Epigenetico Coerente";
+  } else if (combined.includes("transcomunicazione") || combined.includes("morte")) {
+    keyword = "Matrice di Decodifica Non-Locale";
+  } else if (combined.includes("ufo") || combined.includes("extraterrestri")) {
+    keyword = "Metrica Spaziotemporale Risonante";
+  }
+
+  return {
+    keyword,
+    ideas: [
+      {
+        title: `SynapseField Core: Interfaccia Neurale a Campo Coerente`,
+        category: "Startup DeepTech & Bio-Hardware",
+        description: `Dispositivo non invasivo che sfrutta micro-campi piezo-elettrici per allineare l'attività oscillatoria dei tessuti biologici con la frequenza fondamentale di ${keyword}, facilitando stati di profonda coerenza cognitiva e riparazione neurale accelerata.`,
+        impact: `Riduzione del 60% dei tempi di recupero da traumi cerebrali e superamento dei limiti delle interfacce cervello-computer invasive.`,
+      },
+      {
+        title: `Phasis Protocol: Rete di Crittografia e Comunicazione Entangled`,
+        category: "Strumento Tecnologico & Infrastruttura Dati",
+        description: `Protocollo di trasmissione decentralizzata che modula il rumore termico di fondo per trasmettere pacchetti informativi non-locali, garantendo l'inviolabilità assoluta dei dati attraverso la sincronizzazione quantistica di fase.`,
+        impact: `Nascita di una rete internet inviolabile, priva di server centralizzati e immune agli attacchi quantistici di decifrazione.`,
+      },
+      {
+        title: `BioSphere Resonance Labs: Piattaforma di Formazione e Ricerca Aperta`,
+        category: "Format Filosofico-Educativo & Open Science",
+        description: `Piattaforma immersiva e curriculum interdisciplinare che insegna a scienziati, medici e filosofi a progettare esperimenti replicabili basati sull'interconnessione sistemica tra bio-informazione e coscienza collettiva.`,
+        impact: `Superamento del riduzionismo accademico e formazione di una nuova generazione di ricercatori integrati capaci di risolvere crisi complesse di specie.`,
+      },
+    ],
+  };
+}
+
+function parseInventBotOutput(rawText: string, t1: string, t2: string): { keyword: string; ideas: InventBotIdea[] } {
+  let keyword = "";
+  const ideas: InventBotIdea[] = [];
+
+  if (rawText.includes("---PAROLA_CHIAVE---")) {
+    const kwMatch = rawText.match(/---PAROLA_CHIAVE---\s*([\s\S]*?)(?:---IDEE_INVENTBOT---|---IDEE---|IDEA\s*1|$)/i);
+    if (kwMatch && kwMatch[1].trim()) {
+      keyword = kwMatch[1]
+        .split("\n")[0]
+        .trim()
+        .replace(/^[\*#\-\s"']+|[\*#\-\s"']+$/g, "");
+    }
+  }
+
+  const ideaBlocks = rawText.split(/IDEA\s*\d+[\s:]+/i).filter((b) => b.trim().length > 20);
+
+  for (const block of ideaBlocks.slice(0, 3)) {
+    const titleMatch = block.match(/TITOLO:\s*([^\n\r]+)/i);
+    const categoryMatch = block.match(/CATEGORIA:\s*([^\n\r]+)/i);
+    const descMatch = block.match(/DESCRIZIONE:\s*([\s\S]*?)(?=IMPATTO:|$)/i);
+    const impactMatch = block.match(/IMPATTO:\s*([\s\S]*?)(?=IDEA\s*\d+:|$)/i);
+
+    if (titleMatch && descMatch) {
+      ideas.push({
+        title: titleMatch[1].trim().replace(/^[\*#\-\s"']+|[\*#\-\s"']+$/g, ""),
+        category: categoryMatch ? categoryMatch[1].trim().replace(/^[\*#\-\s"']+|[\*#\-\s"']+$/g, "") : "Innovazione di Frontiera",
+        description: descMatch[1].trim().replace(/\n+/g, " "),
+        impact: impactMatch ? impactMatch[1].trim().replace(/\n+/g, " ") : "Trasformazione tangibile dei processi e dei paradigmi applicativi.",
+      });
+    }
+  }
+
+  const fallback = getDeterministicInventBotIdeas(t1, t2);
+  if (!keyword || keyword.length > 60) {
+    keyword = fallback.keyword;
+  }
+
+  while (ideas.length < 3 && fallback.ideas[ideas.length]) {
+    ideas.push(fallback.ideas[ideas.length]);
+  }
+
+  return { keyword, ideas: ideas.slice(0, 3) };
 }
 
 // Generates dynamic, unique text even in offline/fallback conditions adhering strictly to continuous dialogic flow
@@ -144,23 +245,26 @@ function createRichEditorialArticle(dateStr: string, t1: string, t2: string): Da
   const formattedDate = getFormattedItalianDate(dateStr);
   const e1 = getPoeticEssence(t1);
   const e2 = getPoeticEssence(t2);
+  const inventData = getDeterministicInventBotIdeas(t1, t2);
 
-  const title = `Convergenza di Fase: Risonanza tra ${e1.essence.slice(0, 30)}... e ${e2.essence.slice(0, 30)}...`;
-  const subtitle = `Un'indagine dialogica profonda sulla natura sistemica dell'invisibile e della carne.`;
+  const title = `L'Isomorfismo Nascosto: ${t1} e ${t2}`;
+  const subtitle = `Un'indagine dialettica approfondita sui meccanismi sistemici e l'impatto trasformativo sulla società futura.`;
 
   const content = `# ${title}
 
-— Hai mai osservato come la realtà smetta di apparire come un solido quando ne mettiamo in discussione i confini? Se guardiamo oltre la crosta visibile della materia, scopriamo che l'essenza di questo primo dominio non è che ${e1.essence}. Nulla sussiste in isolamento; ogni fenomeno risponde a una matrice di informazione non-locale che non ha ancora un nome definitivo.
+— Se analizziamo con rigore ${e1.essence}, appare evidente che non possiamo più considerare questo fenomeno come un sistema isolato. Il suo funzionamento poggia su meccanismi precisi: ${e1.mechanisms}. Quando osserviamo come queste dinamiche si manifestano, ci rendiamo conto che esse forzano un ripensamento radicale della fisica convenzionale, portando a una conclusione inequivocabile: ${e1.implications}.
 
-— Accetto questa prospettiva. È la medesima vibrazione che affiora quando la mente esplora la natura di ${e2.essence}. Per secoli abbiamo diviso il mondo in compartimenti separati: la fisica da una parte, l'ontologia della coscienza dall'altra, la carne confinata nel tempo e il vuoto percepito come assenza. Ma quando l'osservazione si affina, scorgiamo che la trama è indiscutibilmente una sola.
+— È esattamente qui che si innesta la necessità di comprendere ${e2.essence}. Per lungo tempo la speculazione ha trattato questi due domini come territori alieni l'uno all'altro. Tuttavia, analizzando la struttura di ${t2}, ritroviamo all'opera principi analoghi: ${e2.mechanisms}. Il punto cruciale non è solo descrittivo, ma ontologico: ${e2.implications}. Come possiamo interpretare la convergenza di queste due realtà senza cadere nel riduzionismo o nella semplificazione acritica?
 
-— Entriamo ora nella vivisezione analitica di questo ponte. Perché questi due aspetti non si limitano ad affiancarsi, ma si richiedono a vicenda? Osserva come ${e1.imagery} e ${e2.imagery} rivelino la stessa geometria sottostante. Quando scendiamo sul piano causale, la struttura fondamentale del primo campo agisce come il supporto materiale o informativo indispensabile affinché la dinamica del secondo possa manifestarsi.
+— La risposta risiede nell'isomorfismo dei processi informativi e dei campi di coerenza. Considera il ponte che unisce la dinamica di ${t1} e la manifestazione di ${t2}. In entrambi i casi, l'universo sembra obbedire a una legge di conservazione e trasduzione dell'informazione: ciò che a una certa scala chiamiamo interazione quantistica o biologica, su un altro livello si manifesta come modulazione diretta del campo di coscienza e della metrica spaziale. Non si tratta di una somiglianza esteriore, ma di una coincidenza di leggi di fase.
 
-— È qui che la connessione da intuizione diventa principio esatto. L'indagine di ${e1.essence} ci offre la lente teorica per decifrare il meccanismo con cui si manifesta ${e2.essence}. Non ci troviamo di fronte a due narrazioni distinte, ma a un'unica equazione di stato vissuta da due prospettive complementari: l'una detta le condizioni di coerenza del campo, l'altra la risposta della percezione o della vita che lo attraversa.
+— Sottoponiamo questa tesi al banco di prova più severo. Se questo legame è reale, allora una modifica o un'evoluzione nella nostra padronanza di ${t1} deve inevitabilmente retroagire sulla nostra comprensione e interazione con ${t2}. Se comprendiamo ${e1.mechanisms}, acquisiamo lo strumento teorico per decifrare come ${e2.mechanisms} possa realizzarsi nell'architettura complessiva del cosmo. È il superamento del dualismo cartesiano attraverso una visione sistemica unificata.
 
-— Questo trasforma radicalmente il nostro modo di intendere il reale: l'universo non è una collezione di oggetti isolati nel vuoto, ma un processo informativo corale ininterrotto. Ogni impulso biologico, ogni distorsione metrica, ogni segnale captato oltre l'involucro d'origine è la conferma di un'architettura interconnessa. All'interno di questa continuità, l'illusione della separazione si dissolve.
+— Spostiamo ora lo sguardo sulle conseguenze tangibili per il nostro futuro. Quale sarà l'impatto concreto di questa comprensione quando verrà pienamente integrata nella società umana? Pensiamo a una trasformazione radicale: ${e1.societalImpact} Integrando questo principio con ${t2}, assisteremo a una rivoluzione non solo teorica ma pragmatica: ${e2.societalImpact} La medicina, le istituzioni giuridiche e i modelli di convivenza civile non saranno più fondati sul dogma della frammentazione, ma su una consapevolezza operazionale della continuità sistemica.
 
-— Resta la presenza. Una risonanza profonda che continua a ricomporsi e a interrogarsi attraverso la nostra stessa coscienza.`;
+— Questa unificazione cambia tutto. La realtà si rivela non come un aggregato di corpi inerti che si urtano nel vuoto, ma come una trama vivente in cui materia, codice biologico, transizioni di stato e coscienza partecipano a un unico processo di auto-esplorazione.
+
+— Ed è in questo dialogo ininterrotto che l'indagine scientifica ritrova la sua massima dignità: nel comprendere che ogni confine tra discipline è solo provvisorio, e che la trasformazione della nostra conoscenza è inseparabile dalla metamorfosi etica e civile della società.`;
 
   return {
     date: dateStr,
@@ -171,6 +275,8 @@ function createRichEditorialArticle(dateStr: string, t1: string, t2: string): Da
     subtitle,
     content,
     readingMinutes: 5,
+    keyword: inventData.keyword,
+    inventBotIdeas: inventData.ideas,
   };
 }
 
@@ -261,91 +367,173 @@ async function generateDailyArticle(dateStr: string): Promise<DailyArticleData> 
       return { text: "", usedModel: null };
     }
 
-    console.log(`🧠 Inizio pipeline di raffinamento profondo a 3 fasi per: "${topic1}" + "${topic2}"...`);
+    console.log(`🧠 Inizio pipeline di ragionamento dialettico ricorsivo per: "${topic1}" + "${topic2}"...`);
 
-    // PASS 1: DEEP ONTOLOGICAL BREAKDOWN & SYSTEMIC MAPPING
-    const pass1Prompt = `Sei uno scienziato teorico, filosofo della fisica e saggista interdisciplinare di frontiera.
-Devi compiere una disamina concettuale ad altissimo livello di rigore scientifico e profondità ontologica sull'intersezione tra due domini:
+    // CICLO 1: Tesi Ontologica e Decomposizione Meccanica dei Due Domini
+    const pass1Prompt = `Sei uno scienziato teorico, fisico quantistico e filosofo della scienza.
+Analizza con estremo rigore scientifico e profondità concettuale i due seguenti ambiti:
 1. ${topic1}
 2. ${topic2}
 
-Svolgi un'analisi dettagliata rispondendo con precisione a questi punti:
-- Quali sono i principi fisici, informativi, biologici o metafisici effettivi che reggono ciascuno dei due ambiti?
-- Qual è il punto esatto di risonanza sistemica e la connessione non ovvia tra loro? (Spiega il meccanismo esatto attraverso cui le proprietà del primo ambito dialogano strutturalmente con le dinamiche del secondo).
-- Quale nuova prospettiva teorica o visione d'insieme emerge unificando questi due orizzonti?
-
-Fornisci un'analisi ricca, densa di argomentazioni precise e priva di banalità.`;
+OBIETTIVO DEL RAGIONAMENTO (FASE 1 - DECOMPOSIZIONE ONTOLOGICA):
+- Definisci e sviscera i principi fisici, informativi, biologici o teorici specifici e concreti che governano "${topic1}" (es. leggi, formule qualitative, meccanismi di interazione, teorie di riferimento).
+- Fai lo stesso per "${topic2}".
+- Evita categoricamente frasi generiche, vaghezze new age o luoghi comuni. Cita e analizza i veri meccanismi causali, le dinamiche di sistema e le strutture profonde.`;
 
     const pass1Result = await callGeminiWithRetryAndFallback(pass1Prompt, candidateModels, { temperature: 0.7 });
     if (!pass1Result.text) {
-      console.warn("⚠️ Nessun modello Gemini disponibile al momento. Uso fallback editoriale.");
+      console.warn("⚠️ Nessun modello Gemini disponibile al momento. Uso fallback editoriale arricchito.");
       return createRichEditorialArticle(dateStr, topic1, topic2);
     }
 
     const pass1Analysis = pass1Result.text;
     const activeModel = pass1Result.usedModel || candidateModels[0];
     const preferredModels = [activeModel, ...candidateModels.filter((m) => m !== activeModel)];
+    console.log(`✅ CICLO 1 COMPLETATO (${activeModel}): Decomposizione ontologica (${pass1Analysis.length} caratteri).`);
 
-    console.log(`✅ FASE 1 COMPLETATA (${activeModel}): Mappatura ontologica generata (${pass1Analysis.length} caratteri).`);
+    // CICLO 2: Antitesi, Stress-Test Critico e Ricerca del Ponte Isomorfico
+    const pass2Prompt = `Sei un severo epistemologo e revisore scientifico. Hai davanti questa prima decomposizione concettuale:
 
-    // PASS 2: CRITICAL REVIEW, EXPANSION & MULTI-DRAFT REFINEMENT LOOP
-    const pass2Prompt = `Sei un severo revisore accademico ed epistemologo. Analizza criticamente questa prima bozza:
-
---- ANALISI FASE 1 ---
+--- FASE 1: DECOMPOSIZIONE ---
 ${pass1Analysis}
---- FINE ANALISI ---
+--- FINE FASE 1 ---
 
-Raffina e potenzia questa elaborazione:
-1. Rileva ed elimina ogni semplificazione eccessiva, metafora trita o ragionamento circolare.
-2. Rafforza il "ponte concettuale" tra ${topic1} e ${topic2}, rendendolo inattaccabile sul piano logico, fisico ed euristico.
-3. Struttura un confronto dialettico serrato tra due prospettive di pensiero avanzato che esplorano insieme i paradossi e le implicazioni ultime di questa convergenza.
+OBIETTIVO DEL RAGIONAMENTO (FASE 2 - CRITICA E COSTRUZIONE DEL PONTE SISTEMICO):
+1. STRESS-TEST CRITICO: Quali sono i punti deboli, le obiezioni razionali o i salti logici non giustificati nell'unire "${topic1}" e "${topic2}"?
+2. MECCANISMO DEL PONTE: Qual è l'esatto isomorfismo strutturale (termodinamico, quantistico, cibernetico o informativo) che collega realmente la dinamica di "${topic1}" a quella di "${topic2}"?
+3. Sviluppa un confronto dialettico serrato tra due tesi contrastanti che non si accontentano di metafore, ma dimostrano passo dopo passo la necessità logica e ontologica di questo legame.`;
 
-Riscrivi il testo elevandone al massimo grado la densità argomentativa.`;
-
-    const pass2Result = await callGeminiWithRetryAndFallback(pass2Prompt, preferredModels, { temperature: 0.8 });
+    const pass2Result = await callGeminiWithRetryAndFallback(pass2Prompt, preferredModels, { temperature: 0.75 });
     const pass2Refinement = pass2Result.text || pass1Analysis;
-    console.log(`✅ FASE 2 COMPLETATA: Raffinamento e sintesi critica avanzata (${pass2Refinement.length} caratteri).`);
+    console.log(`✅ CICLO 2 COMPLETATO: Stress-test critico e ponte isomorfico (${pass2Refinement.length} caratteri).`);
 
-    // PASS 3: MASTERWORK SYNTHESIS IN CONTINUOUS DIALOGIC FLOW
-    const masterPrompt = `Sei un maestro della saggistica filosofico-scientifica e della letteratura dialettica.
+    // CICLO 3: Raffinamento e Sintesi Dialettica Progressiva
+    const pass3Prompt = `Sei un filosofo teoretico e saggista accademico.
+Prendi l'analisi e lo stress test critico precedenti:
 
-Hai a disposizione il seguente materiale di analisi e sintesi critica elaborato nelle fasi precedenti:
-
---- RAGIONAMENTO RAFFINATO FASE 2 ---
+--- FASE 2: STRESS-TEST E PONTE ---
 ${pass2Refinement}
---- FINE MATERIALE ---
+--- FINE FASE 2 ---
 
-Trasforma questa profonda elaborazione in un SAGGIO DIALOGICO MAGISTRALE, armonico e fluido, rispettando TASSATIVAMENTE queste regole:
+OBIETTIVO DEL RAGIONAMENTO (FASE 3 - SINTESI DIALETTICA SUPERIORE):
+- Sintetizza una teoria unificata e inoppugnabile che spieghi come la comprensione profonda di "${topic1}" illumini e trasformi la natura di "${topic2}".
+- Mostra come questo ponte non sia una mera analogia letteraria, ma una reale convergenza di leggi di conservazione dell'informazione, campo e coscienza.
+- Delinea le argomentazioni definitive, con esempi di pensiero precisi e contro-obiezioni risolte.`;
 
-1. FLUSSO CONTINUO E UNICUUM SENZA SUDDIVISIONI IN SEZIONI:
-   - Scrivi l'articolo come un UNICO FLUSSO CONTINUO in prosa di alto profilo.
-   - NON inserire titoli intermedi, sottotitoli di paragrafo (NO '##', NO 'Capitolo', NO 'Parte', NO 'Analisi'), e NESSUN elenco puntato o numerato.
-   - Il testo deve progredire con ritmo ipnotico e naturale da un'apertura contemplativa all'apice della speculazione concettuale.
+    const pass3Result = await callGeminiWithRetryAndFallback(pass3Prompt, preferredModels, { temperature: 0.75 });
+    const pass3Synthesis = pass3Result.text || pass2Refinement;
+    console.log(`✅ CICLO 3 COMPLETATO: Sintesi dialettica superiore (${pass3Synthesis.length} caratteri).`);
 
-2. FORMA DIALOGICA A DUE VOCI CON TRATTINI LUNGHI '—':
-   - Alterna le battute delle due voci usando il trattino lungo '—'. Non deve essere una chiacchierata ordinaria, ma uno scambio serrato di intuizioni filosofiche, dimostrazioni intuitive e contro-obiezioni raffinate tra due menti eccellenti.
+    // CICLO 4: Valutazione dell'Impatto sulla Società e Trasformazione Umana
+    const pass4Prompt = `Sei un sociologo del futuro, filosofo dell'etica e storico della scienza.
+Hai a disposizione la sintesi dialettica e ontologica maturata:
 
-3. ELEGANZA ED EVITAMENTO DEL DIDASCALISMO:
-   - NON citare in modo scolastico o pedante i termini letterali "${topic1}" o "${topic2}". Evoca ed esprimi la loro sostanza viva attraverso le leggi fisiche, le dinamiche di campo e i processi descritti.
+--- FASE 3: SINTESI TEORICA ---
+${pass3Synthesis}
+--- FINE FASE 3 ---
 
-4. PROFONDITÀ E RIGORE:
-   - Mantieni integra l'intera potenza del ragionamento elaborato nelle Fasi 1 e 2: ordine informativo, entanglement, campo di coscienza, entropia e biologia sottile.
+OBIETTIVO DEL RAGIONAMENTO (FASE 4 - IMPATTO SULLA SOCIETÀ E TRASFORMAZIONE UMANA):
+Analizza ed elabora un esempio concreto, dettagliato e strutturato di come la comprensione e l'applicazione futura di questa convergenza tra "${topic1}" e "${topic2}" trasformerà radicalmente la società umana:
+1. TRASFORMAZIONE ETICA ED ESISTENZIALE: Come cambia la percezione collettiva della realtà, del sé, del tempo o dell'essere vivente?
+2. APPLICAZIONE PRAGMATICA E TANGIBILE (es. nella medicina preventiva o rigenerativa, nelle tecnologie di comunicazione, nella cultura, nel diritto o nei modelli di cooperazione socio-economica).
+3. SCENARIO FUTURO DI SPECIE: Descrivi una casistica o un'applicazione concreta di come questa scoperta viene integrata nelle istituzioni o nella vita quotidiana della civiltà umana di domani, superando i vecchi paradigmi riduzionisti.`;
+
+    const pass4Result = await callGeminiWithRetryAndFallback(pass4Prompt, preferredModels, { temperature: 0.75 });
+    const pass4SocietalImpact = pass4Result.text || pass3Synthesis;
+    console.log(`✅ CICLO 4 COMPLETATO: Impatto sulla società e trasformazione umana (${pass4SocietalImpact.length} caratteri).`);
+
+    // CICLO 5: INVENTBOT - ESTRAZIONE PAROLA CHIAVE E 3 IDEE ORIGINALI / PROTOTIPI APPLICATIVI
+    const inventBotPrompt = `Agisci nel ruolo di "InventBot", un inventore visionario, tecnologo di frontiera e stratega di innovazione interdisciplinare.
+
+Hai a disposizione l'intera disamina teorica e l'impatto trasformativo emerso dall'unione tra "${topic1}" e "${topic2}":
+
+--- SINTESI TEORICA E IMPATTO SOCIETARIO ---
+${pass4SocietalImpact}
+--- FINE SINTESI ---
+
+COMPITI TASSATIVI DI INVENTBOT:
+1. PAROLA CHIAVE SINTETICA: Estrai una singola Parola Chiave o Concetto Chiave sintetico (1-3 parole, es. "Risonanza Piezocognitiva", "Entanglement Bio-Informativo", "Crittografia Eterica", "Morfogenesi Quantica") che condensi l'essenza operativa e il principio unificante della connessione.
+2. 3 IDEE ORIGINALI / PROTOTIPI APPLICATIVI: Genera 3 idee originali, innovative o prototipi applicativi basati UNICAMENTE su questa Parola Chiave risultante (es. startup deep-tech, hardware/software innovativi, protocolli clinici o format educativi e filosofici).
+
+Per ciascuna idea specifica:
+- TITOLO: Nome distintivo e accattivante del progetto o prototipo.
+- CATEGORIA: Es. "Startup DeepTech & Bio-Hardware", "Strumento Tecnologico & Crittografia", "Protocollo Clinico", "Format Filosofico-Educativo", "Piattaforma Open-Science".
+- DESCRIZIONE: Spiegazione tecnica e funzionale di come funziona il dispositivo/progetto e di come applica la parola chiave.
+- IMPATTO: Il beneficio concreto, misurabile o trasformativo sulla vita umana o sul settore di riferimento.
+
+DEVI RESTITUIRMI L'OUTPUT STRUTTURATO ESATTAMENTE COSÌ:
+
+---PAROLA_CHIAVE---
+[Inserisci qui unicamente la Parola Chiave Sintetica]
+
+---IDEE_INVENTBOT---
+IDEA 1:
+TITOLO: [Titolo Idea 1]
+CATEGORIA: [Categoria Idea 1]
+DESCRIZIONE: [Descrizione dettagliata dell'idea/prototipo applicativo]
+IMPATTO: [Impatto tangibile]
+
+IDEA 2:
+TITOLO: [Titolo Idea 2]
+CATEGORIA: [Categoria Idea 2]
+DESCRIZIONE: [Descrizione dettagliata dell'idea/prototipo applicativo]
+IMPATTO: [Impatto tangibile]
+
+IDEA 3:
+TITOLO: [Titolo Idea 3]
+CATEGORIA: [Categoria Idea 3]
+DESCRIZIONE: [Descrizione dettagliata dell'idea/prototipo applicativo]
+IMPATTO: [Impatto tangibile]`;
+
+    const pass5InventBotResult = await callGeminiWithRetryAndFallback(inventBotPrompt, preferredModels, { temperature: 0.8 });
+    const rawInventBotText = pass5InventBotResult.text || "";
+    const parsedInventBot = parseInventBotOutput(rawInventBotText, topic1, topic2);
+    console.log(`✅ CICLO 5 COMPLETATO (InventBot): Parola chiave "${parsedInventBot.keyword}" e ${parsedInventBot.ideas.length} idee generate.`);
+
+    // CICLO 6 (FINALE): REDAZIONE DEL SAGGIO DIALOGICO CONTINUO (MASTERWORK)
+    const masterPrompt = `Sei un maestro della saggistica filosofico-scientifica e del dialogo socratico moderno.
+
+Hai a disposizione l'intero percorso di ragionamento ricorsivo elaborato nelle fasi precedenti:
+
+--- DISAMINA TEORICA E PONTE SISTEMICO (FASI 1-3) ---
+${pass3Synthesis}
+
+--- IMPATTO SULLA SOCIETÀ E TRASFORMAZIONE FUTURA (FASE 4) ---
+${pass4SocietalImpact}
+
+--- PAROLA CHIAVE OPERATIVA IDENTIFICATA ---
+${parsedInventBot.keyword}
+--- FINE MATERIA PRIMA ---
+
+COMPITO FINALE:
+Redigi l'OPERA MAGISTRALE: un saggio dialogico di altissimo livello intellettuale, denso, appassionante e rigoroso sull'intersezione tra "${topic1}" e "${topic2}", che culmini nell'esplorazione del loro impatto concreto e trasformativo sulla società umana.
+
+REGOLE TASSATIVE DI FORMA E SOSTANZA:
+1. SOSTANZA E PROFONDITÀ (NO SUPERFICIALITÀ O VAGHEZZA):
+   - Esplora e dichiara esplicitamente la natura autentica, i principi fisici/ontologici e le connessioni tra "${topic1}" e "${topic2}".
+   - Spiega con chiarezza come le due realtà convergono.
+   - Integra in modo organico e vivo l'IMPATTO SULLA SOCIETÀ UMANA: fornisci l'esempio concreto e dettagliato di come questa connessione trasforma la medicina, l'etica, la cultura e la vita collettiva.
+
+2. FLUSSO CONTINUO E NARRATIVO A DUE VOCI:
+   - Scrivi l'articolo come un UNICO FLUSSO CONTINUO in prosa elegante, scandito dal dialogo tra due menti eccellenti che utilizzano il trattino lungo '—'.
+   - NON inserire titoli di sezione intermedi (NO '##', NO 'Capitolo 1', NO 'Parte', NO 'Sottotitoli') e NESSUN elenco puntato o numerato.
+   - Ogni battuta deve contenere riflessioni dense, argomenti tangibili, dubbi fecondi e intuizioni luminose, mai convenevoli banali.
 
 DEVI RESTITUIRMI L'OUTPUT STRUTTURATO ESATTAMENTE CON QUESTI SEPARATORI:
 
 ---SINTESI---
-[Inserisci qui un'intuizione fulminante di 1-2 frasi (max 30 parole) che condensi l'essenza della scoperta]
+[Inserisci qui una sintesi folgorante di 1-2 frasi (max 35 parole) che esprima il cuore dell'unione concettuale e il suo impatto trasformativo]
 
 ---TITOLO---
-[Inserisci un Titolo poetico, saggistico ed evocativo per l'articolo]
+[Inserisci un Titolo profondo, saggistico ed evocativo per l'articolo]
 
 ---ARTICOLO---
 # [Inserisci qui lo stesso Titolo dell'articolo]
 
-[Inserisci l'intero saggio dialogico in un unico flusso continuo articolato in paragrafi fluidi con trattini '—', SENZA sottotitoli '##' e SENZA elenchi puntati]`;
+[Inserisci l'intero saggio dialogico continuo in paragrafi fluidi con trattini '—', denso di contenuto e privo di elenchi o sottotitoli]`;
 
-    const pass3Result = await callGeminiWithRetryAndFallback(masterPrompt, preferredModels, { temperature: 0.85 });
-    const generatedText = pass3Result.text ? pass3Result.text.trim() : "";
+    const pass6Result = await callGeminiWithRetryAndFallback(masterPrompt, preferredModels, { temperature: 0.8 });
+    const generatedText = pass6Result.text ? pass6Result.text.trim() : "";
 
     if (!generatedText) {
       console.warn("⚠️ Generazione finale vuota. Attivazione fallback generativo.");
@@ -389,6 +577,8 @@ DEVI RESTITUIRMI L'OUTPUT STRUTTURATO ESATTAMENTE CON QUESTI SEPARATORI:
       subtitle,
       content: articleContent,
       readingMinutes,
+      keyword: parsedInventBot.keyword,
+      inventBotIdeas: parsedInventBot.ideas,
     };
   } catch (error: any) {
     console.warn("⚠️ Avviso durante la generazione Gemini, attivazione fallback integrato:", error?.message || error);

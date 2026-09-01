@@ -1,3 +1,10 @@
+export interface InventBotIdea {
+  title: string;
+  category: string;
+  description: string;
+  impact: string;
+}
+
 export interface ArticleData {
   date: string;
   formattedDate: string;
@@ -7,4 +14,7 @@ export interface ArticleData {
   subtitle?: string;
   content: string;
   readingMinutes: number;
+  keyword?: string;
+  inventBotIdeas?: InventBotIdea[];
 }
+

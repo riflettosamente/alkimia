@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from "react";
 import Markdown from "react-markdown";
-import { Sparkles, Calendar, BookOpen } from "lucide-react";
+import { Sparkles, Calendar, BookOpen, Lightbulb, Zap, ArrowRight } from "lucide-react";
 import type { ArticleData } from "./types";
 
 export default function App() {
@@ -202,6 +202,76 @@ export default function App() {
                 {article.content}
               </Markdown>
             </div>
+
+            {/* InventBot: Idee Originali & Prototipi Applicativi */}
+            {article.inventBotIdeas && article.inventBotIdeas.length > 0 && (
+              <section
+                id="inventbot-section"
+                className="mt-14 sm:mt-16 pt-8 sm:pt-10 border-t border-[#e2d8c9]"
+              >
+                {/* InventBot Header */}
+                <div className="mb-6 sm:mb-8">
+                  <div className="flex items-center gap-2 text-xs font-sans-ui font-semibold tracking-wider uppercase text-[#8a6d4b] mb-2">
+                    <Zap className="w-4 h-4 text-[#a67c4e]" />
+                    <span>InventBot • Idee Originali & Applicazioni Pratiche</span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold font-editorial text-[#1e1b18] mb-2">
+                    Prototipi & Sviluppi Applicativi
+                  </h2>
+                  <p className="text-sm font-sans-ui text-[#6e6355]">
+                    Tre concetti operativi e modelli di innovazione generati a partire dal principio unificante emerso oggi.
+                  </p>
+
+                  {/* Synthetic Keyword Pill */}
+                  {article.keyword && (
+                    <div className="mt-4 inline-flex items-center gap-2 bg-[#f0e8dc] border border-[#dccfb9] rounded-md px-3.5 py-1.5 text-xs sm:text-sm font-sans-ui text-[#42392e]">
+                      <span className="text-[#8c7353] font-medium uppercase text-[11px] tracking-wider">
+                        Concetto Chiave Sintetico:
+                      </span>
+                      <strong className="font-semibold text-[#1e1a16] font-editorial text-sm sm:text-base">
+                        "{article.keyword}"
+                      </strong>
+                    </div>
+                  )}
+                </div>
+
+                {/* Ideas Grid / List */}
+                <div className="space-y-4 sm:space-y-5">
+                  {article.inventBotIdeas.map((idea, index) => (
+                    <div
+                      key={index}
+                      id={`inventbot-idea-${index + 1}`}
+                      className="bg-[#f7f3eb] border border-[#e6dcce] rounded-lg p-4 sm:p-5 text-[#2b2620] transition-colors hover:border-[#cfc0ab]"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                        <span className="text-[11px] font-sans-ui font-semibold uppercase tracking-wider bg-[#eae0d2] text-[#6b5843] px-2.5 py-0.5 rounded">
+                          {idea.category}
+                        </span>
+                        <span className="text-xs font-sans-ui font-medium text-[#8a7f70]">
+                          Prototipo #{index + 1}
+                        </span>
+                      </div>
+
+                      <h3 className="text-base sm:text-lg font-bold font-editorial text-[#191613] mb-2">
+                        {idea.title}
+                      </h3>
+
+                      <p className="text-sm sm:text-[15px] font-sans-ui text-[#443c32] leading-relaxed mb-3">
+                        {idea.description}
+                      </p>
+
+                      <div className="flex items-start gap-2 bg-[#ece4d6]/60 border-l-2 border-[#a67c4e] px-3 py-2 rounded-r text-xs sm:text-sm font-sans-ui text-[#423a30]">
+                        <ArrowRight className="w-3.5 h-3.5 text-[#8a6d4b] shrink-0 mt-0.5" />
+                        <p className="leading-snug">
+                          <strong className="font-semibold text-[#2b251e]">Impatto Tangibile: </strong>
+                          {idea.impact}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Colophon / Bottom Mark */}
             <footer
