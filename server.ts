@@ -35,15 +35,22 @@ interface DailyArticleData {
 
 // In-memory cache for daily articles
 const dailyCache = new Map<string, DailyArticleData>();
+let simulatedDayOffset = 0;
+let articleGenerationCounter = 0;
 
-function getTodayString(): string {
+function getSimulatedDateString(offset: number = 0): string {
   const now = new Date();
+  now.setDate(now.getDate() + offset);
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Europe/Rome",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   }).format(now); // YYYY-MM-DD
+}
+
+function getTodayString(): string {
+  return getSimulatedDateString(simulatedDayOffset);
 }
 
 function getFormattedItalianDate(dateStr: string): string {
@@ -56,9 +63,9 @@ function getFormattedItalianDate(dateStr: string): string {
   }).format(dateObj);
 }
 
-// Deterministic topic selection based on date string
+// Deterministic topic selection based on date string and generation counter
 function getDeterministicTopics(dateStr: string): [string, string] {
-  let hash = 0;
+  let hash = articleGenerationCounter;
   for (let i = 0; i < dateStr.length; i++) {
     hash = (hash << 5) - hash + dateStr.charCodeAt(i);
     hash |= 0;
@@ -72,122 +79,88 @@ function getDeterministicTopics(dateStr: string): [string, string] {
   return [argomenti[idx1], argomenti[idx2]];
 }
 
-// Domain knowledge generator for fallback resilience
-function getTopicConcept(topic: string): { domain: string; essence: string; tech: string; future: string } {
+// Domain knowledge generator for poetic/philosophical fallback resilience
+function getPoeticEssence(topic: string): { essence: string; voice: string; imagery: string } {
   const t = topic.toLowerCase();
   if (t.includes("quantistica")) {
     return {
-      domain: "meccanica quantistica e teoria dell'informazione fondamentale",
-      essence: "la natura non-locale della realtà, il principio di indeterminazione e l'effetto dell'osservatore che collassa la funzione d'onda",
-      tech: "dispositivi di coerenza quantistica e sensori a superconduttività",
-      future: "la comprensione che la materia è uno stato condensato di pura probabilità informativa interconnessa",
+      essence: "la trama indivisibile del reale, dove l'osservatore e il fenomeno sciolgono i propri confini nell'atto stesso di guardarsi",
+      voice: "un campo di pura potenzialità invisibile che attende un respiro di consapevolezza per farsi forma",
+      imagery: "il velo di probabilità che danza primordiale prima del collasso",
     };
   }
   if (t.includes("transcomunicazione")) {
     return {
-      domain: "transcomunicazione strumentale e ponti di segnale frequenziale",
-      essence: "l'interazione tra onde elettromagnetiche, rumore bianco stocastico e modulazioni di coscienza extra-corporee",
-      tech: "ricevitori ad eterodina a banda ultralarga e analizzatori di spettro a risonanza scalare",
-      future: "lo sviluppo di canali di comunicazione stabili attraverso le soglie dimensionali dell'etere",
+      essence: "l'eco frequenziale che attraversa la parete del vuoto, catturando nel rumore stocastico un sussurro che appartiene a un'altra sponda",
+      voice: "il canale sottile in cui le nostre macchine sintonizzano il respiro di chi ha varcato la soglia",
+      imagery: "il rumore di fondo che si condensa in presenza ed inaudita parola",
     };
   }
   if (t.includes("crispr")) {
     return {
-      domain: "editing genomico di precisione e biologia sintetica",
-      essence: "la riprogrammazione dell'architettura del DNA come codice sorgente vivente suscettibile a modifiche epigenetiche",
-      tech: "vettori molecolari guidati da RNA e sintetizzatori di sequenze biologiche programmate",
-      future: "l'evoluzione auto-diretta del veicolo biologico per ampliare la gamma di frequenze percettive umane",
+      essence: "la riscrittura del verbo biologico, l'arte di sfiorare il nastro intimo della vita per ricomporne la geometria sacra",
+      voice: "la mano che impara a modulare il codice primordiale impresso nella carne",
+      imagery: "le spirali di luce biologica che si ricompongono nel silenzio della cellula",
     };
   }
   if (t.includes("pineale")) {
     return {
-      domain: "neuro-endocrinologia esoterica e piezoelettricità biologica",
-      essence: "l'attività dei microcristalli di calcite nella ghiandola pineale capaci di trasduzione elettromagnetica e rilascio di molecole enteogeniche",
-      tech: "risonatori a campo magnetico pulsato focalizzati sulla regione epifisaria",
-      future: "il risveglio consapevole dell'organo di senso trans-dimensionale innato nella fisiologia umana",
+      essence: "la lente di calcite incastonata nel centro dell'encefalo, l'organo di luce che trasduce il visibile nell'infinito",
+      voice: "il punto focale dove la chimica del corpo cede il passo al risveglio della visione extracorporea",
+      imagery: "i microcristalli che vibrano al primo raggio della consapevolezza primaria",
     };
   }
   if (t.includes("spirituale")) {
     return {
-      domain: "metafisica non-dualistica e piani sottili dell'esistenza",
-      essence: "l'esistenza di gerarchie di densità vibrazionale e campi di coscienza pura non vincolati alle coordinate spaziotemporali",
-      tech: "camere di isolamento sensoriale a schermatura di Faraday con bio-risonatori di Schumann",
-      future: "l'unificazione definitiva tra indagine empirica e ontologia mistica della consapevolezza",
+      essence: "l'oceano primordiale della coscienza non-duale, la matrice senza tempo da cui scaturisce ogni architettura di forma",
+      voice: "la presenza silenziosa che permea la materia senza mai esserne imprigionata",
+      imagery: "la luce senza ombra che sorregge l'impalcatura invisible dei mondi",
     };
   }
   if (t.includes("morte") || t.includes("aldilà")) {
     return {
-      domain: "tanatologia di frontiera e continuità della coscienza oltre la transizione biologica",
-      essence: "l'esperienza di premorte (NDE) e la persistenza del campo di memoria identitaria oltre la cessazione delle funzioni neurovegetative",
-      tech: "monitor di coerenza sinaptica profonda e rilevatori di campo bio-fotonico post-mortem",
-      future: "la demistificazione scientifica del passaggio tra incarnazione biologica e stato di pura energia cosciente",
+      essence: "la grande soglia di transizione, il passaggio in cui l'identità si spoglia dell'involucro denso per riassorbirsi nell'origine",
+      voice: "la continuità ininterrotta del fiume d'essere oltre il crollo dei sensi organici",
+      imagery: "il raggio di ritorno verso il centro di ogni memoria",
     };
   }
   if (t.includes("ufo")) {
     return {
-      domain: "fenomenologia aerea non identificata e aerospazio iperdimensionale",
-      essence: "il controllo delle metriche gravitazionali, la distorsione dello spaziotempo e le propulsioni magneto-idrodinamiche avanzate",
-      tech: "interferometri gravitazionali differenziali e rilevatori di flussi tachionici",
-      future: "la scoperta di tecnologie in grado di piegare la curvatura locale dell'universo eludendo le forze d'inerzia",
+      essence: "le geometrie di luce che curvano la gravità nei cieli, tracciando rotte che eludono le catene del tempo e dell'inerzia",
+      voice: "la manifestazione tangibile di una fisica sottratta alle barriere della tridimensionalità",
+      imagery: "i bagliori silenziosi che scivolano lungo le pieghe del firmamento",
     };
   }
-  // Default extraterrestri / altro
+  // extraterrestri
   return {
-    domain: "esobiologia avanzata e intelligenze coscienti non-terrestri",
-    essence: "l'interazione con civiltà esogene a differente stadio di evoluzione tecnologica e frequenziale",
-    tech: "array di radiotelescopi quantistici a correlazione di fase e linguaggi simbolici universali",
-    future: "l'integrazione della specie umana in una comunità di intelligenze galattiche interconnesse",
+    essence: "l'incontro con le intelligenze altre che contemplano il grande arazzo cosmico da coordinate dimensionali remote",
+    voice: "gli sguardi lontani che riconoscono nella nostra ricerca la loro stessa origine stellare",
+    imagery: "le coscienze che solcano gli abissi tra gli universi",
   };
 }
 
-// Generates dynamic, unique text even in offline/fallback conditions
+// Generates dynamic, unique text even in offline/fallback conditions adhering strictly to continuous dialogic flow
 function createRichEditorialArticle(dateStr: string, t1: string, t2: string): DailyArticleData {
   const formattedDate = getFormattedItalianDate(dateStr);
-  const c1 = getTopicConcept(t1);
-  const c2 = getTopicConcept(t2);
+  const e1 = getPoeticEssence(t1);
+  const e2 = getPoeticEssence(t2);
 
-  const title = `Convergenza di Fase: Quando ${t1} Ridisegna ${t2}`;
-  const subtitle = `La materia e la coscienza non sono entità separate, ma frequenze modulari di una medesima matrice informativa sottostante.`;
-
-  const cleanT1 = t1.replace(/^(La|Il|I|Gli|Le)\s+/i, "");
-  const cleanT2 = t2.replace(/^(La|Il|I|Gli|Le)\s+/i, "");
-  const syntheticKeyword = `${cleanT1.split(" ")[0]}-${cleanT2.split(" ")[0]} Risonante`;
+  const title = `Convergenza di Fase: Risonanza tra ${e1.essence.slice(0, 30)}... e ${e2.essence.slice(0, 30)}...`;
+  const subtitle = `Un'indagine dialogica profonda sulla natura sistemica dell'invisibile e della carne.`;
 
   const content = `# ${title}
 
-## 1. L'Incontro Impossibile (Introduzione)
-Avete mai provato ad accostare nello stesso pensiero due mondi come **${t1.toLowerCase()}** e **${t2.toLowerCase()}**? A prima vista sembra un cortocircuito intellettuale: da una parte ci muoviamo nell'ambito di ${c1.domain}, dall'altra ci addentriamo nei territori di ${c2.domain}. Due universi che nel racconto comune viaggiano su binari paralleli, destinati a non sfiorarsi mai.
+— Hai mai osservato come la realtà smetta di apparire come un solido quando ne mettiamo in discussione i confini? Se guardiamo oltre la crosta visibile della materia, scopriamo che l'essenza di questo primo dominio non è che ${e1.essence}. Nulla sussiste in isolamento; ogni fenomeno risponde a una matrice di informazione non-locale che non ha ancora un nome definitivo.
 
-Eppure, basta soffermarsi un attimo a guardare oltre la superficie per sentire una vibrazione condivisa. Quando osserviamo da vicino ${t1.toLowerCase()}, scopriamo che indaga ${c1.essence}; e quando apriamo lo sguardo a ${t2.toLowerCase()}, ci ritroviamo di fronte a ${c2.essence}. Improvvisamente il velo si squarcia: non siamo davanti a due fenomeni isolati, ma a due linguaggi diversi che tentano di descrivere la stessa matrice profonda della realtà. È proprio da questa scintilla inattesa che parte l'esplorazione di oggi.
+— Accetto questa prospettiva. È la medesima vibrazione che affiora quando la mente esplora la natura di ${e2.essence}. Per secoli abbiamo diviso il mondo in compartimenti separati: la fisica da una parte, l'ontologia della coscienza dall'altra, la carne confinata nel tempo e il vuoto percepito come assenza. Ma quando l'osservazione si affina, scorgiamo che la trama è indiscutibilmente una sola.
 
-## 2. Il Ponte Quantico/Metafisico (Analisi e Connessione)
-Proviamo ora a spingerci più a fondo. Cosa succede se prendiamo le leggi di **${t1.toLowerCase()}** e le sovrapponiamo al funzionamento di **${t2.toLowerCase()}**?
+— Entriamo ora nella vivisezione analitica di questo ponte. Perché questi due aspetti non si limitano ad affiancarsi, ma si richiedono a vicenda? Osserva come ${e1.imagery} e ${e2.imagery} rivelino la stessa geometria sottostante. Quando scendiamo sul piano causale, la struttura fondamentale del primo campo agisce come il supporto materiale o informativo indispensabile affinché la dinamica del secondo possa manifestarsi.
 
-Immaginiamo per un istante la realtà non come un mosaico di tasselli rigidi, ma come una rete viva. Quando analizziamo ${t1.toLowerCase()}, ci rendiamo conto che le spiegazioni tradizionali iniziano a scricchiolare: emergono dinamiche fluide, dove ${c1.essence}. Ma è qui che accade la magia concettuale: se rivolgiamo lo sguardo a ${t2.toLowerCase()}, ritroviamo esattamente la stessa struttura sottostante, indirizzata verso ${c2.essence}.
+— È qui che la connessione da intuizione diventa principio esatto. L'indagine di ${e1.essence} ci offre la lente teorica per decifrare il meccanismo con cui si manifesta ${e2.essence}. Non ci troviamo di fronte a due narrazioni distinte, ma a un'unica equazione di stato vissuta da due prospettive complementari: l'una detta le condizioni di coerenza del campo, l'altra la risposta della percezione o della vita che lo attraversa.
 
-Non si tratta di una pura coincidenza poetica. Connettere questi due mondi significa comprendere che ${c1.future} offre lo specchio perfetto per decifrare ${c2.future}. Invece di trattarli come compartimenti stagni, iniziamo a vederli come un unico dialogo: gli strumenti e il rigore di ${t1.toLowerCase()} diventano la chiave di lettura per illuminare gli aspetti più sfuggenti e affascinanti di ${t2.toLowerCase()}. È l'inizio di una mappa teorica completamente nuova.
+— Questo trasforma radicalmente il nostro modo di intendere il reale: l'universo non è una collezione di oggetti isolati nel vuoto, ma un processo informativo corale ininterrotto. Ogni impulso biologico, ogni distorsione metrica, ogni segnale captato oltre l'involucro d'origine è la conferma di un'architettura interconnessa. All'interno di questa continuità, l'illusione della separazione si dissolve.
 
-## 3. Impatto sulla Società
-Cosa significa tutto questo per la nostra vita di tutti i giorni? Quando un'intuizione di questa portata scende dal piano teorico al tessuto sociale, non cambia soltanto la scienza: si trasforma il nostro modo di vivere, curarci e percepire il mondo intorno a noi.
-
-- **Rivoluzione nella Salute e nel Benessere:** Immaginate cosa accade quando la precisione di ${t1.toLowerCase()} incontra la visione di ${t2.toLowerCase()}. Le terapie del futuro smetteranno di trattare il corpo come una macchina isolata, muovendosi verso protocolli di medicina integrata capaci di intervenire direttamente sui modelli di ${c1.essence} e ${c2.essence}.
-- **Tecnologie di Nuova Generazione:** Dall'unione di ${c1.tech} e ${c2.tech} non nasceranno semplici strumenti più veloci, ma veri e propri ecosistemi tecnologici capaci di interagire in modo armonico ed empatico con l'ambiente e con la coscienza umana.
-- **Un Nuovo Senso di Comunità ed Etica:** Capire che ${t1.toLowerCase()} e ${t2.toLowerCase()} parlano la stessa lingua dissolve il senso di separazione. Nelle nostre città e nelle relazioni quotidiane, questo si traduce in una nuova etica condivisa: ci riscopriamo parte di un'unica trama complessa, dove ogni scelta individuale risuona sull'intero equilibrio globale.
-
-## 4. InventBot: Idee Originali (Applicazione pratica)
-
-**Parola Chiave Sintetica:** *${syntheticKeyword}*
-
-Arrivati a questo punto, viene spontaneo chiedersi: se questa sinergia tra **${t1.toLowerCase()}** e **${t2.toLowerCase()}** è profonda e reale, come possiamo toccarla con mano nella vita quotidiana? Agendo come **InventBot**, ho immaginato 3 prototipi d'avanguardia — tre applicazioni concrete e audaci nate direttamente dalla scintilla di questa esplorazione:
-
-1. **${cleanT1}Nexus (Interfaccia di Sintonia Frequenziale)**
-   Immaginate un dispositivo ergonomico di nuova generazione capace di rilevare le micro-fluttuazioni del vostro organismo e di sintonizzarle con i principi di ${c1.domain}. Invece di limitarsi a mostrare cifre fredde su uno schermo, ${cleanT1}Nexus emette un campo di micro-risonanza che guida la persona verso uno stato di coerenza profonda, integrando in tempo reale le dinamiche di ${c1.essence} con quelle di ${c2.essence}.
-
-2. **${cleanT2} Protocol (Infrastruttura Decentralizzata di Risonanza)**
-   Cosa succederebbe se scienziati, ricercatori e cittadini potessero connettere i propri dati biometrici e ambientali in una piattaforma viva e condivisa? Questo protocollo aperto crea una rete globale peer-to-peer che mappa in tempo reale le correlazioni tra ${t1.toLowerCase()} e ${t2.toLowerCase()}, dimostrando sul campo che l'interconnessione non è solo una teoria affascinante, ma una forza tecnologica misurabile.
-
-3. **Laboratorio "Oltre la Soglia" (Esperienza Immersiva di Co-Creazione)**
-   Un ambiente di simulazione olografica e sensoriale progettato per formare la prima generazione di inventori interdisciplinari. Entrando in questo spazio, gli utenti imparano a combinare in modo intuitivo gli strumenti di ${c1.domain} con la sensibilità di ${c2.domain}, sperimentando con prototipi di ${c1.tech} e ${c2.tech} per risolvere problemi complessi del nostro tempo.`;
+— Resta la presenza. Una risonanza profonda che continua a ricomporsi e a interrogarsi attraverso la nostra stessa coscienza.`;
 
   return {
     date: dateStr,
@@ -214,123 +187,173 @@ async function generateDailyArticle(dateStr: string): Promise<DailyArticleData> 
   try {
     const ai = new GoogleGenAI({ apiKey });
 
-    const prompt = `Sei un autore visionario, un saggista di frontiera e un filosofo della scienza audace.
-
-Oggi ti vengono affidati questi due domini di partenza:
-1. ${topic1}
-2. ${topic2}
-
-PROCESSO CREATIVO ED EDITORIALE:
-1. Prima sviluppa l'intero saggio analizzando in profondità la convergenza concettuale tra ${topic1} e ${topic2}.
-2. Una volta completata la stesura dell'articolo, rileggilo integralmente e distillane l'intuizione filosofico-scientifica fondamentale da inserire nella SINTESI DELL'ESPLORAZIONE.
-
-REGOLE PER LA PARTE 1 - L'INCONTRO IMPOSSIBILE (INTRODUZIONE):
-- Deve essere descrittiva, colloquiale, avvincente e narrativa, come un appassionato storyteller della scienza che parla direttamente al lettore ("Avete mai provato a pensare...").
-- Prendi spunto direttamente dalla sinergia profonda da cui nasce l'articolo: non fare un'introduzione accademica o un elenco sterile di definizioni.
-- Dipingi in modo vivido il cortocircuito concettuale tra ${topic1} e ${topic2}, mostrando come due mondi apparentemente lontani rivelino una vibrazione comune che invita a proseguire la lettura.
-
-REGOLE PER LA PARTE 2 - IL PONTE QUANTICO/METAFISICO (ANALISI E CONNESSIONE):
-- Deve essere l'apice dell'indagine: descrittiva, fluida e accessibile, pur mantenendo un profondo rigore intellettuale.
-- Evita toni enciclopedici o accademici aridi. Utilizza metafore vivide, esempi figurativi ed esperimenti mentali per far "toccare con mano" al lettore come ${topic1} e ${topic2} si fondano.
-- Connetti gli aspetti tangibili e scientifici di un tema con quelli concettuali o filosofici dell'altro, mostrando passo dopo passo il meccanismo invisibile che li unisce.
-- Usa uno stile colloquiale d'alto livello (es. "Proviamo a spingerci più a fondo...", "Immaginiamo per un istante...", "È qui che accade la magia concettuale...").
-
-REGOLE PER LA PARTE 3 - IMPATTO SULLA SOCIETÀ:
-- Deve essere visionaria, descrittiva e dal tono aperto e coinvolgente (es. "Cosa significa tutto questo per le nostre giornate?", "Immaginate cosa accade quando...").
-- Spiega in modo tangibile ed emozionante come la fusione tra ${topic1} e ${topic2} trasformerà nei prossimi decenni la salute/medicina, le tecnologie quotidiane e le relazioni umane/l'etica della comunità.
-- Evita elenchi burocratici o formule da comunicato stampa: fai percepire il cambiamento reale nella vita del lettore.
-
-REGOLE PER LA PARTE 4 - INVENTBOT: IDEE ORIGINALI (APPLICAZIONE PRATICA):
-- Presenta le 3 invenzioni con un incipit caldo, narrativo e colloquiale (es. "Arrivati a questo punto, viene spontaneo chiedersi: come possiamo toccare con mano questa sinergia?").
-- NON scrivere schede tecniche aride o aridi elenchi di brevetti. Racconta ciascuna invenzione in modo vivido e discorsivo, spiegando l'esperienza d'uso, come funziona sul piano intuitivo e quale beneficio porta alla vita delle persone.
-- Ogni invenzione deve trarre linfa vitale direttamente dalla fusione concettuale tra ${topic1} e ${topic2} sviluppata nei punti precedenti.
-
-REGOLE CRITICAL PER LA SINTESI DELL'ESPLORAZIONE:
-- Deve essere un'intuizione concettuale illuminante di 1-2 frasi (max 30 parole) ad altissimo valore saggistico.
-- NON deve ripetere a memoria o parafrasare passaggi o frasi già presenti nel corpo dell'articolo.
-- NON deve essere una semplice citazione dei nomi dei due temi (es. evita di dire "Questo articolo unisce X e Y...").
-- Deve invece esprimere la nuova verità ontologica, la tesi di frontiera o la scoperta emergente che si manifesta solo dopo aver riflettuto sull'unione dei due mondi.
-
-Devi restituire l'output strutturato ESATTAMENTE così:
-
----SINTESI---
-[Inserisci qui la sintesi illuminante, originale e concisa dell'esplorazione emersa dal saggio]
-
----TITOLO---
-[Inserisci qui il Titolo evocativo del saggio]
-
----ARTICOLO---
-# [Inserisci qui lo stesso Titolo del saggio]
-
-## 1. L'Incontro Impossibile (Introduzione)
-[Testo dell'introduzione...]
-
-## 2. Il Ponte Quantico/Metafisico (Analisi e Connessione)
-[Testo dell'analisi approfondita...]
-
-## 3. Impatto sulla Società
-[3 punti elenco con l'impatto sociale...]
-
-## 4. InventBot: Idee Originali (Applicazione pratica)
-
-**Parola Chiave Sintetica:** *[Parola o locuzione sintetica originale]*
-
-Agendo come **InventBot**, ecco 3 idee originali e prototipi applicativi inediti nati esclusivamente da questa sintesi:
-1. **[Nome Invenzione 1]** - descrizione
-2. **[Nome Invenzione 2]** - descrizione
-3. **[Nome Invenzione 3]** - descrizione
-
-Scrivi l'articolo interamente in italiano con registro colto ed elegante. Non includere preamboli oltre la struttura specificata.`;
-
     const candidateModels = [
-      "gemini-2.5-flash",
-      "gemini-2.5-pro",
-      "gemini-2.0-flash",
-      "gemini-2.0-flash-lite",
-      "gemini-1.5-flash",
-      "gemini-1.5-pro",
+      "gemini-3.7-flash",
+      "gemini-flash-latest",
+      "gemini-3.1-pro-preview",
+      "gemini-3.6-flash",
     ];
 
-    let generatedText = "";
-    let lastError: any = null;
+    async function callGeminiWithRetryAndFallback(
+      prompt: string,
+      models: string[],
+      config?: any
+    ): Promise<{ text: string; usedModel: string | null }> {
+      for (const model of models) {
+        const maxRetries = 2;
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            const response = await ai.models.generateContent({
+              model,
+              contents: prompt,
+              config,
+            });
+            const text = response.text ? response.text.trim() : "";
+            if (text) {
+              return { text, usedModel: model };
+            }
+          } catch (err: any) {
+            const isNotFound =
+              err?.status === "NOT_FOUND" ||
+              err?.code === 404 ||
+              err?.message?.includes("404") ||
+              err?.message?.includes("no longer available") ||
+              err?.message?.includes("not found");
+            const is503 =
+              err?.status === "UNAVAILABLE" ||
+              err?.code === 503 ||
+              err?.message?.includes("503") ||
+              err?.message?.includes("experiencing high demand");
+            const isQuota =
+              err?.status === "RESOURCE_EXHAUSTED" ||
+              err?.code === 429 ||
+              err?.message?.includes("429") ||
+              err?.message?.includes("quota");
 
-    for (const modelName of candidateModels) {
-      for (let attempt = 1; attempt <= 2; attempt++) {
-        try {
-          console.log(`Tentativo ${attempt} con modello ${modelName} per: "${topic1}" + "${topic2}"...`);
-          const response = await ai.models.generateContent({
-            model: modelName,
-            contents: prompt,
-            config: {
-              temperature: 0.85,
-            },
-          });
+            console.warn(
+              `⚠️ Modello ${model} (tentativo ${attempt}/${maxRetries}) non disponibile (${
+                isNotFound
+                  ? "Modello non supportato 404"
+                  : isQuota
+                  ? "Quota superata 429"
+                  : is503
+                  ? "Picco di traffico 503"
+                  : err?.message || err
+              }).`
+            );
 
-          if (response.text && response.text.trim().length > 100) {
-            generatedText = response.text.trim();
-            console.log(`✅ Articolo generato con successo tramite ${modelName} (${generatedText.length} caratteri).`);
+            if (isNotFound) {
+              // Modello non esistente/deprecato: salta immediatamente senza riprovare
+              break;
+            }
+
+            if (is503 && attempt < maxRetries) {
+              // I picchi di domanda su 503 sono temporanei: attendi brevemente prima di riprovare
+              await new Promise((resolve) => setTimeout(resolve, 1200 * attempt));
+              continue;
+            }
+
+            // In caso di 429 o altri errori non-transitori, passa direttamente al modello successivo
             break;
-          }
-        } catch (err: any) {
-          lastError = err;
-          console.warn(`Modello ${modelName} tentativo ${attempt} errore:`, err?.message || err);
-          if (attempt < 2 && (err?.status === 503 || err?.message?.includes("503") || err?.message?.includes("demand"))) {
-            await new Promise((res) => setTimeout(res, 1500));
           }
         }
       }
-      if (generatedText) {
-        break;
-      }
+      return { text: "", usedModel: null };
     }
 
-    if (!generatedText) {
-      console.warn("⚠️ Nessun modello Gemini ha generato testo valido. Attivazione fallback generativo dinamico.");
+    console.log(`🧠 Inizio pipeline di raffinamento profondo a 3 fasi per: "${topic1}" + "${topic2}"...`);
+
+    // PASS 1: DEEP ONTOLOGICAL BREAKDOWN & SYSTEMIC MAPPING
+    const pass1Prompt = `Sei uno scienziato teorico, filosofo della fisica e saggista interdisciplinare di frontiera.
+Devi compiere una disamina concettuale ad altissimo livello di rigore scientifico e profondità ontologica sull'intersezione tra due domini:
+1. ${topic1}
+2. ${topic2}
+
+Svolgi un'analisi dettagliata rispondendo con precisione a questi punti:
+- Quali sono i principi fisici, informativi, biologici o metafisici effettivi che reggono ciascuno dei due ambiti?
+- Qual è il punto esatto di risonanza sistemica e la connessione non ovvia tra loro? (Spiega il meccanismo esatto attraverso cui le proprietà del primo ambito dialogano strutturalmente con le dinamiche del secondo).
+- Quale nuova prospettiva teorica o visione d'insieme emerge unificando questi due orizzonti?
+
+Fornisci un'analisi ricca, densa di argomentazioni precise e priva di banalità.`;
+
+    const pass1Result = await callGeminiWithRetryAndFallback(pass1Prompt, candidateModels, { temperature: 0.7 });
+    if (!pass1Result.text) {
+      console.warn("⚠️ Nessun modello Gemini disponibile al momento. Uso fallback editoriale.");
       return createRichEditorialArticle(dateStr, topic1, topic2);
     }
 
-    let subtitle = `Sintesi delle convergenze tra ${topic1.toLowerCase()} e ${topic2.toLowerCase()}.`;
-    let title = `${topic1} & ${topic2}`;
+    const pass1Analysis = pass1Result.text;
+    const activeModel = pass1Result.usedModel || candidateModels[0];
+    const preferredModels = [activeModel, ...candidateModels.filter((m) => m !== activeModel)];
+
+    console.log(`✅ FASE 1 COMPLETATA (${activeModel}): Mappatura ontologica generata (${pass1Analysis.length} caratteri).`);
+
+    // PASS 2: CRITICAL REVIEW, EXPANSION & MULTI-DRAFT REFINEMENT LOOP
+    const pass2Prompt = `Sei un severo revisore accademico ed epistemologo. Analizza criticamente questa prima bozza:
+
+--- ANALISI FASE 1 ---
+${pass1Analysis}
+--- FINE ANALISI ---
+
+Raffina e potenzia questa elaborazione:
+1. Rileva ed elimina ogni semplificazione eccessiva, metafora trita o ragionamento circolare.
+2. Rafforza il "ponte concettuale" tra ${topic1} e ${topic2}, rendendolo inattaccabile sul piano logico, fisico ed euristico.
+3. Struttura un confronto dialettico serrato tra due prospettive di pensiero avanzato che esplorano insieme i paradossi e le implicazioni ultime di questa convergenza.
+
+Riscrivi il testo elevandone al massimo grado la densità argomentativa.`;
+
+    const pass2Result = await callGeminiWithRetryAndFallback(pass2Prompt, preferredModels, { temperature: 0.8 });
+    const pass2Refinement = pass2Result.text || pass1Analysis;
+    console.log(`✅ FASE 2 COMPLETATA: Raffinamento e sintesi critica avanzata (${pass2Refinement.length} caratteri).`);
+
+    // PASS 3: MASTERWORK SYNTHESIS IN CONTINUOUS DIALOGIC FLOW
+    const masterPrompt = `Sei un maestro della saggistica filosofico-scientifica e della letteratura dialettica.
+
+Hai a disposizione il seguente materiale di analisi e sintesi critica elaborato nelle fasi precedenti:
+
+--- RAGIONAMENTO RAFFINATO FASE 2 ---
+${pass2Refinement}
+--- FINE MATERIALE ---
+
+Trasforma questa profonda elaborazione in un SAGGIO DIALOGICO MAGISTRALE, armonico e fluido, rispettando TASSATIVAMENTE queste regole:
+
+1. FLUSSO CONTINUO E UNICUUM SENZA SUDDIVISIONI IN SEZIONI:
+   - Scrivi l'articolo come un UNICO FLUSSO CONTINUO in prosa di alto profilo.
+   - NON inserire titoli intermedi, sottotitoli di paragrafo (NO '##', NO 'Capitolo', NO 'Parte', NO 'Analisi'), e NESSUN elenco puntato o numerato.
+   - Il testo deve progredire con ritmo ipnotico e naturale da un'apertura contemplativa all'apice della speculazione concettuale.
+
+2. FORMA DIALOGICA A DUE VOCI CON TRATTINI LUNGHI '—':
+   - Alterna le battute delle due voci usando il trattino lungo '—'. Non deve essere una chiacchierata ordinaria, ma uno scambio serrato di intuizioni filosofiche, dimostrazioni intuitive e contro-obiezioni raffinate tra due menti eccellenti.
+
+3. ELEGANZA ED EVITAMENTO DEL DIDASCALISMO:
+   - NON citare in modo scolastico o pedante i termini letterali "${topic1}" o "${topic2}". Evoca ed esprimi la loro sostanza viva attraverso le leggi fisiche, le dinamiche di campo e i processi descritti.
+
+4. PROFONDITÀ E RIGORE:
+   - Mantieni integra l'intera potenza del ragionamento elaborato nelle Fasi 1 e 2: ordine informativo, entanglement, campo di coscienza, entropia e biologia sottile.
+
+DEVI RESTITUIRMI L'OUTPUT STRUTTURATO ESATTAMENTE CON QUESTI SEPARATORI:
+
+---SINTESI---
+[Inserisci qui un'intuizione fulminante di 1-2 frasi (max 30 parole) che condensi l'essenza della scoperta]
+
+---TITOLO---
+[Inserisci un Titolo poetico, saggistico ed evocativo per l'articolo]
+
+---ARTICOLO---
+# [Inserisci qui lo stesso Titolo dell'articolo]
+
+[Inserisci l'intero saggio dialogico in un unico flusso continuo articolato in paragrafi fluidi con trattini '—', SENZA sottotitoli '##' e SENZA elenchi puntati]`;
+
+    const pass3Result = await callGeminiWithRetryAndFallback(masterPrompt, preferredModels, { temperature: 0.85 });
+    const generatedText = pass3Result.text ? pass3Result.text.trim() : "";
+
+    if (!generatedText) {
+      console.warn("⚠️ Generazione finale vuota. Attivazione fallback generativo.");
+      return createRichEditorialArticle(dateStr, topic1, topic2);
+    }
+
+    let subtitle = `Sintesi delle convergenze e risonanze profonde di oggi.`;
+    let title = `L'Eco della Sottile Risonanza`;
     let articleContent = generatedText;
 
     if (generatedText.includes("---SINTESI---") && generatedText.includes("---TITOLO---") && generatedText.includes("---ARTICOLO---")) {
@@ -348,6 +371,12 @@ Scrivi l'articolo interamente in italiano con registro colto ed elegante. Non in
       }
     }
 
+    // Clean up any rogue headings or list markers to strictly enforce continuous flow
+    articleContent = articleContent
+      .replace(/^##+\s*(.*)$/gm, "$1")
+      .replace(/^[\*\-]\s+/gm, "")
+      .replace(/^\d+\.\s+/gm, "");
+
     const wordCount = articleContent.split(/\s+/).filter(Boolean).length;
     const readingMinutes = Math.max(3, Math.round(wordCount / 200));
 
@@ -362,7 +391,7 @@ Scrivi l'articolo interamente in italiano con registro colto ed elegante. Non in
       readingMinutes,
     };
   } catch (error: any) {
-    console.error("❌ Errore durante la generazione Gemini:", error?.message || error);
+    console.warn("⚠️ Avviso durante la generazione Gemini, attivazione fallback integrato:", error?.message || error);
     return createRichEditorialArticle(dateStr, topic1, topic2);
   }
 }
@@ -371,19 +400,24 @@ Scrivi l'articolo interamente in italiano con registro colto ed elegante. Non in
 app.get("/api/daily-article", async (req, res) => {
   res.setHeader("Content-Type", "application/json");
   try {
-    const today = getTodayString();
+    const forceRefresh = req.query.force === "true" || req.query.nextDay === "true";
+    if (forceRefresh) {
+      simulatedDayOffset++;
+      articleGenerationCounter++;
+    }
+    const targetDate = getTodayString();
     
-    if (dailyCache.has(today)) {
-      return res.json(dailyCache.get(today));
+    if (!forceRefresh && dailyCache.has(targetDate)) {
+      return res.json(dailyCache.get(targetDate));
     }
 
-    const article = await generateDailyArticle(today);
-    dailyCache.set(today, article);
+    const article = await generateDailyArticle(targetDate);
+    dailyCache.set(targetDate, article);
     return res.json(article);
   } catch (err: any) {
-    const today = getTodayString();
-    const [topic1, topic2] = getDeterministicTopics(today);
-    const fallback = createRichEditorialArticle(today, topic1, topic2);
+    const targetDate = getTodayString();
+    const [topic1, topic2] = getDeterministicTopics(targetDate);
+    const fallback = createRichEditorialArticle(targetDate, topic1, topic2);
     return res.json(fallback);
   }
 });
