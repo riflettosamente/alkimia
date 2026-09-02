@@ -122,29 +122,9 @@ export default function App() {
                 id="article-topics-banner"
                 className="bg-[#f4efe6] rounded-md p-4 sm:p-5 text-xs sm:text-sm font-sans-ui text-[#544b3f] space-y-2 border border-[#e8dfd2]"
               >
-                <div className="flex items-center justify-between text-[#7d6c57] font-semibold text-xs uppercase tracking-wider">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[#8a7a65] shrink-0" />
-                    <span>Esplorazione del giorno</span>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      setArticle(null);
-                      setLoading(true);
-                      try {
-                        const res = await fetch(`/api/daily-article?force=true&nextDay=true&t=${Date.now()}`);
-                        const data = await res.json();
-                        setArticle(data);
-                      } catch (err) {
-                        console.error(err);
-                      } finally {
-                        setLoading(false);
-                      }
-                    }}
-                    className="text-[11px] font-sans-ui text-[#8a7a65] hover:text-[#2c251e] underline underline-offset-2 transition-colors cursor-pointer"
-                  >
-                    Rigenera Articolo
-                  </button>
+                <div className="flex items-center gap-2 text-[#7d6c57] font-semibold text-xs uppercase tracking-wider">
+                  <Sparkles className="w-4 h-4 text-[#8a7a65] shrink-0" />
+                  <span>Esplorazione del giorno</span>
                 </div>
                 <p className="text-base sm:text-lg font-editorial italic text-[#2c251e] leading-relaxed font-medium">
                   "{article.subtitle || `Sintesi delle convergenze concettuali emorse dall'indagine di oggi.`}"
