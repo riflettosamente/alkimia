@@ -322,19 +322,66 @@ async function callCloudflareWorkersAI(
   const configuredModel =
     modelOverride ||
     process.env.CLOUDFLARE_AI_MODEL?.trim().replace(/^["']|["']$/g, "") ||
-    "@cf/meta/llama-3.3-70b-instruct";
+    "@cf/meta/llama-3.1-8b-instruct";
 
   const modelsToTry = Array.from(
     new Set([
       configuredModel,
-      "@cf/meta/llama-3.3-70b-instruct",
       "@cf/meta/llama-3.1-8b-instruct",
+      "@cf/meta/llama-3.1-70b-instruct",
       "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+      "@cf/meta/llama-3-8b-instruct",
     ])
   );
 
   for (const model of modelsToTry) {
-    // 1. First, try Cloudflare OpenAI-compatible endpoint (prevents URI routing issues with model names)
+    // 1. Direct Cloudflare Workers AI run endpoint (verified fast and active)
+    try {
+      const runUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`;
+      const response = await fetch(runUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "system",
+              content:
+                "Sei un pensatore visionario, epistemologo, filosofo della scienza e teorico interdisciplinare di altissimo rigore intellettuale.",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          max_tokens: 3000,
+        }),
+      });
+
+      if (response.ok) {
+        const data = (await response.json()) as any;
+        let text = "";
+        if (typeof data?.result?.response === "string") {
+          text = data.result.response;
+        } else if (typeof data?.result === "string") {
+          text = data.result;
+        } else if (typeof data?.result?.output_text === "string") {
+          text = data.result.output_text;
+        } else if (Array.isArray(data?.result) && data.result[0]?.response) {
+          text = data.result[0].response;
+        }
+
+        if (text && text.trim().length > 0) {
+          return { text: text.trim(), usedModel: model };
+        }
+      }
+    } catch (err: any) {
+      // Continue to OpenAI-compatible endpoint fallback
+    }
+
+    // 2. Fallback to Cloudflare OpenAI-compatible endpoint
     try {
       const openAiUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1/chat/completions`;
       const openAiResponse = await fetch(openAiUrl, {
@@ -366,68 +413,9 @@ async function callCloudflareWorkersAI(
         if (text && typeof text === "string" && text.trim().length > 0) {
           return { text: text.trim(), usedModel: model };
         }
-      } else {
-        const errorText = await openAiResponse.text();
-        console.warn(
-          `⚠️ Cloudflare AI (chat/completions) [${model}] HTTP ${openAiResponse.status}:`,
-          errorText.slice(0, 160)
-        );
       }
     } catch (err: any) {
-      console.warn(`⚠️ Eccezione Cloudflare chat/completions [${model}]:`, err?.message || err);
-    }
-
-    // 2. Second, fallback to Cloudflare direct run endpoint
-    try {
-      const runUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`;
-      const response = await fetch(runUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: [
-            {
-              role: "system",
-              content:
-                "Sei un pensatore visionario, epistemologo, filosofo della scienza e teorico interdisciplinare di altissimo rigore intellettuale.",
-            },
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-          max_tokens: 3000,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.warn(
-          `⚠️ Cloudflare Workers AI (ai/run) [${model}] status ${response.status}:`,
-          errorText.slice(0, 160)
-        );
-        continue;
-      }
-
-      const data = (await response.json()) as any;
-      let text = "";
-      if (typeof data?.result?.response === "string") {
-        text = data.result.response;
-      } else if (typeof data?.result === "string") {
-        text = data.result;
-      } else if (typeof data?.result?.output_text === "string") {
-        text = data.result.output_text;
-      } else if (Array.isArray(data?.result) && data.result[0]?.response) {
-        text = data.result[0].response;
-      }
-
-      if (text && text.trim().length > 0) {
-        return { text: text.trim(), usedModel: model };
-      }
-    } catch (err: any) {
-      console.warn(`⚠️ Eccezione chiamata Cloudflare Workers AI [${model}]:`, err?.message || err);
+      // continue next model
     }
   }
 
