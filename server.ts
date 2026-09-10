@@ -280,94 +280,240 @@ function createRichEditorialArticle(dateStr: string, t1: string, t2: string): Da
   };
 }
 
+// Cloudflare credential sanitizers to prevent malformed URI or routing errors
+function sanitizeCloudflareAccountId(val?: string): string {
+  if (!val) return "";
+  let clean = val.trim();
+  // Strip quotes or angle brackets: e.g. "<id>", '"id"', "'id'"
+  clean = clean.replace(/^["'`<]+|["'`>]+$/g, "").trim();
+  // Extract 32-character hex ID if user pasted full dashboard URL
+  const matchDash = clean.match(/dash\.cloudflare\.com\/([a-fA-F0-9]{32})/);
+  if (matchDash) {
+    return matchDash[1];
+  }
+  // Strip trailing slashes or subpaths
+  clean = clean.replace(/\/.*$/, "").trim();
+  return clean;
+}
+
+function sanitizeCloudflareToken(val?: string): string {
+  if (!val) return "";
+  let clean = val.trim();
+  clean = clean.replace(/^["'`<]+|["'`>]+$/g, "").trim();
+  clean = clean.replace(/^Bearer\s+/i, "").trim();
+  return clean;
+}
+
+// Cloudflare Workers AI caller with dual endpoint routing and sanitization
+async function callCloudflareWorkersAI(
+  prompt: string,
+  modelOverride?: string
+): Promise<{ text: string; usedModel: string | null }> {
+  const rawAccountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const rawApiToken = process.env.CLOUDFLARE_API_TOKEN;
+
+  const accountId = sanitizeCloudflareAccountId(rawAccountId);
+  const apiToken = sanitizeCloudflareToken(rawApiToken);
+
+  if (!accountId || !apiToken) {
+    return { text: "", usedModel: null };
+  }
+
+  const configuredModel =
+    modelOverride ||
+    process.env.CLOUDFLARE_AI_MODEL?.trim().replace(/^["']|["']$/g, "") ||
+    "@cf/meta/llama-3.3-70b-instruct";
+
+  const modelsToTry = Array.from(
+    new Set([
+      configuredModel,
+      "@cf/meta/llama-3.3-70b-instruct",
+      "@cf/meta/llama-3.1-8b-instruct",
+      "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b",
+    ])
+  );
+
+  for (const model of modelsToTry) {
+    // 1. First, try Cloudflare OpenAI-compatible endpoint (prevents URI routing issues with model names)
+    try {
+      const openAiUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1/chat/completions`;
+      const openAiResponse = await fetch(openAiUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: "system",
+              content:
+                "Sei un pensatore visionario, epistemologo, filosofo della scienza e teorico interdisciplinare di altissimo rigore intellettuale.",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          max_tokens: 3000,
+        }),
+      });
+
+      if (openAiResponse.ok) {
+        const openAiData = (await openAiResponse.json()) as any;
+        const text = openAiData?.choices?.[0]?.message?.content;
+        if (text && typeof text === "string" && text.trim().length > 0) {
+          return { text: text.trim(), usedModel: model };
+        }
+      } else {
+        const errorText = await openAiResponse.text();
+        console.warn(
+          `⚠️ Cloudflare AI (chat/completions) [${model}] HTTP ${openAiResponse.status}:`,
+          errorText.slice(0, 160)
+        );
+      }
+    } catch (err: any) {
+      console.warn(`⚠️ Eccezione Cloudflare chat/completions [${model}]:`, err?.message || err);
+    }
+
+    // 2. Second, fallback to Cloudflare direct run endpoint
+    try {
+      const runUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`;
+      const response = await fetch(runUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "system",
+              content:
+                "Sei un pensatore visionario, epistemologo, filosofo della scienza e teorico interdisciplinare di altissimo rigore intellettuale.",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          max_tokens: 3000,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.warn(
+          `⚠️ Cloudflare Workers AI (ai/run) [${model}] status ${response.status}:`,
+          errorText.slice(0, 160)
+        );
+        continue;
+      }
+
+      const data = (await response.json()) as any;
+      let text = "";
+      if (typeof data?.result?.response === "string") {
+        text = data.result.response;
+      } else if (typeof data?.result === "string") {
+        text = data.result;
+      } else if (typeof data?.result?.output_text === "string") {
+        text = data.result.output_text;
+      } else if (Array.isArray(data?.result) && data.result[0]?.response) {
+        text = data.result[0].response;
+      }
+
+      if (text && text.trim().length > 0) {
+        return { text: text.trim(), usedModel: model };
+      }
+    } catch (err: any) {
+      console.warn(`⚠️ Eccezione chiamata Cloudflare Workers AI [${model}]:`, err?.message || err);
+    }
+  }
+
+  return { text: "", usedModel: null };
+}
+
 async function generateDailyArticle(dateStr: string): Promise<DailyArticleData> {
   const [topic1, topic2] = getDeterministicTopics(dateStr);
   const formattedDate = getFormattedItalianDate(dateStr);
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    console.warn("⚠️ GEMINI_API_KEY non trovata nelle variabili d'ambiente. Uso il generatore editoriale strutturato.");
+  const hasCloudflare = Boolean(process.env.CLOUDFLARE_API_TOKEN && process.env.CLOUDFLARE_ACCOUNT_ID);
+  const hasGemini = Boolean(process.env.GEMINI_API_KEY);
+
+  if (!hasCloudflare && !hasGemini) {
+    console.warn(
+      "⚠️ Nessuna credenziale AI configurata (CLOUDFLARE_API_TOKEN o GEMINI_API_KEY). Uso il generatore editoriale strutturato."
+    );
     return createRichEditorialArticle(dateStr, topic1, topic2);
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
+    let geminiClient: GoogleGenAI | null = null;
+    if (hasGemini && process.env.GEMINI_API_KEY) {
+      geminiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    }
 
-    const candidateModels = [
+    const candidateGeminiModels = [
       "gemini-3.7-flash",
       "gemini-flash-latest",
       "gemini-3.1-pro-preview",
       "gemini-3.6-flash",
     ];
 
-    async function callGeminiWithRetryAndFallback(
+    async function callGemini(
       prompt: string,
-      models: string[],
       config?: any
     ): Promise<{ text: string; usedModel: string | null }> {
-      for (const model of models) {
-        const maxRetries = 2;
-        for (let attempt = 1; attempt <= maxRetries; attempt++) {
-          try {
-            const response = await ai.models.generateContent({
-              model,
-              contents: prompt,
-              config,
-            });
-            const text = response.text ? response.text.trim() : "";
-            if (text) {
-              return { text, usedModel: model };
-            }
-          } catch (err: any) {
-            const isNotFound =
-              err?.status === "NOT_FOUND" ||
-              err?.code === 404 ||
-              err?.message?.includes("404") ||
-              err?.message?.includes("no longer available") ||
-              err?.message?.includes("not found");
-            const is503 =
-              err?.status === "UNAVAILABLE" ||
-              err?.code === 503 ||
-              err?.message?.includes("503") ||
-              err?.message?.includes("experiencing high demand");
-            const isQuota =
-              err?.status === "RESOURCE_EXHAUSTED" ||
-              err?.code === 429 ||
-              err?.message?.includes("429") ||
-              err?.message?.includes("quota");
-
-            console.warn(
-              `⚠️ Modello ${model} (tentativo ${attempt}/${maxRetries}) non disponibile (${
-                isNotFound
-                  ? "Modello non supportato 404"
-                  : isQuota
-                  ? "Quota superata 429"
-                  : is503
-                  ? "Picco di traffico 503"
-                  : err?.message || err
-              }).`
-            );
-
-            if (isNotFound) {
-              // Modello non esistente/deprecato: salta immediatamente senza riprovare
-              break;
-            }
-
-            if (is503 && attempt < maxRetries) {
-              // I picchi di domanda su 503 sono temporanei: attendi brevemente prima di riprovare
-              await new Promise((resolve) => setTimeout(resolve, 1200 * attempt));
-              continue;
-            }
-
-            // In caso di 429 o altri errori non-transitori, passa direttamente al modello successivo
-            break;
+      if (!geminiClient) return { text: "", usedModel: null };
+      for (const model of candidateGeminiModels) {
+        try {
+          const response = await geminiClient.models.generateContent({
+            model,
+            contents: prompt,
+            config,
+          });
+          const text = response.text ? response.text.trim() : "";
+          if (text) {
+            return { text, usedModel: model };
           }
+        } catch (err: any) {
+          // try next model
         }
       }
       return { text: "", usedModel: null };
     }
 
-    console.log(`🧠 Inizio pipeline di ragionamento dialettico ricorsivo per: "${topic1}" + "${topic2}"...`);
+    // Unified AI caller: prioritizes Cloudflare Workers AI when configured!
+    async function executeAIPrompt(
+      prompt: string,
+      config?: { temperature?: number }
+    ): Promise<{ text: string; provider: string; model: string | null }> {
+      // 1. Cloudflare Workers AI priority
+      if (hasCloudflare) {
+        const cfRes = await callCloudflareWorkersAI(prompt);
+        if (cfRes.text) {
+          return { text: cfRes.text, provider: "Cloudflare Workers AI", model: cfRes.usedModel };
+        }
+        console.warn("⚠️ Cloudflare Workers AI non ha risposto o modello occupato, tentativo fallback secondario.");
+      }
+
+      // 2. Gemini secondary fallback
+      if (hasGemini) {
+        const gemRes = await callGemini(prompt, config);
+        if (gemRes.text) {
+          return { text: gemRes.text, provider: "Gemini", model: gemRes.usedModel };
+        }
+      }
+
+      return { text: "", provider: "None", model: null };
+    }
+
+    console.log(
+      `🧠 Inizio pipeline di ragionamento dialettico per: "${topic1}" + "${topic2}" (Cloudflare primario: ${
+        hasCloudflare ? "Sì" : "No"
+      })...`
+    );
 
     // CICLO 1: Tesi Ontologica e Decomposizione Meccanica dei Due Domini
     const pass1Prompt = `Sei uno scienziato teorico, fisico quantistico e filosofo della scienza.
@@ -380,16 +526,16 @@ OBIETTIVO DEL RAGIONAMENTO (FASE 1 - DECOMPOSIZIONE ONTOLOGICA):
 - Fai lo stesso per "${topic2}".
 - Evita categoricamente frasi generiche, vaghezze new age o luoghi comuni. Cita e analizza i veri meccanismi causali, le dinamiche di sistema e le strutture profonde.`;
 
-    const pass1Result = await callGeminiWithRetryAndFallback(pass1Prompt, candidateModels, { temperature: 0.7 });
+    const pass1Result = await executeAIPrompt(pass1Prompt, { temperature: 0.7 });
     if (!pass1Result.text) {
-      console.warn("⚠️ Nessun modello Gemini disponibile al momento. Uso fallback editoriale arricchito.");
+      console.warn("⚠️ Nessun motore AI ha restituito risposta. Uso fallback editoriale arricchito.");
       return createRichEditorialArticle(dateStr, topic1, topic2);
     }
 
     const pass1Analysis = pass1Result.text;
-    const activeModel = pass1Result.usedModel || candidateModels[0];
-    const preferredModels = [activeModel, ...candidateModels.filter((m) => m !== activeModel)];
-    console.log(`✅ CICLO 1 COMPLETATO (${activeModel}): Decomposizione ontologica (${pass1Analysis.length} caratteri).`);
+    console.log(
+      `✅ CICLO 1 COMPLETATO [${pass1Result.provider} - ${pass1Result.model}]: Decomposizione ontologica (${pass1Analysis.length} caratteri).`
+    );
 
     // CICLO 2: Antitesi, Stress-Test Critico e Ricerca del Ponte Isomorfico
     const pass2Prompt = `Sei un severo epistemologo e revisore scientifico. Hai davanti questa prima decomposizione concettuale:
@@ -403,9 +549,11 @@ OBIETTIVO DEL RAGIONAMENTO (FASE 2 - CRITICA E COSTRUZIONE DEL PONTE SISTEMICO):
 2. MECCANISMO DEL PONTE: Qual è l'esatto isomorfismo strutturale (termodinamico, quantistico, cibernetico o informativo) che collega realmente la dinamica di "${topic1}" a quella di "${topic2}"?
 3. Sviluppa un confronto dialettico serrato tra due tesi contrastanti che non si accontentano di metafore, ma dimostrano passo dopo passo la necessità logica e ontologica di questo legame.`;
 
-    const pass2Result = await callGeminiWithRetryAndFallback(pass2Prompt, preferredModels, { temperature: 0.75 });
+    const pass2Result = await executeAIPrompt(pass2Prompt, { temperature: 0.75 });
     const pass2Refinement = pass2Result.text || pass1Analysis;
-    console.log(`✅ CICLO 2 COMPLETATO: Stress-test critico e ponte isomorfico (${pass2Refinement.length} caratteri).`);
+    console.log(
+      `✅ CICLO 2 COMPLETATO [${pass2Result.provider}]: Stress-test critico e ponte isomorfico (${pass2Refinement.length} caratteri).`
+    );
 
     // CICLO 3: Raffinamento e Sintesi Dialettica Progressiva
     const pass3Prompt = `Sei un filosofo teoretico e saggista accademico.
@@ -420,9 +568,11 @@ OBIETTIVO DEL RAGIONAMENTO (FASE 3 - SINTESI DIALETTICA SUPERIORE):
 - Mostra come questo ponte non sia una mera analogia letteraria, ma una reale convergenza di leggi di conservazione dell'informazione, campo e coscienza.
 - Delinea le argomentazioni definitive, con esempi di pensiero precisi e contro-obiezioni risolte.`;
 
-    const pass3Result = await callGeminiWithRetryAndFallback(pass3Prompt, preferredModels, { temperature: 0.75 });
+    const pass3Result = await executeAIPrompt(pass3Prompt, { temperature: 0.75 });
     const pass3Synthesis = pass3Result.text || pass2Refinement;
-    console.log(`✅ CICLO 3 COMPLETATO: Sintesi dialettica superiore (${pass3Synthesis.length} caratteri).`);
+    console.log(
+      `✅ CICLO 3 COMPLETATO [${pass3Result.provider}]: Sintesi dialettica superiore (${pass3Synthesis.length} caratteri).`
+    );
 
     // CICLO 4: Valutazione dell'Impatto sulla Società e Trasformazione Umana
     const pass4Prompt = `Sei un sociologo del futuro, filosofo dell'etica e storico della scienza.
@@ -438,9 +588,11 @@ Analizza ed elabora un esempio concreto, dettagliato e strutturato di come la co
 2. APPLICAZIONE PRAGMATICA E TANGIBILE (es. nella medicina preventiva o rigenerativa, nelle tecnologie di comunicazione, nella cultura, nel diritto o nei modelli di cooperazione socio-economica).
 3. SCENARIO FUTURO DI SPECIE: Descrivi una casistica o un'applicazione concreta di come questa scoperta viene integrata nelle istituzioni o nella vita quotidiana della civiltà umana di domani, superando i vecchi paradigmi riduzionisti.`;
 
-    const pass4Result = await callGeminiWithRetryAndFallback(pass4Prompt, preferredModels, { temperature: 0.75 });
+    const pass4Result = await executeAIPrompt(pass4Prompt, { temperature: 0.75 });
     const pass4SocietalImpact = pass4Result.text || pass3Synthesis;
-    console.log(`✅ CICLO 4 COMPLETATO: Impatto sulla società e trasformazione umana (${pass4SocietalImpact.length} caratteri).`);
+    console.log(
+      `✅ CICLO 4 COMPLETATO [${pass4Result.provider}]: Impatto sulla società e trasformazione umana (${pass4SocietalImpact.length} caratteri).`
+    );
 
     // CICLO 5: INVENTBOT - ESTRAZIONE PAROLA CHIAVE E 3 IDEE ORIGINALI / PROTOTIPI APPLICATIVI
     const inventBotPrompt = `Agisci nel ruolo di "InventBot", un inventore visionario, tecnologo di frontiera e stratega di innovazione interdisciplinare.
@@ -485,10 +637,12 @@ CATEGORIA: [Categoria Idea 3]
 DESCRIZIONE: [Descrizione dettagliata dell'idea/prototipo applicativo]
 IMPATTO: [Impatto tangibile]`;
 
-    const pass5InventBotResult = await callGeminiWithRetryAndFallback(inventBotPrompt, preferredModels, { temperature: 0.8 });
+    const pass5InventBotResult = await executeAIPrompt(inventBotPrompt, { temperature: 0.8 });
     const rawInventBotText = pass5InventBotResult.text || "";
     const parsedInventBot = parseInventBotOutput(rawInventBotText, topic1, topic2);
-    console.log(`✅ CICLO 5 COMPLETATO (InventBot): Parola chiave "${parsedInventBot.keyword}" e ${parsedInventBot.ideas.length} idee generate.`);
+    console.log(
+      `✅ CICLO 5 COMPLETATO [${pass5InventBotResult.provider}]: Parola chiave "${parsedInventBot.keyword}" e ${parsedInventBot.ideas.length} idee generate.`
+    );
 
     // CICLO 6 (FINALE): REDAZIONE DEL SAGGIO DIALOGICO CONTINUO (MASTERWORK)
     const masterPrompt = `Sei un maestro della saggistica filosofico-scientifica e del dialogo socratico moderno.
@@ -532,7 +686,7 @@ DEVI RESTITUIRMI L'OUTPUT STRUTTURATO ESATTAMENTE CON QUESTI SEPARATORI:
 
 [Inserisci l'intero saggio dialogico continuo in paragrafi fluidi con trattini '—', denso di contenuto e privo di elenchi o sottotitoli]`;
 
-    const pass6Result = await callGeminiWithRetryAndFallback(masterPrompt, preferredModels, { temperature: 0.8 });
+    const pass6Result = await executeAIPrompt(masterPrompt, { temperature: 0.8 });
     const generatedText = pass6Result.text ? pass6Result.text.trim() : "";
 
     if (!generatedText) {
@@ -544,7 +698,11 @@ DEVI RESTITUIRMI L'OUTPUT STRUTTURATO ESATTAMENTE CON QUESTI SEPARATORI:
     let title = `L'Eco della Sottile Risonanza`;
     let articleContent = generatedText;
 
-    if (generatedText.includes("---SINTESI---") && generatedText.includes("---TITOLO---") && generatedText.includes("---ARTICOLO---")) {
+    if (
+      generatedText.includes("---SINTESI---") &&
+      generatedText.includes("---TITOLO---") &&
+      generatedText.includes("---ARTICOLO---")
+    ) {
       const parts = generatedText.split(/---SINTESI---|---TITOLO---|---ARTICOLO---/);
       if (parts.length >= 4) {
         subtitle = parts[1].trim();
@@ -581,7 +739,7 @@ DEVI RESTITUIRMI L'OUTPUT STRUTTURATO ESATTAMENTE CON QUESTI SEPARATORI:
       inventBotIdeas: parsedInventBot.ideas,
     };
   } catch (error: any) {
-    console.warn("⚠️ Avviso durante la generazione Gemini, attivazione fallback integrato:", error?.message || error);
+    console.warn("⚠️ Avviso durante la generazione AI, attivazione fallback integrato:", error?.message || error);
     return createRichEditorialArticle(dateStr, topic1, topic2);
   }
 }
