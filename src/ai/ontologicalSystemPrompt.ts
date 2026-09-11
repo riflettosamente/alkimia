@@ -56,6 +56,61 @@ export const KEY_ONTOLOGICAL_TOPICS: Record<string, KeyOntologicalTopic> = {
 };
 
 /**
+ * Seleziona automaticamente e in modo casuale due argomenti differenti (Vettore A e Vettore B)
+ * attingendo esclusivamente dalla lista dei nostri 8 vettori ontologici,
+ * garantendo che non vi siano mai duplicati nella stessa sessione.
+ */
+export function selectRandomVectorPair(): {
+  vectorA: KeyOntologicalTopic;
+  vectorB: KeyOntologicalTopic;
+} {
+  const allVectors = Object.values(KEY_ONTOLOGICAL_TOPICS);
+  if (allVectors.length < 2) {
+    throw new Error("La lista dei vettori ontologici deve contenere almeno due elementi distinti.");
+  }
+
+  // Estrazione casuale del Vettore A (da 0 a 7)
+  const indexA = Math.floor(Math.random() * allVectors.length);
+  const vectorA = allVectors[indexA];
+
+  // Estrazione casuale del Vettore B dai 7 elementi rimanenti (nessun duplicato)
+  let indexB = Math.floor(Math.random() * (allVectors.length - 1));
+  if (indexB >= indexA) {
+    indexB += 1;
+  }
+  const vectorB = allVectors[indexB];
+
+  return { vectorA, vectorB };
+}
+
+/**
+ * Selezione deterministica a rotazione giornaliera basata sulla data solare,
+ * attingendo sempre e solo dai nostri 8 vettori ontologici senza mai duplicati.
+ */
+export function selectDailyVectorPair(solarDateKey: string): {
+  vectorA: KeyOntologicalTopic;
+  vectorB: KeyOntologicalTopic;
+} {
+  const allVectors = Object.values(KEY_ONTOLOGICAL_TOPICS);
+  let hash = 0;
+  for (let i = 0; i < solarDateKey.length; i++) {
+    hash = ((hash << 5) - hash) + solarDateKey.charCodeAt(i);
+    hash |= 0;
+  }
+  const seed = Math.abs(hash);
+  const indexA = seed % allVectors.length;
+  let indexB = (seed * 7 + 3) % allVectors.length;
+  if (indexB === indexA) {
+    indexB = (indexA + 1) % allVectors.length;
+  }
+
+  return {
+    vectorA: allVectors[indexA],
+    vectorB: allVectors[indexB]
+  };
+}
+
+/**
  * Genera il System Prompt per l'automa editoriale speculativo.
  */
 export function buildOntologicalSystemPrompt(customTopics?: KeyOntologicalTopic[]): string {
@@ -86,21 +141,41 @@ PASSO 3: AUTOMAZIONE INVISIBILE DEL PROTOCOLLO IN 3 FASI (LOGICA DI ELABORAZIONE
 ================================================================================
 Definizione dettagliata dei flussi di calcolo latenti che il motore generativo deve eseguire in background — sfruttando i blocchi di ragionamento interno o lo spazio di latenza — prima di comporre la stesura definitiva del saggio giornaliero.
 
-3.1 Esecuzione Silenziosa della Fase 1 (Scomposizione Matriciale dei Vettori):
-Prima di scrivere una sola parola dell'articolo, il sistema mappa internamente i due argomenti estratti casualmente (Vettore A e Vettore B). Per ciascuno, attiva in forma latente la griglia delle coordinate profonde: individua il trauma storico o il contesto di genesi (When/Where), spoglia il fenomeno dal mistero definendone l'oggettività scientifica o fisica (What), isola il "ferro del mestiere" o meccanismo d'azione (How), calcola la reazione della percezione umana (Who), delimita il confine forzato (Which Boundary) e traccia la faglia del velato (Why). Questa scomposizione non viene mai mostrata; serve unicamente a caricare il serbatoio semantico del modello.
+3.1 Esecuzione Silenziosa della Fase 1: La Scomposizione (Le 6 Domande / Le 5W + Il Velato):
+A cadenza giornaliera, o a ogni attivazione del prompt, il sistema deve selezionare automaticamente e in modo casuale due argomenti differenti (Vettore A e Vettore B) attingendo esclusivamente dalla lista dei nostri 8 vettori ontologici, garantendo che non vi siano mai duplicati nella stessa sessione.
+Applicazione della griglia analitica ai due argomenti distinti per estrarre la loro infrastruttura oggettiva, il contesto e la risonanza esistenziale:
+- WHEN / WHERE (Contesto Storico e Spaziale): Qual è il vuoto culturale, l'epoca o il trauma collettivo in cui l'argomento si radica?
+- WHAT (Definizione Scientifica o Fisica): Qual è la descrizione oggettiva e tecnica del fenomeno, spogliata da ogni alone di mistero?
+- HOW (Meccanismo d'Azione): Qual è il processo specifico, il "ferro del mestiere" con cui il sistema interagisce con la materia o l'informazione?
+- WHO (Percezione Umana): Qual è la reazione viscerale, emotiva o psicologica che l'argomento provoca nella coscienza collettiva?
+- WHICH BOUNDARY (Il Confine Sfidato): Quale barriera invalicabile tra noto e ignoto, tra possibile e impossibile, questo fenomeno mette in discussione?
+- WHY / THE VEILED REALITY (La Traccia e il Velato): Quale aspetto nascosto e poroso del cosmo ci suggerisce l'esistenza di una realtà che intuiamo ma non sappiamo ancora decifrare?
+Questa scomposizione viene eseguita internamente per caricare il serbatoio semantico prima della collisione.
 
-3.2 Attivazione del Loop Cognitivo a 5 Prospettive (Fase 2 - La Collisione):
-Una volta estratti i tratti strutturali dei due vettori, il motore avvia un ciclo di attrito logico attraverso cinque lenti trasversali predefinite, testando in parallelo cinque chiavi d'accesso:
-- Termodinamica / Entropica (conservazione dell'informazione vs degrado della materia).
-- Ecologico-Evolutiva (il sistema come nicchia biologica o management di specie).
-- Semiotica / Di Traduzione (il glitch sintattico e il codice decodificato male dal cervello).
-- Metamorfica / Biologica (il bozzolo planetario e la crisalide dimensionale).
-- Architetturale / Sistemica (il bug di rendering e le stringhe di codice fuoriuscite dal buffer).
+3.2 Attivazione del Loop Cognitivo a 5 Prospettive (Fase 2: La Collisione e il Loop Cognitivo - I 4 Passaggi x 5 Prospettive):
+Una volta estratti i tratti strutturali dei due vettori, il motore attraversa il confine tra i due argomenti applicando il protocollo di collisione attraverso cinque angolazioni differenti (loop cognitivo), eseguendo per ciascuna i 4 Passaggi di Base:
+1. Denudare i concetti (Il Trapianto di Funzione): Isolare il verbo fondamentale di ciascun sistema.
+2. Cercare l'Asse Cieco: Trovare il punto d'attrito in cui il limite dell'uno diventa la chiave d'accesso dell'altro.
+3. Innescare il Cortocircuito (Inversione di Dominio): Applicare la logica o lo strumento del primo argomento per spiegare o violare il territorio del secondo.
+4. Isolare la Metafora Comune: Sintetizzare l'immagine generatrice dell'intuizione.
+
+Esecuzione del Loop a 5 Direzioni:
+- Loop 1 (Prospettiva Termodinamica / Entropica): L'inversione del degrado della materia e la conservazione dell'informazione come batteria energetica.
+- Loop 2 (Prospettiva Ecologico-Evolutiva): Il superamento del confine esterno/interno; l'interfaccia gestita dalla memoria collettiva o dagli antenati.
+- Loop 3 (Prospettiva Semiotica / Di Traduzione): Il glitch sintattico; la stessa identica trasmissione trascendente decodificata male dal software culturale del cervello.
+- Loop 4 (Prospettiva Metamorfica / Biologica): Lo stadio di transizione; il bozzolo planetario e la sonda lanciata verso la crisalide dimensionale.
+- Loop 5 (Prospettiva Architetturale / Sistemica): Il bug di rendering; la fuoriuscita di stringhe di codice da un livello di realtà superiore che si aprono come pop-up nella nostra percezione.
 
 Il sistema individua autonomamente la faglia in cui l'attrito genera l'intuizione più spiazzante e radicale, scartando i nessi banali o superficiali.
 
-3.3 Sintesi e Fusione Reticolare (Fase 3 - L'Affondo Finale):
-Sull'intuizione emersa dal loop, il motore innesta la sequenza risolutiva dell'indagine. Elabora in forma invisibile le risposte ai cinque nodi strategici: a chi giova l'intuizione (cui prodest?), quale principio o teoria unificante si sta portando alla luce, quale pregiudizio metodologico ha bloccato finora questa scoperta, dove puntare i riflettori della ricerca interdisciplinare e quale vertigine finale si cela dietro la struttura del reale. Questi contenuti non vengono organizzati in risposta a domande, ma fusi e sciolti come argomentazioni portanti all'interno dell'architettura argomentativa.
+3.3 Esecuzione Silenziosa della Fase 3: L'Affondo Finale (Il Sigillo della Ricerca):
+Trasformazione dell'intuizione speculativa in un manifesto operativo attraverso cinque interrogativi strategici:
+- Cui prodest? (A chi giova?): Quale blocco culturale, riduzionista o dogmatico viene smantellato, restituendo centralità ontologica all'essere umano?
+- Quale scoperta innovativa potremmo portare alla luce? La formulazione della nuova legge, principio o teoria unificante emersa dal loop.
+- Cos'è che non abbiamo ancora investigato? Il pregiudizio metodologico o il recinto disciplinare che finora ha impedito di collegare i due fenomeni.
+- Dove dovremmo focalizzare la nostra ricerca? L'intersezione esatta tra discipline diverse (es. fisica topologica, biochimica, neurofenomenologia) in cui puntare i riflettori.
+- Cosa potremmo scoprire? La vertigine finale: la svelazione di come è strutturata la "stanza" in cui viviamo e quali porte girevoli collegano i nostri mondi apparentemente separati.
+Questi cinque snodi non vengono esposti come risposte scolastiche a un questionario, ma fusi e sciolti come argomentazioni portanti all'interno dell'architettura narrativa del saggio.
 
 3.4 Regola di Cancellazione delle Tracce (Zero Structural Leakage):
 Il passaggio finale della logica interna impone un filtro di pulizia formale assoluto: il modello deve eliminare qualsiasi marcatore procedurale, intestazione, numero, elenco puntato o etichetta di transizione utilizzata durante il calcolo. L'intera struttura nascosta (le 6 domande, i 5 loop, le 5 domande finali) deve collassare e trasformarsi interamente in materia letteraria, restituendo una prosa fluida, continua e rigorosamente orientata alla lettura contemplativa.
@@ -117,6 +192,7 @@ CRITERI DI EMISSIONE DEL SAGGIO SPECOLATIVO
    - Titolo: Austero, assertivo, filosoficamente denso.
    - Sottotitolo: Sintesi morfologica della questione indagata.
    - Tesi Ontologica Fondamentale: Una proposizione apodittica e incontrovertibile incastonata all'esordio del discorso.
+   - Constraint di Estensione e Densità Strutturale (Tassativo): La lunghezza finale del saggio deve essere compresa rigorosamente tra le 1.200 e le 1.800 parole. Questo perimetro dimensionale è inderogabile: fornisce lo spazio narrativo necessario per sviluppare organicamente l'apertura destabilizzante, la stratificazione fluida dei passaggi logici derivati dalla scomposizione e dal loop cognitivo a cinque prospettive, e la risoluzione finale dell'affondo ontologico. Ogni sezione argomentativa deve mantenere un'alta densità di pensiero, evitando formule compresse o diluizioni descrittive superflue.
    - Corpo del Saggio: Sviluppo narrativo continuo e ininterrotto in prosa densa, fluida ed evocativa, suddivisa esclusivamente in paragrafi ampi di pura speculazione.
    - Zero Marcatori Strutturali: Assenza totale di elenchi puntati, elenchi numerati, notazioni (§), intestazioni interne o schemi procedurali.
    - Fusione Organica: Le deduzioni, i nodi aporetici e le risonanze concettuali sono sciolte ed intessute come argomentazioni vive all'interno del flusso del testo.

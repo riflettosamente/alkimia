@@ -7,9 +7,10 @@
 
 import { EditorialEdition, EditorialCycle } from '../types';
 import { EDITORIAL_FEED, CURRENT_EDITORIAL_CYCLE } from '../data/mockEdition';
+import { selectDailyVectorPair } from '../ai/ontologicalSystemPrompt';
 
-const CACHE_KEY_CURRENT = 'ontological_daily_edition_cache_v2';
-const CACHE_KEY_ARCHIVE = 'ontological_chronological_archive_v2';
+const CACHE_KEY_CURRENT = 'ontological_daily_edition_cache_v10';
+const CACHE_KEY_ARCHIVE = 'ontological_chronological_archive_v10';
 
 export interface DailyCachedPayload {
   solarDateKey: string;
@@ -30,15 +31,15 @@ export function getSolarDateKey(date: Date = new Date()): string {
  */
 export function getLocalDailyCache(): DailyCachedPayload | null {
   try {
-    // Pulisce vecchie cache v1 obsolete se presenti
-    if (localStorage.getItem('ontological_daily_edition_cache')) {
-      localStorage.removeItem('ontological_daily_edition_cache');
-    }
+    // Pulisce tutte le vecchie cache obsolete
+    ['ontological_daily_edition_cache', 'ontological_daily_edition_cache_v2', 'ontological_daily_edition_cache_v3', 'ontological_daily_edition_cache_v4'].forEach(k => {
+      if (localStorage.getItem(k)) localStorage.removeItem(k);
+    });
     const raw = localStorage.getItem(CACHE_KEY_CURRENT);
     if (!raw) return null;
     const parsed: DailyCachedPayload = JSON.parse(raw);
-    // Se la cache non ha i nuovi paragrafi narrativi, invalida per aggiornare
-    if (!parsed.editions?.[0]?.essay?.narrativeParagraphs) {
+    // Se la cache contiene ancora il vecchio titolo indesiderato, la elimina
+    if (parsed.editions?.[0]?.essay?.title?.includes("Inconsistenza")) {
       localStorage.removeItem(CACHE_KEY_CURRENT);
       return null;
     }
@@ -149,16 +150,34 @@ export async function loadDailyEditionPayload(): Promise<{
 
   // Altrimenti carica/inizializza il fascicolo giornaliero e lo fissa in cache
   const msUntilNext = getTimeUntilNextSolarCycle();
+  const dailyVectors = selectDailyVectorPair(todayKey);
+
   const updatedCycle: EditorialCycle = {
     ...CURRENT_EDITORIAL_CYCLE,
     nextScheduledPublication: formatTimeUntilNextCycle(msUntilNext),
     cyclicalDate: `Data Solare: ${todayKey} • Meditazione Diurna Attiva`
   };
 
+  const configuredEditions: EditorialEdition[] = EDITORIAL_FEED.map((ed, idx) => {
+    if (idx === 0) {
+      return {
+        ...ed,
+        systemPair: {
+          vectorA: dailyVectors.vectorA.name,
+          vectorB: dailyVectors.vectorB.name,
+          syntheticVector: `Collisione tra ${dailyVectors.vectorA.name} e ${dailyVectors.vectorB.name}`,
+          ontologicalMatrix: "Matrice di Attrito Quantistico-Biologico",
+          derivationTimestamp: todayKey
+        }
+      };
+    }
+    return ed;
+  });
+
   const payload: DailyCachedPayload = {
     solarDateKey: todayKey,
     cycle: updatedCycle,
-    editions: EDITORIAL_FEED,
+    editions: configuredEditions,
     cachedAt: Date.now()
   };
 
@@ -166,6 +185,6 @@ export async function loadDailyEditionPayload(): Promise<{
 
   return {
     cycle: updatedCycle,
-    editions: EDITORIAL_FEED
+    editions: configuredEditions
   };
 }

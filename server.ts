@@ -2,7 +2,13 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
-import { KEY_ONTOLOGICAL_TOPICS, buildOntologicalSystemPrompt } from "./src/ai/ontologicalSystemPrompt";
+import { 
+  KEY_ONTOLOGICAL_TOPICS, 
+  buildOntologicalSystemPrompt,
+  selectRandomVectorPair,
+  selectDailyVectorPair
+} from "./src/ai/ontologicalSystemPrompt";
+import { buildSequentialInvestigationPrompt } from "./src/ai/speculativeInvestigationEngine";
 
 dotenv.config();
 
@@ -40,86 +46,76 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
-// 2. Consulta degli argomenti chiave
+// 2. Consulta degli 8 vettori ontologici
 app.get("/api/topics", (_req, res) => {
   res.json({
     count: Object.keys(KEY_ONTOLOGICAL_TOPICS).length,
-    topics: Object.values(KEY_ONTOLOGICAL_TOPICS),
-    systemPromptSample: buildOntologicalSystemPrompt().slice(0, 500) + "..."
+    topics: Object.values(KEY_ONTOLOGICAL_TOPICS)
   });
 });
 
-// 3. Generazione Autonoma alimentata dal System Prompt
+// 3. Estrazione automatica e casuale di due vettori distinti (Vettore A e Vettore B)
+app.get("/api/select-vector-pair", (req, res) => {
+  const solarDate = typeof req.query.solarDate === 'string' ? req.query.solarDate : undefined;
+  const pair = solarDate ? selectDailyVectorPair(solarDate) : selectRandomVectorPair();
+  res.json({
+    vectorA: pair.vectorA,
+    vectorB: pair.vectorB
+  });
+});
+
+// 4. Generazione Autonoma alimentata dal System Prompt con selezione casuale dei due vettori
 app.post("/api/generate-autonomous-essay", async (req, res) => {
   try {
-    const { vectorA, vectorB, domain } = req.body;
-    
-    const topicKeys = Object.keys(KEY_ONTOLOGICAL_TOPICS);
-    const selectedA = vectorA || (topicKeys.length > 0 ? KEY_ONTOLOGICAL_TOPICS[topicKeys[0]]?.name : "Indagine Ontologica Primaria");
-    const selectedB = vectorB || (topicKeys.length > 1 ? KEY_ONTOLOGICAL_TOPICS[topicKeys[1]]?.name : "Contingenza e Frattura");
+    // Selezione automatica e casuale di due argomenti differenti attingendo esclusivamente dai nostri 8 vettori
+    const randomPair = selectRandomVectorPair();
+    const selectedA = randomPair.vectorA;
+    const selectedB = randomPair.vectorB;
 
-    const prompt = `Genera un nuovo fascicolo per la pubblicazione diurna autonoma delle 24 ore.
-Combina e indaga la tensione dialettica tra i seguenti vettori concettuali:
-- VETTORE A: ${selectedA}
-- VETTORE B: ${selectedB}
-- DOMINIO D'INDAGINE: ${domain || "Morfologia dell'Infondatezza e Frattura del Principio di Ragione"}
-
-Applica rigorosamente il System Prompt. Rispondi esclusivamente in formato JSON valido che rispetti la seguente struttura:
-{
-  "systemPair": {
-    "vectorA": "string",
-    "vectorB": "string",
-    "syntheticVector": "string",
-    "ontologicalMatrix": "string"
-  },
-  "essay": {
-    "title": "string",
-    "subtitle": "string",
-    "ontologicalThesis": "string",
-    "preamble": "string",
-    "sections": [
-      {
-        "numeral": "I",
-        "title": "string",
-        "propositions": [
-          { "notation": "§ 1.01", "statement": "string", "commentary": "string" },
-          { "notation": "§ 1.02", "statement": "string", "commentary": "string" }
-        ]
-      }
-    ],
-    "corollaries": ["string", "string", "string"],
-    "openAporias": ["string", "string"],
-    "bibliographicResonances": [
-      { "author": "string", "concept": "string", "note": "string" }
-    ]
-  },
-  "pins": [
-    { "marker": "string", "text": "string", "context": "string", "type": "postulato | aporia | faglia | evidenza" }
-  ],
-  "tensions": [
-    { "poleA": "string", "poleB": "string", "field": "string", "state": "string" }
-  ]
-}`;
+    const prompt = buildSequentialInvestigationPrompt(selectedA, selectedB);
 
     const ai = getGenAI();
     const systemPrompt = buildOntologicalSystemPrompt();
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
-      contents: prompt,
-      config: {
-        systemInstruction: systemPrompt,
-        responseMimeType: "application/json",
-        temperature: 0.8
-      }
-    });
+    const candidateModels = ["gemini-3.6-flash", "gemini-3.1-pro-preview"];
+    let responseText = "";
+    let lastError: any = null;
 
-    const responseText = response.text || "{}";
+    for (const modelName of candidateModels) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt,
+          config: {
+            systemInstruction: systemPrompt,
+            responseMimeType: "application/json",
+            temperature: 0.85,
+            maxOutputTokens: 8192
+          }
+        });
+        if (response.text) {
+          responseText = response.text;
+          break;
+        }
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`Tentativo con ${modelName} fallito:`, err.message || err);
+      }
+    }
+
+    if (!responseText) {
+      throw lastError || new Error("Nessun modello disponibile al momento.");
+    }
+
     const parsedData = JSON.parse(responseText);
 
     res.json({
       success: true,
-      data: parsedData
+      data: parsedData,
+      selectedVectors: {
+        vectorA: selectedA,
+        vectorB: selectedB
+      }
     });
   } catch (error: any) {
     console.error("Errore generazione autonoma:", error);
