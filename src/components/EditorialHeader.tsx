@@ -13,7 +13,7 @@ export const EditorialHeader: React.FC<EditorialHeaderProps> = ({ cycle }) => {
         Indagine Ontologica Quotidiana
       </div>
       <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-semibold tracking-tight text-[#f4f0e8]">
-        Generatore di Saggi Speculativi
+        ALKIMIA
       </h1>
       <div className="flex items-center justify-center gap-2 text-xs font-mono text-[#8a8376] pt-1">
         <Calendar className="w-3.5 h-3.5 text-[#c49b45]" />
