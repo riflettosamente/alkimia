@@ -1,6 +1,6 @@
 {
-  "name": "ALKIMIA",
-  "description": "Saggio quotidiano sulle convergenze tra scienza di frontiera, metafisica, coscienza e tecnologia.",
+  "name": "Generatore di Saggi Speculativi",
+  "description": "Generatore autonomo di saggi speculativi e di indagine ontologica.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

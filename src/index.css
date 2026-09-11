@@ -1,123 +1,62 @@
 @import "tailwindcss";
 
-@layer base {
-  html {
-    scroll-behavior: smooth;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
+@theme {
+  --font-serif: 'Newsreader', Georgia, Cambria, 'Times New Roman', Times, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: 'Cinzel', Georgia, serif;
+}
+
+body {
+  background-color: #0b0c0e;
+  color: #e4dfd5;
+  font-family: var(--font-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Griglia sottile della whiteboard investigativa su grafite profonda / nero inchiostro */
+.bg-investigative-grid {
+  background-color: #0b0c0e;
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(220, 215, 205, 0.045) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+::selection {
+  background-color: #2b303d;
+  color: #f6f3eb;
+}
+
+/* Micro-transizioni per rendering tipografico progressivo contemplativo */
+@keyframes contemplativeFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(1.5px);
   }
-  
-  body {
-    font-family: 'Newsreader', Georgia, Cambria, 'Times New Roman', Times, serif;
-    background-color: #fbf9f5;
-    color: #1f1d1a;
-  }
-}
-
-.font-sans-ui {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.font-editorial {
-  font-family: 'Newsreader', Georgia, Cambria, 'Times New Roman', Times, serif;
-}
-
-/* Reader Typography Styles */
-.prose-article {
-  font-size: 1.1875rem; /* ~19px for comfortable long-form reading */
-  line-height: 1.78;
-  color: #272522;
-}
-
-@media (max-width: 640px) {
-  .prose-article {
-    font-size: 1.0625rem; /* ~17px on mobile screens */
-    line-height: 1.72;
-  }
-}
-
-.prose-article h1 {
-  font-family: 'Newsreader', Georgia, serif;
-  font-size: 2.35rem;
-  line-height: 1.25;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  color: #141210;
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-}
-
-@media (max-width: 640px) {
-  .prose-article h1 {
-    font-size: 1.85rem;
-    line-height: 1.28;
-    margin-bottom: 1.25rem;
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
   }
 }
 
-.prose-article h2 {
-  font-family: 'Newsreader', Georgia, serif;
-  font-size: 1.55rem;
-  line-height: 1.35;
-  font-weight: 600;
-  color: #1a1714;
-  margin-top: 2.75rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.35rem;
-  border-bottom: 1px solid #e7e2d9;
+.contemplative-fade-in {
+  animation: contemplativeFadeIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@media (max-width: 640px) {
-  .prose-article h2 {
-    font-size: 1.35rem;
-    margin-top: 2.25rem;
-    margin-bottom: 0.85rem;
-  }
+.contemplative-fade-delayed-1 {
+  opacity: 0;
+  animation: contemplativeFadeIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards;
 }
 
-.prose-article p {
-  margin-bottom: 1.45rem;
+.contemplative-fade-delayed-2 {
+  opacity: 0;
+  animation: contemplativeFadeIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
 }
 
-.prose-article strong {
-  color: #141210;
-  font-weight: 600;
+.contemplative-fade-delayed-3 {
+  opacity: 0;
+  animation: contemplativeFadeIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.75s forwards;
 }
 
-.prose-article em {
-  font-style: italic;
-  color: #2e2b27;
-}
-
-.prose-article ol {
-  list-style-type: decimal;
-  padding-left: 1.4rem;
-  margin-top: 1.2rem;
-  margin-bottom: 1.5rem;
-}
-
-.prose-article ol li {
-  margin-bottom: 1rem;
-  padding-left: 0.35rem;
-}
-
-.prose-article ul {
-  list-style-type: disc;
-  padding-left: 1.4rem;
-  margin-top: 1.2rem;
-  margin-bottom: 1.5rem;
-}
-
-.prose-article ul li {
-  margin-bottom: 0.75rem;
-  padding-left: 0.35rem;
-}
-
-.prose-article blockquote {
-  border-left: 3px solid #b8ab97;
-  padding-left: 1.25rem;
-  margin: 1.75rem 0;
-  font-style: italic;
-  color: #454039;
-}
