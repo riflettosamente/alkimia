@@ -11,7 +11,7 @@ export default function App() {
   const { editions, cycle } = useDailyScheduler();
 
   return (
-    <div className="min-h-screen bg-[#0b0c0e] text-[#e4dfd5] font-serif">
+    <div className="min-h-screen bg-[#f7f5f0] text-[#24211e] font-serif">
       {/* Feed editoriale verticale continuo con testata incorporata direttamente nella pagina principale */}
       <EditorialFeed 
         editions={editions} 

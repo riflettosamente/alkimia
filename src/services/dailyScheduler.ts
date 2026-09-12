@@ -20,8 +20,8 @@ import {
 export { getSolarDateKey, formatItalianDate, formatTimeUntilNextCycle };
 export const getTimeUntilNextSolarCycle = getTimeUntilNextSolarMidnight;
 
-const CACHE_KEY_CURRENT = 'alkimia_daily_edition_cache_v12';
-const CACHE_KEY_ARCHIVE = 'alkimia_chronological_archive_v12';
+const CACHE_KEY_CURRENT = 'alkimia_daily_edition_cache_v13';
+const CACHE_KEY_ARCHIVE = 'alkimia_chronological_archive_v13';
 
 export interface DailyCachedPayload {
   solarDateKey: string;
@@ -43,7 +43,8 @@ export function getLocalDailyCache(): DailyCachedPayload | null {
       'ontological_daily_edition_cache_v4',
       'ontological_daily_edition_cache_v9',
       'ontological_daily_edition_cache_v10',
-      'ontological_daily_edition_cache_v11'
+      'ontological_daily_edition_cache_v11',
+      'alkimia_daily_edition_cache_v12'
     ].forEach(k => {
       if (localStorage.getItem(k)) localStorage.removeItem(k);
     });

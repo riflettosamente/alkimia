@@ -10,6 +10,10 @@ import {
 } from "./src/ai/ontologicalSystemPrompt";
 import { buildSequentialInvestigationPrompt } from "./src/ai/speculativeInvestigationEngine";
 import { CURRENT_EDITORIAL_CYCLE, CURRENT_SPECULATIVE_ESSAY } from "./src/data/mockEdition";
+import { buildPhase1Decomposition } from "./src/data/canonicalDecompositions";
+import { buildPhase2Collision } from "./src/data/canonicalCollisions";
+import { buildPhase2LoopFiveDirections } from "./src/data/canonicalLoopFiveDirections";
+import { buildPhase3FinalStrike } from "./src/data/canonicalFinalStrikes";
 
 dotenv.config();
 
@@ -38,47 +42,68 @@ function getGenAI(): GoogleGenAI {
   return aiClient;
 }
 
-// Supporto per OpenRouter
+// Supporto per OpenRouter con lista di modelli di fallback
 async function generateWithOpenRouter(systemPrompt: string, userPrompt: string): Promise<{ text: string; model: string }> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new Error("OPENROUTER_API_KEY non configurata.");
   }
-  const model = process.env.OPENROUTER_MODEL || "meta-llama/llama-3.3-70b-instruct";
+  const preferredModel = process.env.OPENROUTER_MODEL;
+  const candidateModels = [
+    ...(preferredModel ? [preferredModel] : []),
+    "nex-agi/nex-n2.5-pro:free",
+    "nex-agi/nex-n2.5-mini:free",
+    "nvidia/nemotron-3.5-lightning:free",
+    "liquid/lfm-2.5-2.6b:free",
+    "meta-llama/llama-3.3-70b-instruct"
+  ];
+  // Deduplica preservando l'ordine
+  const uniqueModels = Array.from(new Set(candidateModels));
   const appUrl = process.env.APP_URL || "https://alkimia.ai";
 
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    signal: AbortSignal.timeout(60000),
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "HTTP-Referer": appUrl,
-      "X-Title": "ALKIMIA",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
-      ],
-      temperature: 0.85,
-      max_tokens: 8192,
-      response_format: { type: "json_object" }
-    })
-  });
+  let lastError: any = null;
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`OpenRouter error (${response.status}): ${errorBody}`);
+  for (const model of uniqueModels) {
+    try {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        signal: AbortSignal.timeout(60000),
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": appUrl,
+          "X-Title": "ALKIMIA",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ],
+          temperature: 0.85,
+          max_tokens: 8192,
+          response_format: { type: "json_object" }
+        })
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`OpenRouter error (${response.status}) su ${model}: ${errorBody}`);
+      }
+
+      const data: any = await response.json();
+      const text = data.choices?.[0]?.message?.content;
+      if (!text) {
+        throw new Error(`Nessun contenuto generato restituito da OpenRouter (${model}).`);
+      }
+      return { text, model };
+    } catch (err: any) {
+      lastError = err;
+      console.warn(`[OpenRouter] Modello ${model} non disponibile: ${err.message || err}`);
+    }
   }
 
-  const data: any = await response.json();
-  const text = data.choices?.[0]?.message?.content;
-  if (!text) {
-    throw new Error("Nessun contenuto generato restituito da OpenRouter.");
-  }
-  return { text, model };
+  throw lastError || new Error("Nessun modello OpenRouter ha risposto con successo.");
 }
 
 // Supporto per Cloudflare Workers AI
@@ -428,6 +453,10 @@ async function executeDailyAiDrafting(solarDateKey: string) {
             ontologicalMatrix: parsed.systemPair?.ontologicalMatrix || "Matrice di Attrito Quantistico-Biologico",
             derivationTimestamp: formattedDate
           },
+          phase1Decomposition: parsed.phase1Decomposition || buildPhase1Decomposition(selectedA.name, selectedB.name),
+          phase2Collision: parsed.phase2Collision || buildPhase2Collision(selectedA.name, selectedB.name),
+          phase2Loop: parsed.phase2Loop || buildPhase2LoopFiveDirections(selectedA.name, selectedB.name),
+          phase3FinalStrike: parsed.phase3FinalStrike || buildPhase3FinalStrike(selectedA.name, selectedB.name),
           essay: parsed.essay,
           pins: [],
           tensions: []
@@ -480,6 +509,10 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<{ cycle: a
       ontologicalMatrix: "Soglia di fase tra l'entropia organica locale e la conservazione dell'informazione non-locale",
       derivationTimestamp: formattedDate
     },
+    phase1Decomposition: buildPhase1Decomposition(selectedA.name, selectedB.name),
+    phase2Collision: buildPhase2Collision(selectedA.name, selectedB.name),
+    phase2Loop: buildPhase2LoopFiveDirections(selectedA.name, selectedB.name),
+    phase3FinalStrike: buildPhase3FinalStrike(selectedA.name, selectedB.name),
     essay: CURRENT_SPECULATIVE_ESSAY,
     pins: [],
     tensions: []

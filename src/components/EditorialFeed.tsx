@@ -16,7 +16,7 @@ export const EditorialFeed: React.FC<EditorialFeedProps> = ({ editions, cycle })
   }
 
   return (
-    <main className="min-h-screen bg-[#0b0c0e] text-[#ded9ce] pb-32">
+    <main className="min-h-screen bg-[#f7f5f0] text-[#24211e] pb-32">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-12">
         
         {/* Testata dell'Applicazione */}

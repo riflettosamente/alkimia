@@ -97,11 +97,96 @@ export interface OntologicalEssence {
   prohibitedSuperficialities: string[];
 }
 
+export interface VectorPhase1Decomposition {
+  topicName: string;
+  whenWhere: string;      // 1. WHEN / WHERE (Contesto Storico e Spaziale): Qual è il vuoto culturale, l'epoca o il trauma collettivo in cui l'argomento si radica?
+  what: string;           // 2. WHAT (Definizione Scientifica o Fisica): Qual è la descrizione oggettiva e tecnica del fenomeno, spogliata da ogni alone di mistero?
+  how: string;            // 3. HOW (Meccanismo d'Azione): Qual è il processo specifico, il "ferro del mestiere" con cui il sistema interagisce con la materia o l'informazione?
+  who: string;            // 4. WHO (Percezione Umana): Qual è la reazione viscerale, emotiva o psicologica che l'argomento provoca nella coscienza collettiva?
+  whichBoundary: string;  // 5. WHICH BOUNDARY (Il Confine Sfidato): Quale barriera invalicabile tra noto e ignoto, tra possibile e impossibile, questo fenomeno mette in discussione?
+  whyVeiled: string;      // 6. WHY / THE VEILED REALITY (La Traccia e il Velato): Quale aspetto nascosto e poroso del cosmo ci suggerisce l'esistenza di una realtà che intuiamo ma non sappiamo ancora decifrare?
+}
+
+export interface Phase1StructuralDecomposition {
+  vectorA: VectorPhase1Decomposition;
+  vectorB: VectorPhase1Decomposition;
+}
+
+export interface Phase2Step1StrippingFunction {
+  fundamentalVerbA: string;
+  abstractFunctionA: string;
+  fundamentalVerbB: string;
+  abstractFunctionB: string;
+  functionalSynthesis: string;
+}
+
+export interface Phase2Step2BlindAxis {
+  boundaryA: string;
+  accessDoorToB: string;
+  creviceContactPoint: string;
+}
+
+export interface Phase2Step3InvertedDirection {
+  methodAAppliedToB: string;
+  provocativeViolationQuestion: string;
+  counterIntuitiveInsight: string;
+}
+
+export interface Phase2Step4CommonMetaphor {
+  masterMetaphorTitle: string;
+  cosmologicalAnthropologicalGround: string;
+  unifyingVision: string;
+}
+
+export interface Phase2CollisionDecomposition {
+  step1StrippingFunction: Phase2Step1StrippingFunction;
+  step2BlindAxis: Phase2Step2BlindAxis;
+  step3InvertedDirection: Phase2Step3InvertedDirection;
+  step4CommonMetaphor: Phase2Step4CommonMetaphor;
+}
+
+export interface Phase2DirectionTrack {
+  id: string;
+  directionNumber: number;
+  directionTitle: string;
+  ontologicalAngle: string;
+  collision: Phase2CollisionDecomposition;
+}
+
+export interface Phase2LoopFiveDirections {
+  theoreticalPreamble: string;
+  tracks: Phase2DirectionTrack[];
+}
+
+export interface DirectionFinalStrikeItem {
+  directionNumber: number;
+  directionTitle: string;
+  ontologicalAngle: string;
+  cuiProdest: string;
+  groundbreakingDiscovery: string;
+  uninvestigatedBias: string;
+  researchFocusIntersection: string;
+  dizzyingRevelation: string;
+}
+
+export interface Phase3FinalStrike {
+  cuiProdest: string;
+  groundbreakingDiscovery: string;
+  uninvestigatedBias: string;
+  researchFocusIntersection: string;
+  dizzyingRevelation: string;
+  directionStrikes?: DirectionFinalStrikeItem[];
+}
+
 export interface EditorialEdition {
   id: string;
   cycle: EditorialCycle;
   systemPair: SystemConceptualPair;
   essay: SpeculativeEssay;
+  phase1Decomposition?: Phase1StructuralDecomposition;
+  phase2Collision?: Phase2CollisionDecomposition;
+  phase2Loop?: Phase2LoopFiveDirections;
+  phase3FinalStrike?: Phase3FinalStrike;
   pins: WhiteboardPin[];
   tensions: DialecticalTension[];
   isLatest: boolean;

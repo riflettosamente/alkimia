@@ -7,24 +7,24 @@
 }
 
 body {
-  background-color: #0b0c0e;
-  color: #e4dfd5;
+  background-color: #f7f5f0;
+  color: #24211e;
   font-family: var(--font-serif);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Griglia sottile della whiteboard investigativa su grafite profonda / nero inchiostro */
+/* Griglia sottile della whiteboard investigativa su carta chiara e calda */
 .bg-investigative-grid {
-  background-color: #0b0c0e;
+  background-color: #f7f5f0;
   background-image: 
-    radial-gradient(circle at 1px 1px, rgba(220, 215, 205, 0.045) 1px, transparent 0);
+    radial-gradient(circle at 1px 1px, rgba(50, 45, 38, 0.06) 1px, transparent 0);
   background-size: 24px 24px;
 }
 
 ::selection {
-  background-color: #2b303d;
-  color: #f6f3eb;
+  background-color: #e5ded2;
+  color: #171513;
 }
 
 /* Micro-transizioni per rendering tipografico progressivo contemplativo */
