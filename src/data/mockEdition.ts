@@ -1,8 +1,11 @@
 import { EditorialCycle, SpeculativeEssay, EditorialEdition } from '../types';
+import { formatItalianDate } from '../utils/dateUtils';
+
+const TODAY_FORMATTED = formatItalianDate(new Date());
 
 export const CURRENT_EDITORIAL_CYCLE: EditorialCycle = {
   editionNumber: "Edizione Quotidiana",
-  cyclicalDate: "10 Settembre 2026",
+  cyclicalDate: TODAY_FORMATTED,
   investigativeDomain: "Collisione tra Fisica dei Campi, Biologia Molecolare e Coscienza",
   currentPhase: "pubblicato_contemplazione",
   nextScheduledPublication: "Al compimento della rotazione diurna",
@@ -66,7 +69,7 @@ export const EDITORIAL_FEED: EditorialEdition[] = [
       vectorB: "6. L'Aldilà (Afterlife)",
       syntheticVector: "Transduzione neurochimica del continuum informativo post-biologico",
       ontologicalMatrix: "Soglia di fase tra l'entropia organica locale e la conservazione dell'informazione non-locale della coscienza",
-      derivationTimestamp: "10 Settembre 2026"
+      derivationTimestamp: TODAY_FORMATTED
     },
     essay: CURRENT_SPECULATIVE_ESSAY,
     pins: [],

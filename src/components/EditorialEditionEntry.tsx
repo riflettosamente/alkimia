@@ -34,7 +34,7 @@ export const EditorialEditionEntry: React.FC<EditorialEditionEntryProps> = ({
           <span>{isLatest ? "Saggio del Giorno" : `Fascicolo Archiviato (-${index * 24}h)`}</span>
         </div>
         <div>
-          <span>{cycle.cyclicalDate}</span>
+          <span>Data di emissione: {cycle.cyclicalDate}</span>
         </div>
       </div>
 

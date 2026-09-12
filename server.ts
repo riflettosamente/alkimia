@@ -9,6 +9,7 @@ import {
   selectDailyVectorPair
 } from "./src/ai/ontologicalSystemPrompt";
 import { buildSequentialInvestigationPrompt } from "./src/ai/speculativeInvestigationEngine";
+import { CURRENT_EDITORIAL_CYCLE, CURRENT_SPECULATIVE_ESSAY } from "./src/data/mockEdition";
 
 dotenv.config();
 
@@ -48,6 +49,7 @@ async function generateWithOpenRouter(systemPrompt: string, userPrompt: string):
 
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
+    signal: AbortSignal.timeout(60000),
     headers: {
       "Authorization": `Bearer ${apiKey}`,
       "HTTP-Referer": appUrl,
@@ -90,6 +92,7 @@ async function generateWithCloudflare(systemPrompt: string, userPrompt: string):
 
   const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`, {
     method: "POST",
+    signal: AbortSignal.timeout(60000),
     headers: {
       "Authorization": `Bearer ${apiKey}`,
       "Content-Type": "application/json"
@@ -316,6 +319,214 @@ app.post("/api/generate-autonomous-essay", async (req, res) => {
     });
   }
 });
+
+// Cache in memoria delle edizioni quotidiane per data solare (YYYY-MM-DD)
+const dailyEditionsCache: Record<string, { cycle: any; edition: any }> = {};
+
+const ITALIAN_MONTHS_SERVER = [
+  'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+  'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+];
+
+function formatItalianDateServer(dateInput?: string | Date): string {
+  let d: Date;
+  if (!dateInput) {
+    d = new Date();
+  } else if (typeof dateInput === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+      const [year, month, day] = dateInput.split('-').map(Number);
+      return `${day} ${ITALIAN_MONTHS_SERVER[month - 1]} ${year}`;
+    }
+    d = new Date(dateInput);
+  } else {
+    d = dateInput;
+  }
+  const day = d.getUTCDate();
+  const month = ITALIAN_MONTHS_SERVER[d.getUTCMonth()];
+  const year = d.getUTCFullYear();
+  return `${day} ${month} ${year}`;
+}
+
+// Generatore e gestore autonomo del Saggio del Giorno (Fase 1 + Fase 2 + Fase 3)
+const isGeneratingDaily: Record<string, boolean> = {};
+
+async function executeDailyAiDrafting(solarDateKey: string) {
+  if (isGeneratingDaily[solarDateKey]) return;
+  isGeneratingDaily[solarDateKey] = true;
+
+  try {
+    const formattedDate = formatItalianDateServer(solarDateKey);
+    const pair = selectDailyVectorPair(solarDateKey);
+    const selectedA = pair.vectorA;
+    const selectedB = pair.vectorB;
+
+    const prompt = buildSequentialInvestigationPrompt(selectedA, selectedB);
+    const systemPrompt = buildOntologicalSystemPrompt();
+
+    const hasOpenRouter = Boolean(process.env.OPENROUTER_API_KEY);
+    const hasCloudflare = Boolean(process.env.CLOUDFLARE_API_KEY && process.env.CLOUDFLARE_ACCOUNT_ID);
+    const hasGemini = Boolean(process.env.GEMINI_API_KEY);
+
+    let rawText = "";
+
+    // 1. Priorità OpenRouter
+    if (hasOpenRouter) {
+      try {
+        console.log(`[ALKIMIA 00:00] Avvio elaborazione con OpenRouter per la data solare ${solarDateKey}...`);
+        const res = await generateWithOpenRouter(systemPrompt, prompt);
+        rawText = res.text;
+        console.log(`[ALKIMIA 00:00] Generazione OpenRouter completata con successo per ${solarDateKey}.`);
+      } catch (e: any) {
+        console.warn(`[ALKIMIA 00:00] OpenRouter non riuscito per ${solarDateKey}:`, e.message);
+      }
+    }
+
+    // 2. Priorità Cloudflare
+    if (!rawText && hasCloudflare) {
+      try {
+        console.log(`[ALKIMIA 00:00] Avvio elaborazione con Cloudflare per la data solare ${solarDateKey}...`);
+        const res = await generateWithCloudflare(systemPrompt, prompt);
+        rawText = res.text;
+        console.log(`[ALKIMIA 00:00] Generazione Cloudflare completata con successo per ${solarDateKey}.`);
+      } catch (e: any) {
+        console.warn(`[ALKIMIA 00:00] Cloudflare non riuscito per ${solarDateKey}:`, e.message);
+      }
+    }
+
+    // 3. Fallback Gemini
+    if (!rawText && hasGemini) {
+      try {
+        console.log(`[ALKIMIA 00:00] Avvio elaborazione fallback con Gemini per la data solare ${solarDateKey}...`);
+        const res = await generateWithGemini(systemPrompt, prompt);
+        rawText = res.text;
+        console.log(`[ALKIMIA 00:00] Generazione Gemini completata con successo per ${solarDateKey}.`);
+      } catch (e: any) {
+        console.warn(`[ALKIMIA 00:00] Gemini non riuscito per ${solarDateKey}:`, e.message);
+      }
+    }
+
+    if (rawText) {
+      const parsed = cleanAndParseJson(rawText);
+      if (parsed.essay && parsed.essay.title) {
+        const cycle = {
+          ...CURRENT_EDITORIAL_CYCLE,
+          cyclicalDate: formattedDate,
+          nextScheduledPublication: "Al compimento della rotazione diurna"
+        };
+
+        const edition = {
+          id: `edition-${solarDateKey}`,
+          isLatest: true,
+          cycle: {
+            ...cycle,
+            cyclicalDate: formattedDate
+          },
+          systemPair: {
+            vectorA: selectedA.name,
+            vectorB: selectedB.name,
+            syntheticVector: parsed.systemPair?.syntheticVector || `Collisione speculativa tra ${selectedA.name} e ${selectedB.name}`,
+            ontologicalMatrix: parsed.systemPair?.ontologicalMatrix || "Matrice di Attrito Quantistico-Biologico",
+            derivationTimestamp: formattedDate
+          },
+          essay: parsed.essay,
+          pins: [],
+          tensions: []
+        };
+
+        dailyEditionsCache[solarDateKey] = { cycle, edition };
+        console.log(`[ALKIMIA 00:00] Nuovo Saggio del Giorno redatto e registrato per ${formattedDate}.`);
+      }
+    }
+  } catch (err: any) {
+    console.error(`[ALKIMIA 00:00] Errore durante l'elaborazione del saggio:`, err.message || err);
+  } finally {
+    isGeneratingDaily[solarDateKey] = false;
+  }
+}
+
+async function getOrCreateDailyEdition(solarDateKey: string): Promise<{ cycle: any; edition: any }> {
+  const formattedDate = formatItalianDateServer(solarDateKey);
+
+  if (dailyEditionsCache[solarDateKey]) {
+    const cached = dailyEditionsCache[solarDateKey];
+    cached.cycle.cyclicalDate = formattedDate;
+    cached.edition.cycle.cyclicalDate = formattedDate;
+    cached.edition.systemPair.derivationTimestamp = formattedDate;
+    return cached;
+  }
+
+  // Prepara immediatamente l'edizione calibrata con data sincronizzata
+  const pair = selectDailyVectorPair(solarDateKey);
+  const selectedA = pair.vectorA;
+  const selectedB = pair.vectorB;
+
+  const cycle = {
+    ...CURRENT_EDITORIAL_CYCLE,
+    cyclicalDate: formattedDate,
+    nextScheduledPublication: "Al compimento della rotazione diurna"
+  };
+
+  const edition = {
+    id: `edition-${solarDateKey}`,
+    isLatest: true,
+    cycle: {
+      ...cycle,
+      cyclicalDate: formattedDate
+    },
+    systemPair: {
+      vectorA: selectedA.name,
+      vectorB: selectedB.name,
+      syntheticVector: `Collisione speculativa tra ${selectedA.name} e ${selectedB.name}`,
+      ontologicalMatrix: "Soglia di fase tra l'entropia organica locale e la conservazione dell'informazione non-locale",
+      derivationTimestamp: formattedDate
+    },
+    essay: CURRENT_SPECULATIVE_ESSAY,
+    pins: [],
+    tensions: []
+  };
+
+  dailyEditionsCache[solarDateKey] = { cycle, edition };
+
+  // Avvia l'elaborazione AI in background se non già in corso
+  executeDailyAiDrafting(solarDateKey);
+
+  return dailyEditionsCache[solarDateKey];
+}
+
+// 6. Endpoint Saggio del Giorno: restituisce il saggio garantendo l'assoluta uguaglianza tra data di emissione e saggio
+app.get("/api/daily-edition", async (req, res) => {
+  try {
+    const solarDateKey = typeof req.query.solarDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.solarDate)
+      ? req.query.solarDate
+      : new Date().toISOString().split('T')[0];
+
+    const data = await getOrCreateDailyEdition(solarDateKey);
+    res.json({
+      success: true,
+      solarDateKey,
+      cycle: data.cycle,
+      edition: data.edition
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Trigger automatico di rotazione solare alle ore 00:00 UTC
+let lastMonitoredSolarKey = new Date().toISOString().split('T')[0];
+setInterval(async () => {
+  const currentKey = new Date().toISOString().split('T')[0];
+  if (currentKey !== lastMonitoredSolarKey) {
+    lastMonitoredSolarKey = currentKey;
+    console.log(`[ALKIMIA 00:00] Transizione alla data ${currentKey}. Elaborazione automatica nuovo Saggio del Giorno in corso...`);
+    try {
+      await getOrCreateDailyEdition(currentKey);
+      console.log(`[ALKIMIA 00:00] Nuovo Saggio del Giorno per ${currentKey} redatto con successo.`);
+    } catch (err: any) {
+      console.error(`[ALKIMIA 00:00] Errore trigger automatico 00:00:`, err.message || err);
+    }
+  }
+}, 30000);
 
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
