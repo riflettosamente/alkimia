@@ -82,6 +82,8 @@ export const EDITORIAL_FEED: EditorialEdition[] = [
     phase2Loop: buildPhase2LoopFiveDirections("3. La Tecnologia CRISPR", "2. La Transcomunicazione Strumentale (TCI)"),
     phase3FinalStrike: buildPhase3FinalStrike("3. La Tecnologia CRISPR", "2. La Transcomunicazione Strumentale (TCI)"),
     pins: [],
-    tensions: []
+    tensions: [],
+    aiProvider: "openrouter",
+    aiModel: "nex-agi/nex-n2.5-pro:free"
   }
 ];

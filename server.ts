@@ -393,6 +393,8 @@ async function executeDailyAiDrafting(solarDateKey: string) {
     const hasGemini = Boolean(process.env.GEMINI_API_KEY);
 
     let rawText = "";
+    let usedProvider: 'openrouter' | 'cloudflare' | 'gemini' = 'openrouter';
+    let usedModel = "nex-agi/nex-n2.5-pro:free";
 
     // 1. Priorità OpenRouter
     if (hasOpenRouter) {
@@ -400,7 +402,9 @@ async function executeDailyAiDrafting(solarDateKey: string) {
         console.log(`[ALKIMIA 00:00] Avvio elaborazione con OpenRouter per la data solare ${solarDateKey}...`);
         const res = await generateWithOpenRouter(systemPrompt, prompt);
         rawText = res.text;
-        console.log(`[ALKIMIA 00:00] Generazione OpenRouter completata con successo per ${solarDateKey}.`);
+        usedProvider = 'openrouter';
+        usedModel = res.model;
+        console.log(`[ALKIMIA 00:00] Generazione OpenRouter completata con successo per ${solarDateKey} (${res.model}).`);
       } catch (e: any) {
         console.warn(`[ALKIMIA 00:00] OpenRouter non riuscito per ${solarDateKey}:`, e.message);
       }
@@ -412,7 +416,9 @@ async function executeDailyAiDrafting(solarDateKey: string) {
         console.log(`[ALKIMIA 00:00] Avvio elaborazione con Cloudflare per la data solare ${solarDateKey}...`);
         const res = await generateWithCloudflare(systemPrompt, prompt);
         rawText = res.text;
-        console.log(`[ALKIMIA 00:00] Generazione Cloudflare completata con successo per ${solarDateKey}.`);
+        usedProvider = 'cloudflare';
+        usedModel = res.model;
+        console.log(`[ALKIMIA 00:00] Generazione Cloudflare completata con successo per ${solarDateKey} (${res.model}).`);
       } catch (e: any) {
         console.warn(`[ALKIMIA 00:00] Cloudflare non riuscito per ${solarDateKey}:`, e.message);
       }
@@ -424,7 +430,9 @@ async function executeDailyAiDrafting(solarDateKey: string) {
         console.log(`[ALKIMIA 00:00] Avvio elaborazione fallback con Gemini per la data solare ${solarDateKey}...`);
         const res = await generateWithGemini(systemPrompt, prompt);
         rawText = res.text;
-        console.log(`[ALKIMIA 00:00] Generazione Gemini completata con successo per ${solarDateKey}.`);
+        usedProvider = 'gemini';
+        usedModel = res.model;
+        console.log(`[ALKIMIA 00:00] Generazione Gemini completata con successo per ${solarDateKey} (${res.model}).`);
       } catch (e: any) {
         console.warn(`[ALKIMIA 00:00] Gemini non riuscito per ${solarDateKey}:`, e.message);
       }
@@ -459,11 +467,13 @@ async function executeDailyAiDrafting(solarDateKey: string) {
           phase3FinalStrike: parsed.phase3FinalStrike || buildPhase3FinalStrike(selectedA.name, selectedB.name),
           essay: parsed.essay,
           pins: [],
-          tensions: []
+          tensions: [],
+          aiProvider: usedProvider,
+          aiModel: usedModel
         };
 
         dailyEditionsCache[solarDateKey] = { cycle, edition };
-        console.log(`[ALKIMIA 00:00] Nuovo Saggio del Giorno redatto e registrato per ${formattedDate}.`);
+        console.log(`[ALKIMIA 00:00] Nuovo Saggio del Giorno redatto e registrato per ${formattedDate} via ${usedProvider}.`);
       }
     }
   } catch (err: any) {
@@ -515,7 +525,9 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<{ cycle: a
     phase3FinalStrike: buildPhase3FinalStrike(selectedA.name, selectedB.name),
     essay: CURRENT_SPECULATIVE_ESSAY,
     pins: [],
-    tensions: []
+    tensions: [],
+    aiProvider: "openrouter",
+    aiModel: "nex-agi/nex-n2.5-pro:free"
   };
 
   dailyEditionsCache[solarDateKey] = { cycle, edition };

@@ -190,4 +190,6 @@ export interface EditorialEdition {
   pins: WhiteboardPin[];
   tensions: DialecticalTension[];
   isLatest: boolean;
+  aiProvider?: 'openrouter' | 'cloudflare' | 'gemini';
+  aiModel?: string;
 }

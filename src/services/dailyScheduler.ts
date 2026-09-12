@@ -212,7 +212,9 @@ export async function loadDailyEditionPayload(): Promise<{
           syntheticVector: `Collisione tra ${dailyVectors.vectorA.name} e ${dailyVectors.vectorB.name}`,
           ontologicalMatrix: "Soglia di fase tra entropia organica e conservazione dell'informazione non-locale",
           derivationTimestamp: formattedToday
-        }
+        },
+        aiProvider: ed.aiProvider || "openrouter",
+        aiModel: ed.aiModel || "nex-agi/nex-n2.5-pro:free"
       };
     }
     return {

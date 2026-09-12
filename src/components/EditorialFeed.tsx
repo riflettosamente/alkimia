@@ -20,7 +20,11 @@ export const EditorialFeed: React.FC<EditorialFeedProps> = ({ editions, cycle })
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-12">
         
         {/* Testata dell'Applicazione */}
-        <EditorialHeader cycle={cycle} />
+        <EditorialHeader 
+          cycle={cycle} 
+          aiProvider={currentEdition.aiProvider}
+          aiModel={currentEdition.aiModel}
+        />
 
         {/* Unico Articolo Generato */}
         <div>
