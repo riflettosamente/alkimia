@@ -24,6 +24,8 @@ export const EditorialFeed: React.FC<EditorialFeedProps> = ({ editions, cycle })
           cycle={cycle} 
           aiProvider={currentEdition.aiProvider}
           aiModel={currentEdition.aiModel}
+          generationStatus={currentEdition.generationStatus}
+          generationError={currentEdition.generationError}
         />
 
         {/* Unico Articolo Generato */}
