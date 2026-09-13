@@ -83,7 +83,11 @@ export const EDITORIAL_FEED: EditorialEdition[] = [
     phase3FinalStrike: buildPhase3FinalStrike("3. La Tecnologia CRISPR", "2. La Transcomunicazione Strumentale (TCI)"),
     pins: [],
     tensions: [],
-    aiProvider: "openrouter",
-    aiModel: "nex-agi/nex-n2.5-pro:free"
+    // Contenuto canonico scritto localmente, non prodotto da un provider AI.
+    // Dichiarare qui un provider falso mascherava i fallimenti della generazione reale.
+    aiProvider: null,
+    aiModel: null,
+    generationStatus: "placeholder",
+    generationError: null
   }
 ];

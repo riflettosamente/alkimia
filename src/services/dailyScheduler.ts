@@ -7,7 +7,7 @@
  * del Saggio del Giorno siano identiche.
  */
 
-import { EditorialEdition, EditorialCycle } from '../types';
+import { EditorialEdition, EditorialCycle, EditionGenerationStatus } from '../types';
 import { EDITORIAL_FEED, CURRENT_EDITORIAL_CYCLE } from '../data/mockEdition';
 import { selectDailyVectorPair } from '../ai/ontologicalSystemPrompt';
 import { 
@@ -20,8 +20,9 @@ import {
 export { getSolarDateKey, formatItalianDate, formatTimeUntilNextCycle };
 export const getTimeUntilNextSolarCycle = getTimeUntilNextSolarMidnight;
 
-const CACHE_KEY_CURRENT = 'alkimia_daily_edition_cache_v13';
-const CACHE_KEY_ARCHIVE = 'alkimia_chronological_archive_v13';
+// v14: la versione precedente poteva contenere il ripiego locale spacciato per saggio generato.
+const CACHE_KEY_CURRENT = 'alkimia_daily_edition_cache_v14';
+const CACHE_KEY_ARCHIVE = 'alkimia_chronological_archive_v14';
 
 export interface DailyCachedPayload {
   solarDateKey: string;
@@ -44,7 +45,9 @@ export function getLocalDailyCache(): DailyCachedPayload | null {
       'ontological_daily_edition_cache_v9',
       'ontological_daily_edition_cache_v10',
       'ontological_daily_edition_cache_v11',
-      'alkimia_daily_edition_cache_v12'
+      'alkimia_daily_edition_cache_v12',
+      'alkimia_daily_edition_cache_v13',
+      'alkimia_chronological_archive_v13'
     ].forEach(k => {
       if (localStorage.getItem(k)) localStorage.removeItem(k);
     });
@@ -113,17 +116,50 @@ export function hasSolarDayChanged(storedDateKey: string): boolean {
  * Sincronizza con l'endpoint server /api/daily-edition garantendo la perfetta uguaglianza
  * tra la data di emissione della testata e la data del Saggio del Giorno.
  */
-export async function loadDailyEditionPayload(): Promise<{
+export interface DailyEditionPayload {
   cycle: EditorialCycle;
   editions: EditorialEdition[];
-}> {
+  /**
+   * `true` quando il saggio mostrato NON è definitivo: l'hook continua a interrogare il
+   * server finché la redazione non si conclude.
+   */
+  isProvisional: boolean;
+}
+
+/** Intervallo di polling finché il saggio del giorno risulta provvisorio. */
+export const PROVISIONAL_POLL_INTERVAL_MS = 15000;
+
+/**
+ * Un'edizione va persistita nel localStorage solo se il saggio è davvero prodotto dall'AI.
+ *
+ * In precedenza qualsiasi risposta — compreso il ripiego canonico locale — veniva salvata e,
+ * per tutta la giornata solare, la cache locale aveva la precedenza sul server: il saggio
+ * generato non arrivava mai al lettore.
+ */
+function isPersistable(editions: EditorialEdition[]): boolean {
+  const lead = editions[0];
+  if (!lead) return false;
+  const status = lead.generationStatus;
+  // Le edizioni d'archivio precedenti alla correzione non riportano lo stato: si accettano
+  // solo se dichiarano un provider reale.
+  if (!status) return Boolean(lead.aiProvider);
+  return status === 'generated';
+}
+
+export async function loadDailyEditionPayload(): Promise<DailyEditionPayload> {
   const todayKey = getSolarDateKey();
   const formattedToday = formatItalianDate(todayKey);
   const msUntilNext = getTimeUntilNextSolarMidnight();
   const cached = getLocalDailyCache();
 
-  // 1. Se è già presente in cache locale per la data solare odierna, restituisce con conto alla rovescia aggiornato
-  if (cached && cached.solarDateKey === todayKey && cached.editions && cached.editions.length > 0) {
+  // 1. Cache locale: valida solo se contiene un saggio definitivo della data solare odierna
+  if (
+    cached &&
+    cached.solarDateKey === todayKey &&
+    cached.editions &&
+    cached.editions.length > 0 &&
+    isPersistable(cached.editions)
+  ) {
     const cycleWithUpdatedCountdown: EditorialCycle = {
       ...cached.cycle,
       cyclicalDate: formattedToday,
@@ -142,7 +178,8 @@ export async function loadDailyEditionPayload(): Promise<{
     }));
     return {
       cycle: cycleWithUpdatedCountdown,
-      editions: editionsWithConsistentDate
+      editions: editionsWithConsistentDate,
+      isProvisional: false
     };
   }
 
@@ -152,6 +189,10 @@ export async function loadDailyEditionPayload(): Promise<{
     if (res.ok) {
       const serverData = await res.json();
       if (serverData.success && serverData.edition && serverData.cycle) {
+        const generation = serverData.generation ?? null;
+        const generationStatus: EditionGenerationStatus | undefined =
+          serverData.edition.generationStatus ?? generation?.status ?? undefined;
+
         const cycle: EditorialCycle = {
           ...serverData.cycle,
           cyclicalDate: formattedToday,
@@ -167,21 +208,33 @@ export async function loadDailyEditionPayload(): Promise<{
           systemPair: {
             ...serverData.edition.systemPair,
             derivationTimestamp: formattedToday
-          }
+          },
+          aiProvider: serverData.edition.aiProvider ?? generation?.aiProvider ?? null,
+          aiModel: serverData.edition.aiModel ?? generation?.aiModel ?? null,
+          generationStatus,
+          generationError: serverData.edition.generationError ?? generation?.error ?? null,
+          generationAttempts:
+            serverData.edition.generationAttempts ?? generation?.attempts ?? undefined
         };
 
-        const payload: DailyCachedPayload = {
-          solarDateKey: todayKey,
-          cycle,
-          editions: [edition],
-          cachedAt: Date.now()
-        };
+        const editions = [edition];
 
-        setLocalDailyCache(payload);
+        // Persistenza solo a saggio definitivo: altrimenti il ripiego resterebbe bloccato
+        // nel browser per l'intera giornata.
+        if (isPersistable(editions)) {
+          const payload: DailyCachedPayload = {
+            solarDateKey: todayKey,
+            cycle,
+            editions,
+            cachedAt: Date.now()
+          };
+          setLocalDailyCache(payload);
+        }
 
         return {
           cycle,
-          editions: [edition]
+          editions,
+          isProvisional: generationStatus !== 'generated'
         };
       }
     }
@@ -189,7 +242,9 @@ export async function loadDailyEditionPayload(): Promise<{
     console.warn("Connessione /api/daily-edition non disponibile, applico fallback locale con date sincronizzate:", err);
   }
 
-  // 3. Fallback locale deterministico rigorosamente allineato alla data solare odierna
+  // 3. Fallback locale deterministico rigorosamente allineato alla data solare odierna.
+  //    Non viene persistito: è un ripiego d'emergenza che deve poter essere sostituito dal
+  //    saggio reale non appena il backend torna raggiungibile.
   const dailyVectors = selectDailyVectorPair(todayKey);
 
   const fallbackCycle: EditorialCycle = {
@@ -213,8 +268,11 @@ export async function loadDailyEditionPayload(): Promise<{
           ontologicalMatrix: "Soglia di fase tra entropia organica e conservazione dell'informazione non-locale",
           derivationTimestamp: formattedToday
         },
-        aiProvider: ed.aiProvider || "openrouter",
-        aiModel: ed.aiModel || "nex-agi/nex-n2.5-pro:free"
+        aiProvider: null,
+        aiModel: null,
+        generationStatus: 'failed',
+        generationError: "Backend non raggiungibile: saggio canonico locale di riserva.",
+        generationAttempts: ed.generationAttempts
       };
     }
     return {
@@ -226,17 +284,9 @@ export async function loadDailyEditionPayload(): Promise<{
     };
   });
 
-  const payload: DailyCachedPayload = {
-    solarDateKey: todayKey,
-    cycle: fallbackCycle,
-    editions: fallbackEditions,
-    cachedAt: Date.now()
-  };
-
-  setLocalDailyCache(payload);
-
   return {
     cycle: fallbackCycle,
-    editions: fallbackEditions
+    editions: fallbackEditions,
+    isProvisional: true
   };
 }

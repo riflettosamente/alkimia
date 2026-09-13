@@ -1,0 +1,64 @@
+# ============================================================================
+# ALKIMIA — configurazione dichiarativa del deploy su Render
+#
+# Uso: su Render crea un "Blueprint" pointing a questo repository. Il servizio
+# viene ricreato identico a ogni deploy, invece di dipendere da impostazioni
+# inserite a mano nella dashboard.
+#
+# Le variabili con `sync: false` vanno valorizzate una sola volta nella
+# dashboard di Render (schede Environment): Render chiederà il valore al primo
+# deploy e non lo scriverà mai nel repository.
+# ============================================================================
+services:
+  - type: web
+    name: alkimia
+    runtime: node
+    plan: free
+    # Render rileva automaticamente la versione di Node dal campo "engines" di package.json.
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    # Il servizio è pronto quando risponde l'endpoint di diagnostica.
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      # SCOPO: runtime. Non va imposto in fase di build: `vite build` gestisce
+      # NODE_ENV da solo e il server lo usa per scegliere tra middleware Vite (dev)
+      # e file statici da dist/ (produzione).
+      - key: NODE_ENV
+        scope: runtime
+        value: production
+      # Redundante ora che server.ts legge process.env.PORT, ma esplicitarlo
+      # rimuove ogni ambiguità sul bind.
+      - key: PORT
+        scope: runtime
+        value: 3000
+      - key: APP_URL
+        scope: runtime
+        sync: false
+      - key: OPENROUTER_API_KEY
+        scope: runtime
+        sync: false
+      - key: OPENROUTER_MODEL
+        scope: runtime
+        sync: false
+      - key: CLOUDFLARE_API_KEY
+        scope: runtime
+        sync: false
+      - key: CLOUDFLARE_ACCOUNT_ID
+        scope: runtime
+        sync: false
+      - key: CLOUDFLARE_MODEL
+        scope: runtime
+        sync: false
+      - key: GEMINI_API_KEY
+        scope: runtime
+        sync: false
+      - key: GEMINI_MODEL
+        scope: runtime
+        sync: false
+      - key: AI_REQUEST_TIMEOUT_MS
+        scope: runtime
+        value: "180000"
+      - key: AI_RETRY_COOLDOWN_MS
+        scope: runtime
+        value: "180000"

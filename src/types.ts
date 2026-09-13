@@ -178,6 +178,16 @@ export interface Phase3FinalStrike {
   directionStrikes?: DirectionFinalStrikeItem[];
 }
 
+/**
+ * Stato reale della redazione del Saggio del Giorno.
+ *
+ * - `generated`:    il saggio è stato prodotto da un motore AI.
+ * - `generating`:   la generazione è in corso; il contenuto mostrato è provvisorio.
+ * - `failed`:       tutti i provider hanno fallito; il contenuto mostrato è il ripiego canonico locale.
+ * - `placeholder`:  nessuna generazione è ancora stata tentata (ripiego locale deterministico).
+ */
+export type EditionGenerationStatus = 'generated' | 'generating' | 'failed' | 'placeholder';
+
 export interface EditorialEdition {
   id: string;
   cycle: EditorialCycle;
@@ -190,6 +200,15 @@ export interface EditorialEdition {
   pins: WhiteboardPin[];
   tensions: DialecticalTension[];
   isLatest: boolean;
-  aiProvider?: 'openrouter' | 'cloudflare' | 'gemini';
-  aiModel?: string;
+  /**
+   * `null` quando il provider non è noto con certezza: prima di questa correzione
+   * il front-end dichiarava "openrouter" anche sul contenuto di ripiego, mentendo all'utente.
+   */
+  aiProvider?: 'openrouter' | 'cloudflare' | 'gemini' | null;
+  aiModel?: string | null;
+  generationStatus?: EditionGenerationStatus;
+  /** Motivo leggibile del fallimento, presente solo con `generationStatus === 'failed'`. */
+  generationError?: string | null;
+  /** Tentativi per provider effettuati dal server per questa data solare. */
+  generationAttempts?: number;
 }
