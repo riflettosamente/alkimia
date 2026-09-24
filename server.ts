@@ -2,13 +2,20 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
+import { jsonrepair } from "jsonrepair";
 import { 
   KEY_ONTOLOGICAL_TOPICS, 
   buildOntologicalSystemPrompt,
+  buildAnalyticalSystemPrompt,
+  buildLiteraryEssaySystemPrompt,
   selectRandomVectorPair,
   selectDailyVectorPair
 } from "./src/ai/ontologicalSystemPrompt";
-import { buildSequentialInvestigationPrompt } from "./src/ai/speculativeInvestigationEngine";
+import { 
+  buildStep1AnalysisPrompt,
+  buildStep2LiteraryEssayPrompt,
+  buildSequentialInvestigationPrompt 
+} from "./src/ai/speculativeInvestigationEngine";
 import { CURRENT_EDITORIAL_CYCLE, CURRENT_SPECULATIVE_ESSAY } from "./src/data/mockEdition";
 import { buildPhase1Decomposition } from "./src/data/canonicalDecompositions";
 import { buildPhase2Collision } from "./src/data/canonicalCollisions";
@@ -60,25 +67,35 @@ function getGenAI(): GoogleGenAI {
   return aiClient;
 }
 
+function isAgenticHarnessGated(model?: string | null): boolean {
+  if (!model) return false;
+  const lower = model.toLowerCase();
+  return lower.startsWith("thinkingmachines/") || lower.includes("agentic-harness");
+}
+
+function getEffectiveOpenRouterModel(): string {
+  const envModel = process.env.OPENROUTER_MODEL?.trim();
+  if (envModel && !isAgenticHarnessGated(envModel)) {
+    return envModel;
+  }
+  return "nex-agi/nex-n2.5-mini:free";
+}
+
 // Supporto per OpenRouter con lista di modelli di fallback
 async function generateWithOpenRouter(systemPrompt: string, userPrompt: string): Promise<{ text: string; model: string }> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new Error("OPENROUTER_API_KEY non configurata.");
   }
-  const preferredModel = process.env.OPENROUTER_MODEL;
+  const rawPreferredModel = process.env.OPENROUTER_MODEL?.trim();
   const candidateModels = [
-    ...(preferredModel ? [preferredModel] : []),
+    ...(rawPreferredModel && !isAgenticHarnessGated(rawPreferredModel) ? [rawPreferredModel] : []),
     "nex-agi/nex-n2.5-pro:free",
+    "google/gemma-4-31b-it:free",
     "nex-agi/nex-n2.5-mini:free",
-    "nvidia/nemotron-3.5-lightning:free",
+    "google/gemma-4-26b-a4b-it:free",
     "liquid/lfm-2.5-2.6b:free"
-    // NOTA: "meta-llama/llama-3.3-70b-instruct" è stato rimosso dalla catena.
-    // È un modello A PAGAMENTO: con un account OpenRouter senza credito restituisce
-    // 402 "Payment Required" e non costituisce quindi un fallback reale, ma solo
-    // un ulteriore tentativo destinato a fallire. Per usarlo impostare esplicitamente
-    // OPENROUTER_MODEL=meta-llama/llama-3.3-70b-instruct dopo aver caricato credito.
-  ];
+  ].filter(m => !isAgenticHarnessGated(m));
   // Deduplica preservando l'ordine
   const uniqueModels = Array.from(new Set(candidateModels));
   const appUrl = process.env.APP_URL || "https://alkimia.ai";
@@ -86,66 +103,60 @@ async function generateWithOpenRouter(systemPrompt: string, userPrompt: string):
   const errors: string[] = [];
 
   for (const model of uniqueModels) {
-    // Molti modelli (soprattutto gratuiti) non implementano gli structured outputs e
-    // rispondono con 400 "does not support feature: structured-outputs". In tal caso
-    // si ritenta sullo stesso modello richiedendo il JSON solo via prompt.
-    for (const useJsonResponseFormat of [true, false]) {
-      try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "HTTP-Referer": appUrl,
-            "X-Title": "ALKIMIA",
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model,
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: userPrompt }
-            ],
-            temperature: 0.85,
-            max_tokens: 8192,
-            ...(useJsonResponseFormat ? { response_format: { type: "json_object" } } : {})
-          })
-        });
+    try {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": appUrl,
+          "X-Title": "ALKIMIA",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ],
+          temperature: 0.85,
+          max_tokens: 8192
+        })
+      });
 
-        if (!response.ok) {
-          const errorBody = (await response.text()).slice(0, 400);
+      if (!response.ok) {
+        const errorBody = (await response.text()).slice(0, 400);
 
-          // 402: credito insufficiente. Nessuna utilità nel proseguire con altri modelli
-          // a pagamento dello stesso provider.
-          if (response.status === 402) {
-            throw new Error(`OpenRouter 402 su ${model}: credito insufficiente — ${errorBody}`);
-          }
-
-          // 400 su structured outputs: ritenta senza response_format sullo stesso modello.
-          if (response.status === 400 && useJsonResponseFormat && /structured[-_ ]?output|response_format|json_object/i.test(errorBody)) {
-            console.warn(`[OpenRouter] ${model} non supporta response_format json_object: nuovo tentativo senza.`);
-            continue;
-          }
-
-          throw new Error(`OpenRouter error (${response.status}) su ${model}: ${errorBody}`);
+        // 403 su agentic harness: modello riservato ad harness agentici, passaggio immediato al successivo
+        if (response.status === 403 && /agentic[-_ ]?harness/i.test(errorBody)) {
+          console.info(`[OpenRouter] Modello ${model} riservato ad agentic harness (403): passaggio al modello successivo.`);
+          errors.push(`${model}: riservato ad agentic harness (403)`);
+          continue;
         }
 
-        const data: any = await response.json();
-        const text = data.choices?.[0]?.message?.content;
-        if (!text) {
-          throw new Error(`Nessun contenuto generato restituito da OpenRouter (${model}).`);
+        // 402: credito insufficiente. Nessuna utilità nel proseguire con altri modelli
+        // a pagamento dello stesso provider.
+        if (response.status === 402) {
+          throw new Error(`OpenRouter 402 su ${model}: credito insufficiente — ${errorBody}`);
         }
-        return { text, model };
-      } catch (err: any) {
-        const isAbort = err?.name === "TimeoutError" || err?.name === "AbortError";
-        const reason = isAbort
-          ? `timeout dopo ${Math.round(AI_REQUEST_TIMEOUT_MS / 1000)} s`
-          : (err?.message || String(err));
-        console.warn(`[OpenRouter] Modello ${model} non disponibile (json=${useJsonResponseFormat}): ${reason}`);
-        errors.push(`${model}: ${reason}`);
-        // Un timeout o un errore di rete non si risolvono ripetendo la chiamata senza JSON.
-        break;
+
+        throw new Error(`OpenRouter error (${response.status}) su ${model}: ${errorBody}`);
       }
+
+      const data: any = await response.json();
+      const text = data.choices?.[0]?.message?.content;
+      if (!text) {
+        throw new Error(`Nessun contenuto generato restituito da OpenRouter (${model}).`);
+      }
+      return { text, model };
+    } catch (err: any) {
+      const isAbort = err?.name === "TimeoutError" || err?.name === "AbortError";
+      const reason = isAbort
+        ? `timeout dopo ${Math.round(AI_REQUEST_TIMEOUT_MS / 1000)} s`
+        : (err?.message || String(err));
+      console.warn(`[OpenRouter] Modello ${model} non disponibile: ${reason}`);
+      errors.push(`${model}: ${reason}`);
+      continue;
     }
   }
 
@@ -159,36 +170,54 @@ async function generateWithCloudflare(systemPrompt: string, userPrompt: string):
   if (!apiKey || !accountId) {
     throw new Error("CLOUDFLARE_API_KEY (o TOKEN) e CLOUDFLARE_ACCOUNT_ID non configurati.");
   }
-  const model = process.env.CLOUDFLARE_MODEL || "@cf/meta/llama-3.3-70b-instruct";
+  const preferredModel = process.env.CLOUDFLARE_MODEL;
+  const candidateModels = Array.from(new Set([
+    ...(preferredModel ? [preferredModel] : []),
+    "@cf/meta/llama-3.1-70b-instruct",
+    "@cf/meta/llama-3.1-8b-instruct",
+    "@cf/meta/llama-3.2-3b-instruct"
+  ]));
 
-  const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`, {
-    method: "POST",
-      signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
-        temperature: 0.85,
-        max_tokens: 8192
-      })
-    });
+  let lastError = "";
+  for (const model of candidateModels) {
+    try {
+      const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`, {
+        method: "POST",
+        signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ],
+          temperature: 0.85,
+          max_tokens: 8192
+        })
+      });
 
-  if (!response.ok) {
-    const errorBody = (await response.text()).slice(0, 400);
-    throw new Error(`Cloudflare Workers AI error (${response.status}): ${errorBody}`);
+      if (!response.ok) {
+        const errorBody = (await response.text()).slice(0, 400);
+        lastError = `Cloudflare Workers AI error (${response.status}) su ${model}: ${errorBody}`;
+        continue;
+      }
+
+      const data: any = await response.json();
+      const text = data.result?.response || data.result?.text || data.result?.choices?.[0]?.message?.content;
+      if (!text) {
+        lastError = `Nessun contenuto generato restituito da Cloudflare Workers AI (${model}).`;
+        continue;
+      }
+      return { text, model };
+    } catch (err: any) {
+      lastError = err?.message || String(err);
+      continue;
+    }
   }
 
-  const data: any = await response.json();
-  const text = data.result?.response || data.result?.text;
-  if (!text) {
-    throw new Error("Nessun contenuto generato restituito da Cloudflare Workers AI.");
-  }
-  return { text, model };
+  throw new Error(lastError || "Cloudflare Workers AI non disponibile.");
 }
 
 // Fallback Google Gemini
@@ -196,11 +225,13 @@ async function generateWithGemini(systemPrompt: string, userPrompt: string): Pro
   const ai = getGenAI();
   // Il modello preferito può essere fissato via GEMINI_MODEL. I valori di default sono
   // entrambi effettivamente disponibili sulla Gemini API.
-  const preferredModel = process.env.GEMINI_MODEL;
+  const rawPreferredModel = process.env.GEMINI_MODEL?.trim();
+  const preferredModel = rawPreferredModel && rawPreferredModel !== "default" ? rawPreferredModel : undefined;
   const candidateModels = Array.from(new Set([
     ...(preferredModel ? [preferredModel] : []),
     "gemini-3.6-flash",
-    "gemini-3.1-pro-preview"
+    "gemini-3.1-pro-preview",
+    "gemini-3.5-flash"
   ]));
   const errors: string[] = [];
 
@@ -236,15 +267,15 @@ async function generateWithGemini(systemPrompt: string, userPrompt: string): Pro
 }
 
 /**
- * Catena unica di generazione con priorità: OpenRouter → Cloudflare Workers AI → Google Gemini.
- *
- * Restituisce il testo grezzo prodotto insieme al provider/modello effettivamente usati, oppure
- * un riepilogo strutturato dei tentativi falliti. Nessuna eccezione viene sollevata: il chiamante
- * decide come esporre il fallimento, così l'errore non può più essere inghiottito silenziosamente.
+ * Catena di generazione con priorità configurabile.
+ * - step: 'analysis' (Passo 1): privilegia OpenRouter/Cloudflare per preservare token.
+ * - step: 'literary' (Passo 2): privilegia modelli ad altissima sensibilità morfosintattica
+ *   italiana (Gemini 3.6 Flash / modelli LLM avanzati) per garantire un dizionario autentico ed eliminare neologismi spuri.
  */
 async function runAiProviderChain(
   systemPrompt: string,
-  userPrompt: string
+  userPrompt: string,
+  options?: { step?: 'analysis' | 'literary' }
 ): Promise<
   | { ok: true; text: string; provider: 'openrouter' | 'cloudflare' | 'gemini'; model: string; attempts: string[] }
   | { ok: false; error: string; attempts: string[] }
@@ -256,18 +287,28 @@ async function runAiProviderChain(
   const hasGemini = Boolean(process.env.GEMINI_API_KEY);
 
   const attempts: string[] = [];
+  const step = options?.step || 'analysis';
 
-  const chain: Array<{
+  // Per il Passo 2 (scrittura letteraria pura), Gemini viene posto al vertice per garantire
+  // una prosa italiana nativa perfetta, con Cloudflare (Llama 3.1 70B) come secondo fallback immediato
+  // e affidabile, prima di tentare con OpenRouter.
+  const defaultChain: Array<{
     provider: 'openrouter' | 'cloudflare' | 'gemini';
     configured: boolean;
     run: () => Promise<{ text: string; model: string }>;
-  }> = [
-    { provider: 'openrouter', configured: hasOpenRouter, run: () => generateWithOpenRouter(systemPrompt, userPrompt) },
-    { provider: 'cloudflare', configured: hasCloudflare, run: () => generateWithCloudflare(systemPrompt, userPrompt) },
-    { provider: 'gemini', configured: hasGemini, run: () => generateWithGemini(systemPrompt, userPrompt) }
-  ];
+  }> = step === 'literary'
+    ? [
+        ...(hasGemini ? [{ provider: 'gemini' as const, configured: hasGemini, run: () => generateWithGemini(systemPrompt, userPrompt) }] : []),
+        ...(hasCloudflare ? [{ provider: 'cloudflare' as const, configured: hasCloudflare, run: () => generateWithCloudflare(systemPrompt, userPrompt) }] : []),
+        ...(hasOpenRouter ? [{ provider: 'openrouter' as const, configured: hasOpenRouter, run: () => generateWithOpenRouter(systemPrompt, userPrompt) }] : [])
+      ]
+    : [
+        ...(hasCloudflare ? [{ provider: 'cloudflare' as const, configured: hasCloudflare, run: () => generateWithCloudflare(systemPrompt, userPrompt) }] : []),
+        ...(hasOpenRouter ? [{ provider: 'openrouter' as const, configured: hasOpenRouter, run: () => generateWithOpenRouter(systemPrompt, userPrompt) }] : []),
+        ...(hasGemini ? [{ provider: 'gemini' as const, configured: hasGemini, run: () => generateWithGemini(systemPrompt, userPrompt) }] : [])
+      ];
 
-  for (const entry of chain) {
+  for (const entry of defaultChain) {
     if (!entry.configured) {
       attempts.push(`${entry.provider}: non configurato`);
       continue;
@@ -294,17 +335,35 @@ function cleanAndParseJson(rawText: string): any {
   if (cleaned.startsWith("```")) {
     cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
   }
+
+  // 1. Prova JSON.parse diretto
   try {
     return JSON.parse(cleaned);
-  } catch {
-    const firstBrace = cleaned.indexOf("{");
-    const lastBrace = cleaned.lastIndexOf("}");
-    if (firstBrace !== -1 && lastBrace > firstBrace) {
-      const extracted = cleaned.substring(firstBrace, lastBrace + 1);
+  } catch {}
+
+  // 2. Estrazione compresa tra prima '{' e ultima '}'
+  const firstBrace = cleaned.indexOf("{");
+  const lastBrace = cleaned.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    const extracted = cleaned.substring(firstBrace, lastBrace + 1);
+    try {
       return JSON.parse(extracted);
-    }
-    throw new Error("Impossibile decodificare il payload JSON restituito dal modello.");
+    } catch {}
+
+    // 3. Riparazione della porzione estratta con jsonrepair
+    try {
+      const repaired = jsonrepair(extracted);
+      return JSON.parse(repaired);
+    } catch {}
   }
+
+  // 4. Riparazione sull'intero blocco con jsonrepair
+  try {
+    const repaired = jsonrepair(cleaned);
+    return JSON.parse(repaired);
+  } catch {}
+
+  throw new Error("Impossibile decodificare il payload JSON restituito dal modello.");
 }
 
 // 1. Health check & AI Provider status
@@ -364,7 +423,7 @@ app.get("/api/ai-providers", (_req, res) => {
     providers: {
       openrouter: {
         configured: hasOpenRouter,
-        model: process.env.OPENROUTER_MODEL || "meta-llama/llama-3.3-70b-instruct",
+        model: getEffectiveOpenRouterModel(),
         isPrimary: true
       },
       cloudflare: {
@@ -399,80 +458,64 @@ app.get("/api/select-vector-pair", (req, res) => {
   });
 });
 
-// 5. Generazione Autonoma con priorità OpenRouter e Cloudflare (per preservare i token di Google Gemini)
-app.post("/api/generate-autonomous-essay", async (req, res) => {
+// 5. Generazione Autonoma a Due Passi (Passo 1: Analisi e Collisione -> Passo 2: Composizione Letteraria)
+app.post("/api/generate-autonomous-essay", async (_req, res) => {
   try {
-    // Selezione automatica e casuale di due argomenti differenti attingendo esclusivamente dai nostri 8 vettori
     const randomPair = selectRandomVectorPair();
     const selectedA = randomPair.vectorA;
     const selectedB = randomPair.vectorB;
 
-    const prompt = buildSequentialInvestigationPrompt(selectedA, selectedB);
-    const systemPrompt = buildOntologicalSystemPrompt();
+    // Passo 1: Analisi e Collisione (Fasi 1, 2, 3, 4)
+    const step1Prompt = buildStep1AnalysisPrompt(selectedA, selectedB);
+    const step1SystemPrompt = buildAnalyticalSystemPrompt();
 
-    const hasOpenRouter = Boolean(process.env.OPENROUTER_API_KEY);
-    const hasCloudflare = Boolean(process.env.CLOUDFLARE_API_KEY && process.env.CLOUDFLARE_ACCOUNT_ID);
-    const hasGemini = Boolean(process.env.GEMINI_API_KEY);
-
-    let generationResult: { text: string; model: string; provider: string } | null = null;
-    let providerErrorLog: string[] = [];
-
-    // 1. PRIORITÀ ASSOLUTA: OpenRouter (evita di toccare i token di Google Gemini)
-    if (hasOpenRouter) {
-      try {
-        const openrouterRes = await generateWithOpenRouter(systemPrompt, prompt);
-        generationResult = { ...openrouterRes, provider: "openrouter" };
-      } catch (err: any) {
-        console.warn("Tentativo con OpenRouter fallito:", err.message || err);
-        providerErrorLog.push(`OpenRouter: ${err.message}`);
-      }
+    const step1Res = await runAiProviderChain(step1SystemPrompt, step1Prompt);
+    if (step1Res.ok === false) {
+      throw new Error(`Passo 1 (Analisi) fallito: ${step1Res.error}`);
     }
 
-    // 2. SECONDA PRIORITÀ: Cloudflare Workers AI
-    if (!generationResult && hasCloudflare) {
-      try {
-        const cloudflareRes = await generateWithCloudflare(systemPrompt, prompt);
-        generationResult = { ...cloudflareRes, provider: "cloudflare" };
-      } catch (err: any) {
-        console.warn("Tentativo con Cloudflare fallito:", err.message || err);
-        providerErrorLog.push(`Cloudflare: ${err.message}`);
-      }
+    const parsedStep1 = cleanAndParseJson(step1Res.text);
+
+    // Passo 2: Composizione Letteraria Pura (Fase 5: Saggio del Giorno)
+    const step2Prompt = buildStep2LiteraryEssayPrompt(parsedStep1, selectedA, selectedB);
+    const step2SystemPrompt = buildLiteraryEssaySystemPrompt();
+
+    const step2Res = await runAiProviderChain(step2SystemPrompt, step2Prompt, { step: 'literary' });
+    if (step2Res.ok === false) {
+      throw new Error(`Passo 2 (Saggio Letterario) fallito: ${step2Res.error}`);
     }
 
-    // 3. FALLBACK ULTIMO: Google Gemini (solo se OpenRouter e Cloudflare non sono configurati o falliti)
-    if (!generationResult && hasGemini) {
-      try {
-        const geminiRes = await generateWithGemini(systemPrompt, prompt);
-        generationResult = { ...geminiRes, provider: "gemini" };
-      } catch (err: any) {
-        console.warn("Tentativo con Gemini fallito:", err.message || err);
-        providerErrorLog.push(`Gemini: ${err.message}`);
-      }
-    }
-
-    if (!generationResult) {
-      throw new Error(
-        `Nessun motore AI ha completato la generazione. Errori: ${providerErrorLog.join("; ") || "Nessuna API KEY configurata tra OpenRouter, Cloudflare e Gemini."}`
-      );
-    }
-
-    const parsedData = cleanAndParseJson(generationResult.text);
+    const parsedStep2 = cleanAndParseJson(step2Res.text);
 
     res.json({
       success: true,
-      provider: generationResult.provider,
-      model: generationResult.model,
-      data: parsedData,
+      provider: step2Res.provider,
+      model: step2Res.model,
+      step1Provider: step1Res.provider,
+      step1Model: step1Res.model,
+      data: {
+        systemPair: {
+          vectorA: selectedA.name,
+          vectorB: selectedB.name,
+          syntheticVector: parsedStep1?.systemPair?.syntheticVector || `Collisione tra ${selectedA.name} e ${selectedB.name}`,
+          ontologicalMatrix: parsedStep1?.systemPair?.ontologicalMatrix || "Matrice d'Attrito Ontologico"
+        },
+        phase1Decomposition: parsedStep1?.phase1Decomposition || buildPhase1Decomposition(selectedA.name, selectedB.name),
+        phase2Collision: parsedStep1?.phase2Collision || buildPhase2Collision(selectedA.name, selectedB.name),
+        phase2Loop: parsedStep1?.phase2Loop || buildPhase2LoopFiveDirections(selectedA.name, selectedB.name),
+        phase3FinalStrike: parsedStep1?.phase3FinalStrike || buildPhase3FinalStrike(selectedA.name, selectedB.name),
+        essay: parsedStep2.essay
+      },
       selectedVectors: {
         vectorA: selectedA,
         vectorB: selectedB
       }
     });
   } catch (error: any) {
-    console.error("Errore generazione autonoma:", error);
+    console.error("Errore generazione autonoma a due passi:", error);
     res.status(500).json({ 
       success: false, 
-      error: error.message || "Errore durante l'elaborazione del saggio speculativo." 
+      error: error.message || "Errore durante l'elaborazione a due passi del saggio speculativo." 
     });
   }
 });
@@ -597,56 +640,98 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     const selectedA = pair.vectorA;
     const selectedB = pair.vectorB;
 
-    const prompt = buildSequentialInvestigationPrompt(selectedA, selectedB);
-    const systemPrompt = buildOntologicalSystemPrompt();
-
     console.log(
-      `[ALKIMIA] Avvio redazione del Saggio del Giorno ${solarDateKey} — ` +
+      `[ALKIMIA] Avvio redazione a due passi del Saggio del Giorno ${solarDateKey} — ` +
       `Vettore A «${selectedA.name}» × Vettore B «${selectedB.name}».`
     );
 
-    const result = await runAiProviderChain(systemPrompt, prompt);
+    // =========================================================================
+    // PASSO 1: Analisi e Collisione Ontologica (Fasi 1, 2, 3 e 4)
+    // =========================================================================
+    console.log(`[ALKIMIA] Passo 1: Analisi e collisione preliminare in corso...`);
+    const step1Prompt = buildStep1AnalysisPrompt(selectedA, selectedB);
+    const step1SystemPrompt = buildAnalyticalSystemPrompt();
+
+    const step1Result = await runAiProviderChain(step1SystemPrompt, step1Prompt);
 
     const entry = dailyEditionsCache[solarDateKey];
     if (!entry) return;
 
     entry.attempts += 1;
-    entry.finishedAt = Date.now();
 
-    // `ok === false` invece di `!result.ok`: con `strictNullChecks` disattivato
-    // (come in tsconfig.json) la negazione di un booleano non restringe l'unione.
-    if (result.ok === false) {
+    if (step1Result.ok === false) {
       entry.status = 'failed';
       entry.aiProvider = null;
       entry.aiModel = null;
-      entry.error = result.error;
-      console.error(`[ALKIMIA] Redazione ${solarDateKey} fallita: ${result.error}`);
+      entry.error = `Passo 1 (Analisi) fallito: ${step1Result.error}`;
+      entry.finishedAt = Date.now();
+      console.error(`[ALKIMIA] ${entry.error}`);
       return;
     }
 
-    let parsed: any;
+    let parsedStep1: any;
     try {
-      parsed = cleanAndParseJson(result.text);
+      parsedStep1 = cleanAndParseJson(step1Result.text);
     } catch (err: any) {
       entry.status = 'failed';
-      entry.aiProvider = result.provider;
-      entry.aiModel = result.model;
-      entry.error = `Payload non decodificabile da ${result.provider}/${result.model}: ${err.message || err}`;
+      entry.aiProvider = step1Result.provider;
+      entry.aiModel = step1Result.model;
+      entry.error = `Passo 1: Payload analitico non decodificabile da ${step1Result.provider}/${step1Result.model}: ${err.message || err}`;
+      entry.finishedAt = Date.now();
       console.error(`[ALKIMIA] ${entry.error}`);
       return;
     }
 
-    if (!parsed?.essay?.title) {
+    console.log(
+      `[ALKIMIA] Passo 1 completato con successo via ${step1Result.provider} (${step1Result.model}). ` +
+      `Avvio Passo 2 (Composizione Letteraria Pura - Fase 5)...`
+    );
+
+    // =========================================================================
+    // PASSO 2: Composizione Letteraria Pura (Fase 5: Saggio del Giorno)
+    // =========================================================================
+    const step2Prompt = buildStep2LiteraryEssayPrompt(parsedStep1, selectedA, selectedB);
+    const step2SystemPrompt = buildLiteraryEssaySystemPrompt();
+
+    const step2Result = await runAiProviderChain(step2SystemPrompt, step2Prompt, { step: 'literary' });
+
+    if (step2Result.ok === false) {
       entry.status = 'failed';
-      entry.aiProvider = result.provider;
-      entry.aiModel = result.model;
-      entry.error =
-        `Il modello ${result.model} ha restituito un JSON privo di "essay.title": contenuto scartato.`;
+      entry.aiProvider = step1Result.provider;
+      entry.aiModel = step1Result.model;
+      entry.error = `Passo 2 (Saggio Letterario) fallito: ${step2Result.error}`;
+      entry.finishedAt = Date.now();
       console.error(`[ALKIMIA] ${entry.error}`);
       return;
     }
 
-    // Esito positivo: il contenuto provvisorio viene sostituito integralmente da quello AI.
+    let parsedStep2: any;
+    try {
+      parsedStep2 = cleanAndParseJson(step2Result.text);
+    } catch (err: any) {
+      entry.status = 'failed';
+      entry.aiProvider = step2Result.provider;
+      entry.aiModel = step2Result.model;
+      entry.error = `Passo 2: Payload saggio non decodificabile da ${step2Result.provider}/${step2Result.model}: ${err.message || err}`;
+      entry.finishedAt = Date.now();
+      console.error(`[ALKIMIA] ${entry.error}`);
+      return;
+    }
+
+    if (!parsedStep2?.essay?.title) {
+      entry.status = 'failed';
+      entry.aiProvider = step2Result.provider;
+      entry.aiModel = step2Result.model;
+      entry.error =
+        `Il modello ${step2Result.model} ha restituito un JSON privo di "essay.title": contenuto scartato.`;
+      entry.finishedAt = Date.now();
+      console.error(`[ALKIMIA] ${entry.error}`);
+      return;
+    }
+
+    entry.finishedAt = Date.now();
+
+    // Esito positivo: fusione organica di Passo 1 e Passo 2 nell'edizione completa
     entry.cycle = {
       ...CURRENT_EDITORIAL_CYCLE,
       cyclicalDate: formattedDate,
@@ -661,35 +746,37 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
         vectorA: selectedA.name,
         vectorB: selectedB.name,
         syntheticVector:
-          parsed.systemPair?.syntheticVector ||
+          parsedStep1.systemPair?.syntheticVector ||
           `Collisione speculativa tra ${selectedA.name} e ${selectedB.name}`,
         ontologicalMatrix:
-          parsed.systemPair?.ontologicalMatrix || "Matrice di Attrito Quantistico-Biologico",
+          parsedStep1.systemPair?.ontologicalMatrix || "Matrice d'Attrito Ontologico",
         derivationTimestamp: formattedDate
       },
       phase1Decomposition:
-        parsed.phase1Decomposition || buildPhase1Decomposition(selectedA.name, selectedB.name),
-      phase2Collision: parsed.phase2Collision || buildPhase2Collision(selectedA.name, selectedB.name),
-      phase2Loop:
-        parsed.phase2Loop || buildPhase2LoopFiveDirections(selectedA.name, selectedB.name),
-      phase3FinalStrike:
-        parsed.phase3FinalStrike || buildPhase3FinalStrike(selectedA.name, selectedB.name),
-      essay: parsed.essay,
+        parsedStep1.phase1Decomposition || buildPhase1Decomposition(selectedA.name, selectedB.name),
+      phase2Collision: 
+        parsedStep1.phase2Collision || buildPhase2Collision(selectedA.name, selectedB.name),
+      phase2Loop: 
+        parsedStep1.phase2Loop || buildPhase2LoopFiveDirections(selectedA.name, selectedB.name),
+      phase3FinalStrike: 
+        parsedStep1.phase3FinalStrike || buildPhase3FinalStrike(selectedA.name, selectedB.name),
+      essay: parsedStep2.essay,
       pins: [],
       tensions: [],
-      aiProvider: result.provider,
-      aiModel: result.model,
+      aiProvider: step2Result.provider,
+      aiModel: step2Result.model,
       generationStatus: 'generated',
       generationError: null,
       generationAttempts: entry.attempts
     };
     entry.status = 'generated';
-    entry.aiProvider = result.provider;
-    entry.aiModel = result.model;
+    entry.aiProvider = step2Result.provider;
+    entry.aiModel = step2Result.model;
     entry.error = null;
 
     console.log(
-      `[ALKIMIA] Saggio del Giorno ${formattedDate} redatto con successo via ${result.provider} (${result.model}).`
+      `[ALKIMIA] Saggio del Giorno ${formattedDate} redatto con successo a due passi: ` +
+      `Passo 1 (${step1Result.provider}/${step1Result.model}) + Passo 2 (${step2Result.provider}/${step2Result.model}).`
     );
   })().finally(() => {
     delete inFlightDaily[solarDateKey];
