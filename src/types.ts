@@ -204,7 +204,7 @@ export interface EditorialEdition {
    * `null` quando il provider non è noto con certezza: prima di questa correzione
    * il front-end dichiarava "openrouter" anche sul contenuto di ripiego, mentendo all'utente.
    */
-  aiProvider?: 'openrouter' | 'cloudflare' | 'gemini' | null;
+  aiProvider?: 'groq' | 'openrouter' | 'cloudflare' | 'gemini' | null;
   aiModel?: string | null;
   generationStatus?: EditionGenerationStatus;
   /** Motivo leggibile del fallimento, presente solo con `generationStatus === 'failed'`. */

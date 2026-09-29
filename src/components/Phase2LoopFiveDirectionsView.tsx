@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Phase2LoopFiveDirections, SystemConceptualPair } from '../types';
-import { buildPhase2LoopFiveDirections } from '../data/canonicalLoopFiveDirections';
+import { normalizePhase2Loop } from '../utils/phase2LoopUtils';
 import { Compass, Repeat, GitCommit, Unlink, Sparkles, RefreshCw, HelpCircle, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -13,13 +13,15 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
   systemPair,
   loop
 }) => {
-  const activeLoop = loop || buildPhase2LoopFiveDirections(
-    systemPair.vectorA,
-    systemPair.vectorB
+  const activeLoop = normalizePhase2Loop(
+    loop,
+    systemPair?.vectorA || '',
+    systemPair?.vectorB || ''
   );
 
   const [selectedTrackIndex, setSelectedTrackIndex] = useState<number>(0);
-  const currentTrack = activeLoop.tracks[selectedTrackIndex] || activeLoop.tracks[0];
+  const currentTrack = activeLoop?.tracks?.[selectedTrackIndex] || activeLoop?.tracks?.[0];
+  const collision = currentTrack?.collision;
 
   return (
     <motion.div
@@ -46,20 +48,20 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
         </div>
 
         <div className="pt-2 text-xs sm:text-sm text-[#575043] font-serif leading-relaxed">
-          {activeLoop.theoreticalPreamble}
+          {activeLoop?.theoreticalPreamble}
         </div>
 
         {/* I due vettori del binario concettuale */}
         <div className="pt-4 border-t border-[#ede7dc] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono">
           <div className="bg-[#faf8f5] px-3 py-1.5 border border-[#ede7dc] rounded-sm text-[#787164]">
-            <span className="text-[#9e7627] font-semibold">Binario Fisso A:</span> {systemPair.vectorA}
+            <span className="text-[#9e7627] font-semibold">Binario Fisso A:</span> {systemPair?.vectorA || 'Vettore A'}
           </div>
           <div className="text-[#9e7627] flex items-center gap-1">
             <Compass className="w-3.5 h-3.5" />
             <span className="tracking-wider uppercase font-semibold">5 Inclinazioni di Faglia</span>
           </div>
           <div className="bg-[#faf8f5] px-3 py-1.5 border border-[#ede7dc] rounded-sm text-[#787164]">
-            <span className="text-[#5c6e8c] font-semibold">Binario Fisso B:</span> {systemPair.vectorB}
+            <span className="text-[#5c6e8c] font-semibold">Binario Fisso B:</span> {systemPair?.vectorB || 'Vettore B'}
           </div>
         </div>
       </div>
@@ -71,7 +73,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
             Seleziona la Direzione di Collisione (1 – 5):
           </span>
           <span className="text-xs font-mono text-[#9e7627] font-semibold">
-            {selectedTrackIndex + 1} di 5
+            {selectedTrackIndex + 1} di {activeLoop?.tracks?.length || 5}
           </span>
         </div>
 
@@ -80,12 +82,13 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
           aria-label="Le 5 direzioni del loop ontologico"
           className="grid grid-cols-1 sm:grid-cols-5 gap-2 p-1.5 bg-[#ede9e0] border border-[#d8d0c2] rounded-sm"
         >
-          {activeLoop.tracks.map((track, idx) => {
+          {activeLoop?.tracks?.map((track, idx) => {
             const isSelected = selectedTrackIndex === idx;
+            const uniqueKey = `track-dir-tab-${track.directionNumber ?? (idx + 1)}-${idx}-${track.id || 'dir'}`;
             return (
               <button
-                key={track.id}
-                id={`track-btn-${track.directionNumber}`}
+                key={uniqueKey}
+                id={`track-btn-${track.directionNumber || idx + 1}`}
                 role="tab"
                 aria-selected={isSelected}
                 onClick={() => setSelectedTrackIndex(idx)}
@@ -97,12 +100,12 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
               >
                 <div className="flex items-center justify-between">
                   <span className={`text-[11px] font-mono font-bold ${isSelected ? 'text-[#9e7627]' : 'text-[#8a8274]'}`}>
-                    DIR #{track.directionNumber}
+                    DIR #{track.directionNumber || idx + 1}
                   </span>
                   {isSelected && <GitCommit className="w-3.5 h-3.5 text-[#9e7627]" />}
                 </div>
                 <div className="text-xs font-serif font-semibold mt-1 line-clamp-2 leading-tight">
-                  {track.directionTitle.split(':')[1]?.trim() || track.directionTitle}
+                  {track.directionTitle?.split(':')[1]?.trim() || track.directionTitle || `Direzione ${idx + 1}`}
                 </div>
               </button>
             );
@@ -113,7 +116,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
       {/* Dettaglio della Direzione Selezionata con i 4 Passaggi Integrali */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={currentTrack.id}
+          key={`active-track-motion-${currentTrack?.directionNumber || selectedTrackIndex}-${selectedTrackIndex}`}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
@@ -124,10 +127,10 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
           <div className="p-5 bg-[#faf8f5] border border-[#ded7ca] rounded-sm space-y-2">
             <div className="flex items-center gap-2 text-xs font-mono text-[#9e7627] font-semibold uppercase tracking-wider">
               <Compass className="w-4 h-4" />
-              <span>Direzione {currentTrack.directionNumber} • {currentTrack.directionTitle}</span>
+              <span>Direzione {currentTrack?.directionNumber || selectedTrackIndex + 1} • {currentTrack?.directionTitle || 'Direzione Ontologica'}</span>
             </div>
             <p className="text-sm font-serif text-[#2c2823] leading-relaxed italic pl-6 border-l-2 border-[#9e7627]">
-              {currentTrack.ontologicalAngle}
+              {currentTrack?.ontologicalAngle || 'Angolazione ontologica di indagine.'}
             </p>
           </div>
 
@@ -149,18 +152,18 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 bg-[#faf8f5] border border-[#ede7dc] rounded-sm space-y-1.5">
                     <span className="text-xs font-mono font-bold text-[#9e7627] block uppercase">
-                      Verbo [A]: {currentTrack.collision.step1StrippingFunction.fundamentalVerbA}
+                      Verbo [A]: {collision?.step1StrippingFunction?.fundamentalVerbA || 'Trasporre'}
                     </span>
                     <p className="text-xs sm:text-sm text-[#3d3830] font-serif leading-relaxed">
-                      {currentTrack.collision.step1StrippingFunction.abstractFunctionA}
+                      {collision?.step1StrippingFunction?.abstractFunctionA || 'Funzione astratta primaria del primo vettore.'}
                     </p>
                   </div>
                   <div className="p-4 bg-[#fcfbfa] border border-[#ede7dc] rounded-sm space-y-1.5">
                     <span className="text-xs font-mono font-bold text-[#475b7a] block uppercase">
-                      Verbo [B]: {currentTrack.collision.step1StrippingFunction.fundamentalVerbB}
+                      Verbo [B]: {collision?.step1StrippingFunction?.fundamentalVerbB || 'Persistere'}
                     </span>
                     <p className="text-xs sm:text-sm text-[#3d3830] font-serif leading-relaxed">
-                      {currentTrack.collision.step1StrippingFunction.abstractFunctionB}
+                      {collision?.step1StrippingFunction?.abstractFunctionB || 'Funzione astratta primaria del secondo vettore.'}
                     </p>
                   </div>
                 </div>
@@ -168,7 +171,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                   <span className="font-mono text-xs uppercase tracking-wider text-[#9e7627] font-semibold block mb-0.5">
                     Sintesi Funzionale:
                   </span>
-                  {currentTrack.collision.step1StrippingFunction.functionalSynthesis}
+                  {collision?.step1StrippingFunction?.functionalSynthesis || 'Sintesi del punto di contatto tra i due verbi fondamentali.'}
                 </div>
               </div>
             </div>
@@ -192,7 +195,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                       <span>Confine / Limite di A</span>
                     </div>
                     <p className="text-xs sm:text-sm text-[#2c2823] font-serif leading-relaxed">
-                      {currentTrack.collision.step2BlindAxis.boundaryA}
+                      {collision?.step2BlindAxis?.boundaryA || 'Limite estremo dell\'operatività del vettore A.'}
                     </p>
                   </div>
                   <div className="p-4 bg-[#faf8f5] border border-[#ede7dc] rounded-sm space-y-1">
@@ -201,7 +204,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                       <span>Varco d'Accesso a B</span>
                     </div>
                     <p className="text-xs sm:text-sm text-[#2c2823] font-serif leading-relaxed">
-                      {currentTrack.collision.step2BlindAxis.accessDoorToB}
+                      {collision?.step2BlindAxis?.accessDoorToB || 'Varco d\'accesso che si dischiude verso il vettore B.'}
                     </p>
                   </div>
                 </div>
@@ -209,7 +212,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                   <span className="font-mono not-italic text-xs uppercase tracking-wider text-[#9e7627] font-semibold block mb-0.5">
                     Crepa Asimmetrica:
                   </span>
-                  {currentTrack.collision.step2BlindAxis.creviceContactPoint}
+                  {collision?.step2BlindAxis?.creviceContactPoint || 'Punto di fessurazione in cui le due polarità divergono.'}
                 </div>
               </div>
             </div>
@@ -232,7 +235,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                     <span>Metodo Invertito</span>
                   </div>
                   <p className="text-xs sm:text-sm font-serif text-[#2c2823] leading-relaxed">
-                    {currentTrack.collision.step3InvertedDirection.methodAAppliedToB}
+                    {collision?.step3InvertedDirection?.methodAAppliedToB || 'Applicazione della logica del primo vettore all\'orizzonte del secondo.'}
                   </p>
                 </div>
 
@@ -242,7 +245,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                     <span>Quesito Provocatorio di Violazione:</span>
                   </div>
                   <p className="text-sm sm:text-base font-serif font-semibold text-[#1a1714] leading-relaxed italic">
-                    «{currentTrack.collision.step3InvertedDirection.provocativeViolationQuestion}»
+                    «{collision?.step3InvertedDirection?.provocativeViolationQuestion || 'Quale anomalia si spalanca ribaltando la direzione dello sguardo?'}»
                   </p>
                 </div>
 
@@ -250,7 +253,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                   <span className="font-mono text-xs uppercase tracking-wider text-[#475b7a] font-semibold block mb-0.5">
                     Intuizione Contro-Intuitiva:
                   </span>
-                  {currentTrack.collision.step3InvertedDirection.counterIntuitiveInsight}
+                  {collision?.step3InvertedDirection?.counterIntuitiveInsight || 'Il cortocircuito logico svela un presupposto implicito del paradigma.'}
                 </div>
               </div>
             </div>
@@ -272,7 +275,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                     Metafora Architetturale
                   </span>
                   <h3 className="text-base sm:text-lg font-serif font-bold text-[#1a1714]">
-                    {currentTrack.collision.step4CommonMetaphor.masterMetaphorTitle}
+                    {collision?.step4CommonMetaphor?.masterMetaphorTitle || 'LA SOGLIA DEL VELATO'}
                   </h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -281,7 +284,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                       Radice Cosmologica / Antropologica
                     </span>
                     <p className="text-xs sm:text-sm text-[#3d3830] font-serif leading-relaxed">
-                      {currentTrack.collision.step4CommonMetaphor.cosmologicalAnthropologicalGround}
+                      {collision?.step4CommonMetaphor?.cosmologicalAnthropologicalGround || 'Fondamento antropologico comune ai due domini d\'indagine.'}
                     </p>
                   </div>
                   <div className="p-3.5 bg-[#faf8f5] border border-[#ede7dc] rounded-sm space-y-1">
@@ -289,7 +292,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                       Visione d'Insieme
                     </span>
                     <p className="text-xs sm:text-sm text-[#1a1714] font-serif font-medium leading-relaxed">
-                      {currentTrack.collision.step4CommonMetaphor.unifyingVision}
+                      {collision?.step4CommonMetaphor?.unifyingVision || 'La convergenza organica che riannoda i due fenomeni in un unico continuum.'}
                     </p>
                   </div>
                 </div>
@@ -324,3 +327,4 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
     </motion.div>
   );
 };
+

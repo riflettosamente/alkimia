@@ -1,6 +1,6 @@
 import React from 'react';
 import { Phase2CollisionDecomposition, SystemConceptualPair } from '../types';
-import { buildPhase2Collision } from '../data/canonicalCollisions';
+import { normalizePhase2Collision } from '../utils/phase2CollisionUtils';
 import { Zap, GitMerge, Unlink, RefreshCw, Sparkles, HelpCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -13,17 +13,16 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
   systemPair,
   collision
 }) => {
-  const activeCollision = collision || buildPhase2Collision(
-    systemPair.vectorA,
-    systemPair.vectorB
+  const activeCollision = normalizePhase2Collision(
+    collision,
+    systemPair?.vectorA || '',
+    systemPair?.vectorB || ''
   );
 
-  const {
-    step1StrippingFunction,
-    step2BlindAxis,
-    step3InvertedDirection,
-    step4CommonMetaphor
-  } = activeCollision;
+  const step1StrippingFunction = activeCollision?.step1StrippingFunction;
+  const step2BlindAxis = activeCollision?.step2BlindAxis;
+  const step3InvertedDirection = activeCollision?.step3InvertedDirection;
+  const step4CommonMetaphor = activeCollision?.step4CommonMetaphor;
 
   return (
     <motion.div
@@ -56,7 +55,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
               Vettore A
             </span>
             <h3 className="text-base font-serif text-[#1a1714] font-semibold">
-              {systemPair.vectorA}
+              {systemPair?.vectorA || 'Vettore A'}
             </h3>
           </div>
 
@@ -70,7 +69,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
               Vettore B
             </span>
             <h3 className="text-base font-serif text-[#1a1714] font-semibold">
-              {systemPair.vectorB}
+              {systemPair?.vectorB || 'Vettore B'}
             </h3>
           </div>
         </div>
@@ -100,25 +99,25 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 bg-[#faf8f5] border border-[#ede7dc] rounded-sm space-y-2">
                 <span className="text-xs font-mono font-bold text-[#9e7627] block uppercase">
-                  Verbo Fondamentale [A] • {systemPair.vectorA}
+                  Verbo Fondamentale [A] • {systemPair?.vectorA || 'Vettore A'}
                 </span>
                 <p className="text-sm font-serif font-semibold text-[#1a1714]">
-                  {step1StrippingFunction.fundamentalVerbA}
+                  {step1StrippingFunction?.fundamentalVerbA || 'VIOLARE'}
                 </p>
                 <p className="text-xs sm:text-sm text-[#3d3830] font-serif leading-relaxed">
-                  {step1StrippingFunction.abstractFunctionA}
+                  {step1StrippingFunction?.abstractFunctionA || 'Funzione astratta primaria del primo vettore.'}
                 </p>
               </div>
 
               <div className="p-4 bg-[#fcfbfa] border border-[#ede7dc] rounded-sm space-y-2">
                 <span className="text-xs font-mono font-bold text-[#475b7a] block uppercase">
-                  Verbo Fondamentale [B] • {systemPair.vectorB}
+                  Verbo Fondamentale [B] • {systemPair?.vectorB || 'Vettore B'}
                 </span>
                 <p className="text-sm font-serif font-semibold text-[#1a1714]">
-                  {step1StrippingFunction.fundamentalVerbB}
+                  {step1StrippingFunction?.fundamentalVerbB || 'ESTENDERE'}
                 </p>
                 <p className="text-xs sm:text-sm text-[#3d3830] font-serif leading-relaxed">
-                  {step1StrippingFunction.abstractFunctionB}
+                  {step1StrippingFunction?.abstractFunctionB || 'Funzione astratta primaria del secondo vettore.'}
                 </p>
               </div>
             </div>
@@ -127,7 +126,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
               <span className="font-mono text-xs uppercase tracking-wider text-[#9e7627] font-semibold block mb-1">
                 Sintesi del Trapianto Funzionale:
               </span>
-              {step1StrippingFunction.functionalSynthesis}
+              {step1StrippingFunction?.functionalSynthesis || 'Sintesi del punto di contatto tra i due verbi fondamentali.'}
             </div>
           </div>
         </div>
@@ -157,7 +156,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                   <span>Limite / Confine del Primo Argomento (A)</span>
                 </div>
                 <p className="text-sm text-[#2c2823] font-serif leading-relaxed">
-                  {step2BlindAxis.boundaryA}
+                  {step2BlindAxis?.boundaryA || 'Limite estremo dell\'operatività del vettore A.'}
                 </p>
               </div>
 
@@ -167,7 +166,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                   <span>Strumento d'Accesso al Secondo Argomento (B)</span>
                 </div>
                 <p className="text-sm text-[#2c2823] font-serif leading-relaxed">
-                  {step2BlindAxis.accessDoorToB}
+                  {step2BlindAxis?.accessDoorToB || 'Varco d\'accesso che si dischiude verso il vettore B.'}
                 </p>
               </div>
             </div>
@@ -177,7 +176,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                 Punto di Contatto sulla Crepa:
               </span>
               <p className="text-sm font-serif text-[#1f1c19] leading-relaxed italic">
-                {step2BlindAxis.creviceContactPoint}
+                {step2BlindAxis?.creviceContactPoint || 'Punto di fessurazione in cui le due polarità divergono.'}
               </p>
             </div>
           </div>
@@ -207,7 +206,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                 <span>Inversione dei Domini Operativi</span>
               </div>
               <p className="text-sm font-serif text-[#2c2823] leading-relaxed">
-                {step3InvertedDirection.methodAAppliedToB}
+                {step3InvertedDirection?.methodAAppliedToB || 'Applicazione della logica del primo vettore all\'orizzonte del secondo.'}
               </p>
             </div>
 
@@ -218,7 +217,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                 <span>Quesito di Violazione Concettuale:</span>
               </div>
               <p className="text-base sm:text-lg font-serif font-semibold text-[#1a1714] leading-relaxed italic">
-                «{step3InvertedDirection.provocativeViolationQuestion}»
+                «{step3InvertedDirection?.provocativeViolationQuestion || 'Quale anomalia si spalanca ribaltando la direzione dello sguardo?'}»
               </p>
             </div>
 
@@ -226,7 +225,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
               <span className="font-mono text-xs uppercase tracking-wider text-[#475b7a] font-semibold block mb-1">
                 Intuizione Contro-Intuitiva (Cortocircuito):
               </span>
-              {step3InvertedDirection.counterIntuitiveInsight}
+              {step3InvertedDirection?.counterIntuitiveInsight || 'Il cortocircuito logico svela un presupposto implicito del paradigma.'}
             </div>
           </div>
         </div>
@@ -251,7 +250,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                 Grande Metafora Architetturale
               </span>
               <h3 className="text-lg sm:text-xl font-serif font-bold text-[#1a1714]">
-                {step4CommonMetaphor.masterMetaphorTitle}
+                {step4CommonMetaphor?.masterMetaphorTitle || 'LA SOGLIA DEL VELATO'}
               </h3>
             </div>
 
@@ -261,7 +260,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                   Radice Antropologica / Cosmologica
                 </span>
                 <p className="text-sm text-[#3d3830] font-serif leading-relaxed">
-                  {step4CommonMetaphor.cosmologicalAnthropologicalGround}
+                  {step4CommonMetaphor?.cosmologicalAnthropologicalGround || 'Fondamento antropologico comune ai due domini d\'indagine.'}
                 </p>
               </div>
 
@@ -270,7 +269,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                   Visione Unificante Finale
                 </span>
                 <p className="text-sm text-[#1a1714] font-serif font-medium leading-relaxed">
-                  {step4CommonMetaphor.unifyingVision}
+                  {step4CommonMetaphor?.unifyingVision || 'La convergenza organica che riannoda i due fenomeni in un unico continuum.'}
                 </p>
               </div>
             </div>

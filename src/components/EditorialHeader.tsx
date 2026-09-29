@@ -2,7 +2,7 @@ import React from 'react';
 import { EditorialCycle, EditionGenerationStatus } from '../types';
 import { Calendar } from 'lucide-react';
 
-type AiProvider = 'openrouter' | 'cloudflare' | 'gemini' | null | undefined;
+type AiProvider = 'groq' | 'openrouter' | 'cloudflare' | 'gemini' | null | undefined;
 
 interface EditorialHeaderProps {
   cycle: EditorialCycle;
@@ -28,13 +28,15 @@ export const EditorialHeader: React.FC<EditorialHeaderProps> = ({
   generationError
 }) => {
   const providerName =
-    aiProvider === 'gemini'
-      ? 'Google Gemini'
-      : aiProvider === 'cloudflare'
-        ? 'Cloudflare Workers AI'
-        : aiProvider === 'openrouter'
-          ? 'OpenRouter'
-          : null;
+    aiProvider === 'groq'
+      ? 'Groq (LPU Inference)'
+      : aiProvider === 'gemini'
+        ? 'Google Gemini'
+        : aiProvider === 'cloudflare'
+          ? 'Cloudflare Workers AI'
+          : aiProvider === 'openrouter'
+            ? 'OpenRouter'
+            : null;
 
   // verde: provider a token gratuiti · rosso: Gemini (token Google consumati) o generazione fallita
   const isGemini = aiProvider === 'gemini';

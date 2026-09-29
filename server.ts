@@ -19,8 +19,11 @@ import {
 import { CURRENT_EDITORIAL_CYCLE, CURRENT_SPECULATIVE_ESSAY } from "./src/data/mockEdition";
 import { buildPhase1Decomposition } from "./src/data/canonicalDecompositions";
 import { buildPhase2Collision } from "./src/data/canonicalCollisions";
+import { normalizePhase2Collision } from "./src/utils/phase2CollisionUtils";
 import { buildPhase2LoopFiveDirections } from "./src/data/canonicalLoopFiveDirections";
+import { normalizePhase2Loop } from "./src/utils/phase2LoopUtils";
 import { buildPhase3FinalStrike } from "./src/data/canonicalFinalStrikes";
+import { recordVectorExtraction } from "./src/server/vectorTracker";
 
 dotenv.config();
 
@@ -79,6 +82,134 @@ function getEffectiveOpenRouterModel(): string {
     return envModel;
   }
   return "nex-agi/nex-n2.5-mini:free";
+}
+
+// Supporto per Groq (LPU Inference con modelli ad alte prestazioni: gpt-oss-120b, qwen3.8-27b)
+let groqCachedModels: string[] | null = null;
+let groqModelsCacheTime = 0;
+
+async function getGroqActiveModels(apiKey: string): Promise<string[]> {
+  const now = Date.now();
+  if (groqCachedModels && (now - groqModelsCacheTime) < 5 * 60 * 1000) {
+    return groqCachedModels;
+  }
+  const fallbackList = [
+    "openai/gpt-oss-120b",
+    "qwen/qwen3.8-27b",
+    "openai/gpt-oss-20b"
+  ];
+  try {
+    const res = await fetch("https://api.groq.com/openai/v1/models", {
+      headers: { "Authorization": `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(5000)
+    });
+    if (res.ok) {
+      const data: any = await res.json();
+      if (Array.isArray(data.data)) {
+        const chatModels = data.data
+          .map((m: any) => m.id as string)
+          .filter((id: string) => 
+            !id.includes("whisper") && 
+            !id.includes("guard") && 
+            !id.includes("safeguard") &&
+            !id.includes("orpheus")
+          );
+        // Ordina prioritizzando i modelli con maggiori parametri
+        chatModels.sort((a: string, b: string) => {
+          if (a.includes("120b")) return -1;
+          if (b.includes("120b")) return 1;
+          if (a.includes("70b")) return -1;
+          if (b.includes("70b")) return 1;
+          if (a.includes("27b")) return -1;
+          if (b.includes("27b")) return 1;
+          return 0;
+        });
+        groqCachedModels = Array.from(new Set([...chatModels, ...fallbackList]));
+        groqModelsCacheTime = now;
+        return groqCachedModels;
+      }
+    }
+  } catch (e) {
+    console.warn("[Groq] Impossibile recuperare lista dinamica modelli, uso lista statica.");
+  }
+  groqCachedModels = fallbackList;
+  groqModelsCacheTime = now;
+  return groqCachedModels;
+}
+
+async function generateWithGroq(systemPrompt: string, userPrompt: string, isJson: boolean = false): Promise<{ text: string; model: string }> {
+  let apiKey = process.env.GROQ_API_KEY?.trim();
+  const rawPreferredModel = process.env.GROQ_MODEL?.trim();
+
+  // Se l'utente ha accidentalmente incollato la chiave API in GROQ_MODEL
+  if (!apiKey && rawPreferredModel?.startsWith("gsk_")) {
+    apiKey = rawPreferredModel;
+  }
+  if (!apiKey) {
+    throw new Error("GROQ_API_KEY non configurata.");
+  }
+
+  // Ignora il modello se è in realtà una chiave gsk_
+  const cleanPreferredModel = (rawPreferredModel && !rawPreferredModel.startsWith("gsk_"))
+    ? rawPreferredModel
+    : null;
+
+  const activeModels = await getGroqActiveModels(apiKey);
+  const candidateModels = Array.from(new Set([
+    ...(cleanPreferredModel ? [cleanPreferredModel] : []),
+    ...activeModels
+  ]));
+
+  const errors: string[] = [];
+
+  for (const model of candidateModels) {
+    try {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ],
+          temperature: 0.8,
+          max_tokens: 8192,
+          ...(isJson ? { response_format: { type: "json_object" } } : {})
+        })
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.text()).slice(0, 400);
+        if (response.status === 429 || /rate_limit/i.test(errorBody)) {
+          console.warn(`[Groq] Rate limit su ${model}: ${errorBody}`);
+          errors.push(`${model}: rate limit (${response.status})`);
+          continue;
+        }
+        throw new Error(`Groq error (${response.status}) su ${model}: ${errorBody}`);
+      }
+
+      const data: any = await response.json();
+      const text = data.choices?.[0]?.message?.content;
+      if (!text) {
+        throw new Error(`Nessun contenuto generato restituito da Groq (${model}).`);
+      }
+      return { text, model };
+    } catch (err: any) {
+      const isAbort = err?.name === "TimeoutError" || err?.name === "AbortError";
+      const reason = isAbort
+        ? `timeout dopo ${Math.round(AI_REQUEST_TIMEOUT_MS / 1000)} s`
+        : (err?.message || String(err));
+      console.warn(`[Groq] Modello ${model} non riuscito: ${reason}`);
+      errors.push(`${model}: ${reason}`);
+    }
+  }
+
+  throw new Error(`Nessun modello Groq ha risposto con successo. ${errors.join(" | ")}`);
 }
 
 // Supporto per OpenRouter con lista di modelli di fallback
@@ -229,8 +360,8 @@ async function generateWithGemini(systemPrompt: string, userPrompt: string): Pro
   const preferredModel = rawPreferredModel && rawPreferredModel !== "default" ? rawPreferredModel : undefined;
   const candidateModels = Array.from(new Set([
     ...(preferredModel ? [preferredModel] : []),
+    "gemini-3.8-flash",
     "gemini-3.6-flash",
-    "gemini-3.1-pro-preview",
     "gemini-3.5-flash"
   ]));
   const errors: string[] = [];
@@ -258,8 +389,8 @@ async function generateWithGemini(systemPrompt: string, userPrompt: string): Pro
         const message = err?.message || String(err);
         console.warn(`[Gemini] Tentativo con ${modelName} fallito (maxOutputTokens=${withTokenCap}): ${message}`);
         errors.push(`${modelName}: ${message.slice(0, 200)}`);
-        // Se il modello non esiste o la chiave non è autorizzata, ripetere non serve.
-        if (/404|not found|PERMISSION_DENIED|API key not valid|400/i.test(message)) break;
+        // Se il modello non esiste, la quota è esaurita (429) o non autorizzata, passare subito oltre senza sprecare tentativi
+        if (/404|not found|PERMISSION_DENIED|API key not valid|400|429|RESOURCE_EXHAUSTED|quota/i.test(message)) break;
       }
     }
   }
@@ -277,9 +408,13 @@ async function runAiProviderChain(
   userPrompt: string,
   options?: { step?: 'analysis' | 'literary' }
 ): Promise<
-  | { ok: true; text: string; provider: 'openrouter' | 'cloudflare' | 'gemini'; model: string; attempts: string[] }
+  | { ok: true; text: string; provider: 'groq' | 'openrouter' | 'cloudflare' | 'gemini'; model: string; attempts: string[] }
   | { ok: false; error: string; attempts: string[] }
 > {
+  const hasGroq = Boolean(
+    process.env.GROQ_API_KEY?.trim() ||
+    (process.env.GROQ_MODEL?.trim() && process.env.GROQ_MODEL.trim().startsWith("gsk_"))
+  );
   const hasOpenRouter = Boolean(process.env.OPENROUTER_API_KEY);
   const hasCloudflare = Boolean(
     (process.env.CLOUDFLARE_API_KEY || process.env.CLOUDFLARE_API_TOKEN) && process.env.CLOUDFLARE_ACCOUNT_ID
@@ -288,21 +423,24 @@ async function runAiProviderChain(
 
   const attempts: string[] = [];
   const step = options?.step || 'analysis';
+  const isJson = step === 'analysis';
 
-  // Per il Passo 2 (scrittura letteraria pura), Gemini viene posto al vertice per garantire
-  // una prosa italiana nativa perfetta, con Cloudflare (Llama 3.1 70B) come secondo fallback immediato
-  // e affidabile, prima di tentare con OpenRouter.
+  // Gerarchia ottimizzata:
+  // - literary: Groq (Llama 3.3 70B) o Gemini (se disponibile e con quota), seguiti da Cloudflare e OpenRouter.
+  // - analysis: Groq (LPU ad alta velocità e JSON affidabile), seguito da Cloudflare, OpenRouter e Gemini.
   const defaultChain: Array<{
-    provider: 'openrouter' | 'cloudflare' | 'gemini';
+    provider: 'groq' | 'openrouter' | 'cloudflare' | 'gemini';
     configured: boolean;
     run: () => Promise<{ text: string; model: string }>;
   }> = step === 'literary'
     ? [
+        ...(hasGroq ? [{ provider: 'groq' as const, configured: hasGroq, run: () => generateWithGroq(systemPrompt, userPrompt, false) }] : []),
         ...(hasGemini ? [{ provider: 'gemini' as const, configured: hasGemini, run: () => generateWithGemini(systemPrompt, userPrompt) }] : []),
         ...(hasCloudflare ? [{ provider: 'cloudflare' as const, configured: hasCloudflare, run: () => generateWithCloudflare(systemPrompt, userPrompt) }] : []),
         ...(hasOpenRouter ? [{ provider: 'openrouter' as const, configured: hasOpenRouter, run: () => generateWithOpenRouter(systemPrompt, userPrompt) }] : [])
       ]
     : [
+        ...(hasGroq ? [{ provider: 'groq' as const, configured: hasGroq, run: () => generateWithGroq(systemPrompt, userPrompt, isJson) }] : []),
         ...(hasCloudflare ? [{ provider: 'cloudflare' as const, configured: hasCloudflare, run: () => generateWithCloudflare(systemPrompt, userPrompt) }] : []),
         ...(hasOpenRouter ? [{ provider: 'openrouter' as const, configured: hasOpenRouter, run: () => generateWithOpenRouter(systemPrompt, userPrompt) }] : []),
         ...(hasGemini ? [{ provider: 'gemini' as const, configured: hasGemini, run: () => generateWithGemini(systemPrompt, userPrompt) }] : [])
@@ -323,10 +461,10 @@ async function runAiProviderChain(
     }
   }
 
-  const configuredAny = hasOpenRouter || hasCloudflare || hasGemini;
+  const configuredAny = hasGroq || hasOpenRouter || hasCloudflare || hasGemini;
   const error = configuredAny
     ? `Nessun motore AI ha completato la generazione. ${attempts.join(" | ")}`
-    : "Nessuna API KEY configurata tra OpenRouter, Cloudflare e Gemini.";
+    : "Nessuna API KEY configurata tra Groq, OpenRouter, Cloudflare e Gemini.";
   return { ok: false, error, attempts };
 }
 
@@ -465,6 +603,13 @@ app.post("/api/generate-autonomous-essay", async (_req, res) => {
     const selectedA = randomPair.vectorA;
     const selectedB = randomPair.vectorB;
 
+    recordVectorExtraction(
+      new Date().toISOString().slice(0, 10),
+      selectedA.name,
+      selectedB.name,
+      'manual_generation'
+    );
+
     // Passo 1: Analisi e Collisione (Fasi 1, 2, 3, 4)
     const step1Prompt = buildStep1AnalysisPrompt(selectedA, selectedB);
     const step1SystemPrompt = buildAnalyticalSystemPrompt();
@@ -501,8 +646,8 @@ app.post("/api/generate-autonomous-essay", async (_req, res) => {
           ontologicalMatrix: parsedStep1?.systemPair?.ontologicalMatrix || "Matrice d'Attrito Ontologico"
         },
         phase1Decomposition: parsedStep1?.phase1Decomposition || buildPhase1Decomposition(selectedA.name, selectedB.name),
-        phase2Collision: parsedStep1?.phase2Collision || buildPhase2Collision(selectedA.name, selectedB.name),
-        phase2Loop: parsedStep1?.phase2Loop || buildPhase2LoopFiveDirections(selectedA.name, selectedB.name),
+        phase2Collision: normalizePhase2Collision(parsedStep1?.phase2Collision, selectedA.name, selectedB.name),
+        phase2Loop: normalizePhase2Loop(parsedStep1?.phase2Loop, selectedA.name, selectedB.name),
         phase3FinalStrike: parsedStep1?.phase3FinalStrike || buildPhase3FinalStrike(selectedA.name, selectedB.name),
         essay: parsedStep2.essay
       },
@@ -527,7 +672,7 @@ interface DailyEditionEntry {
   cycle: any;
   edition: any;
   status: 'generated' | 'generating' | 'failed' | 'placeholder';
-  aiProvider: 'openrouter' | 'cloudflare' | 'gemini' | null;
+  aiProvider: 'groq' | 'openrouter' | 'cloudflare' | 'gemini' | null;
   aiModel: string | null;
   error: string | null;
   attempts: number;
@@ -586,8 +731,12 @@ function stampSolarDate(entry: DailyEditionEntry, solarDateKey: string): DailyEd
  * entrambi i campi, quindi devono coincidere.
  */
 function syncEditionWithEntry(entry: DailyEditionEntry): DailyEditionEntry {
+  const vectorA = entry.edition?.systemPair?.vectorA || '';
+  const vectorB = entry.edition?.systemPair?.vectorB || '';
   entry.edition = {
     ...entry.edition,
+    phase2Collision: normalizePhase2Collision(entry.edition?.phase2Collision, vectorA, vectorB),
+    phase2Loop: normalizePhase2Loop(entry.edition?.phase2Loop, vectorA, vectorB),
     aiProvider: entry.aiProvider,
     aiModel: entry.aiModel,
     generationStatus: entry.status,
@@ -639,6 +788,8 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     const pair = selectDailyVectorPair(solarDateKey);
     const selectedA = pair.vectorA;
     const selectedB = pair.vectorB;
+
+    recordVectorExtraction(solarDateKey, selectedA.name, selectedB.name, 'daily_edition');
 
     console.log(
       `[ALKIMIA] Avvio redazione a due passi del Saggio del Giorno ${solarDateKey} — ` +
@@ -755,9 +906,9 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
       phase1Decomposition:
         parsedStep1.phase1Decomposition || buildPhase1Decomposition(selectedA.name, selectedB.name),
       phase2Collision: 
-        parsedStep1.phase2Collision || buildPhase2Collision(selectedA.name, selectedB.name),
+        normalizePhase2Collision(parsedStep1.phase2Collision, selectedA.name, selectedB.name),
       phase2Loop: 
-        parsedStep1.phase2Loop || buildPhase2LoopFiveDirections(selectedA.name, selectedB.name),
+        normalizePhase2Loop(parsedStep1.phase2Loop, selectedA.name, selectedB.name),
       phase3FinalStrike: 
         parsedStep1.phase3FinalStrike || buildPhase3FinalStrike(selectedA.name, selectedB.name),
       essay: parsedStep2.essay,
@@ -813,6 +964,8 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
   const pair = selectDailyVectorPair(solarDateKey);
   const selectedA = pair.vectorA;
   const selectedB = pair.vectorB;
+
+  recordVectorExtraction(solarDateKey, selectedA.name, selectedB.name, 'daily_edition');
 
   const cycle = {
     ...CURRENT_EDITORIAL_CYCLE,

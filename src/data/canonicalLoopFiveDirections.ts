@@ -6,9 +6,9 @@ import { Phase2LoopFiveDirections } from '../types';
  * costringendo il protocollo dei 4 passaggi a girare a vuoto in cerca di attriti sempre nuovi,
  * svelando cinque diverse faglie ontologiche.
  */
-export function buildPhase2LoopFiveDirections(vectorAName: string, vectorBName: string): Phase2LoopFiveDirections {
-  const normA = vectorAName.toUpperCase();
-  const normB = vectorBName.toUpperCase();
+export function buildPhase2LoopFiveDirections(vectorAName?: string, vectorBName?: string): Phase2LoopFiveDirections {
+  const normA = (vectorAName || "").toUpperCase();
+  const normB = (vectorBName || "").toUpperCase();
 
   // Caso 1: CRISPR (A) & TCI (B)
   if ((normA.includes("CRISPR") || normA.includes("GENETICA")) && 

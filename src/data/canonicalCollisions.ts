@@ -7,9 +7,9 @@ import { Phase2CollisionDecomposition } from '../types';
  * 3. Ribaltare la Direzione (Il cortocircuito logico): metodo di A applicato al problema di B ("E se usassimo la logica di A per violare o spiegare il territorio di B?").
  * 4. Isolare la Metafora Comune: grande metafora antropologica o cosmologica unificante.
  */
-export function buildPhase2Collision(vectorAName: string, vectorBName: string): Phase2CollisionDecomposition {
-  const normA = vectorAName.toUpperCase();
-  const normB = vectorBName.toUpperCase();
+export function buildPhase2Collision(vectorAName?: string, vectorBName?: string): Phase2CollisionDecomposition {
+  const normA = (vectorAName || "").toUpperCase();
+  const normB = (vectorBName || "").toUpperCase();
 
   // Caso 1: CRISPR (A) & TCI (B)
   if ((normA.includes("CRISPR") || normA.includes("GENETICA")) && 

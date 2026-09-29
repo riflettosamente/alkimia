@@ -60,40 +60,44 @@ VETTORE B: ${vectorB.name}
 Definizione Filosofico-Operativa: ${vectorB.operationalDefinition}
 ================================================================================
 
-Esegui con il massimo rigore le 4 fasi di ricerca preliminare:
+Esegui con il massimo rigore le 4 fasi di ricerca preliminare.
+REGOLA FONDAMENTALE DI PROFONDITÀ (ANTI-STERILITÀ):
+- È SEVERAMENTE VIETATO rispondere con singole parole, elenchi telegrafici o definizioni ridotte all'osso.
+- Ogni campo deve consistere in un'analisi concettuale densa, articolata e filosoficamente pregnante (da 2 a 4 frasi dense per ogni proprietà, salvo i soli verbi fondamentali all'infinito).
+- La ricerca deve illuminare le fratture epistemologiche, la fenomenologia dell'esperienza e le implicazioni ontologiche profonde.
 
 1. FASE 1: SCOMPOSIZIONE STRUTTURALE (Coordinate 6W + Il Velato per entrambi i vettori)
    Analizza per Vettore A e Vettore B:
-   - whenWhere: Contesto Storico e Spaziale (genesi culturale o trauma d'origine)
-   - what: Definizione Scientifica o Fisica oggettiva
-   - how: Meccanismo d'Azione o "ferro del mestiere"
-   - who: Percezione ed Esperienza Umana (risonanza nella coscienza)
-   - whichBoundary: Confine Sfidato tra noto e ignoto
-   - whyVeiled: La Traccia e il Velato (l'indicazione di una realtà latente)
+   - whenWhere: Contesto Storico e Spaziale (genesi culturale, epoca o trauma collettivo d'origine, almeno 2-3 frasi dense)
+   - what: Definizione Scientifica o Fisica oggettiva (descrizione rigorosa e meccanicistica del fenomeno, 2-3 frasi)
+   - how: Meccanismo d'Azione o "ferro del mestiere" (processo operativo e dinamica materiale/informativa, 2-3 frasi)
+   - who: Percezione ed Esperienza Umana (risonanza viscerale, psicologica e fenomenologica nella coscienza, 2-3 frasi)
+   - whichBoundary: Confine Sfidato tra noto e ignoto (la soglia di realtà o il limite epistemico messo in crisi, 2-3 frasi)
+   - whyVeiled: La Traccia e il Velato (l'intuizione di una dimensione latente non ancora codificata dalla scienza ordinaria, 2-3 frasi)
 
 2. FASE 2: LA COLLISIONE FONDAMENTALE (I 4 Passaggi di Attrito)
-   - step1StrippingFunction: Trapianto di funzione (verbo fondamentale di A e B, sintesi funzionale)
-   - step2BlindAxis: Asse Cieco (il limite di A che diviene porta d'accesso a B, punto di frattura)
-   - step3InvertedDirection: Inversione di Dominio (metodo di A applicato a B, domanda provocatoria, intuizione controintuitiva)
-   - step4CommonMetaphor: Metafora Comune (titolo metafora generatrice, radice cosmologica, visione unificante)
+   - step1StrippingFunction: Trapianto di funzione (isolare il singolo verbo ontologico fondante di A e B all'infinito, spiegare le rispettive funzioni astratte in 2 frasi, e formulare una sintesi funzionale d'attrito in 2-3 frasi)
+   - step2BlindAxis: Asse Cieco (articolare con precisione il confine/limite insuperabile di A, come esso diviene porta d'accesso a B, e il punto esatto di frattura sulla crepa ontologica, 2-3 frasi per campo)
+   - step3InvertedDirection: Inversione di Dominio (metodo operativo di A applicato brutalmente al dominio di B, domanda provocatoria di rottura, intuizione controintuitiva che sovverte il paradigma ordinario)
+   - step4CommonMetaphor: Metafora Comune (titolo evocativo della metafora generatrice, radice cosmologica e antropologica profonda, visione unificante a livello sistemico)
 
 3. FASE 3: IL LOOP COGNITIVO A 5 PROSPETTIVE
-   Sviluppa 5 tracce distinte applicando la collisione attraverso 5 lenti ontologiche:
-   - Traccia 1: Termodinamica / Entropica (degrado vs neghentropia informativa)
-   - Traccia 2: Ecologico-Evolutiva (confine individuo/specie, interfaccia mnestica)
-   - Traccia 3: Semiotica / Di Traduzione (segnale sorgente e filtri ermeneutici)
-   - Traccia 4: Metamorfica / Biologica (soglia di fase, mutazione organica)
-   - Traccia 5: Architetturale / Sistemica (struttura a strati del reale, limiti di computazione)
-   Per ciascuna traccia fornisci: directionNumber, directionTitle, ontologicalAngle, e i 4 step di collisione.
+   Sviluppa 5 tracce distinte applicando la collisione attraverso 5 lenti ontologiche con analisi dettagliata e specifica:
+   - Traccia 1: Termodinamica / Entropica (degrado vs neghentropia informativa, dissipazione e conservazione dell'ordine)
+   - Traccia 2: Ecologico-Evolutiva (confine individuo/specie, interfaccia mnestica, co-evoluzione simbiotica)
+   - Traccia 3: Semiotica / Di Traduzione (segnale sorgente primario, filtri ermeneutici e decodifica del reale)
+   - Traccia 4: Metamorfica / Biologica (soglia di fase, mutazione organica, plasticità della materia vivente)
+   - Traccia 5: Architetturale / Sistemica (struttura a strati del reale, limiti di risoluzione e calcolo cosmico)
+   Per ciascuna traccia sviluppa in modo esaustivo directionNumber, directionTitle, ontologicalAngle e tutti i 4 step di collisione (con spiegazioni dense, mai ridotte a formule vuote).
 
 4. FASE 4: L'AFFONDO FINALE (Manifesto Operativo e Sigillo della Ricerca)
-   Genera:
-   - cuiProdest: Smantellamento del dogma riduzionista ed emancipazione ontologica dell'uomo
-   - groundbreakingDiscovery: Principio innovativo unificante emerso dalla sintesi
-   - uninvestigatedBias: Pregiudizio metodologico o recinto disciplinare mai esplorato
-   - researchFocusIntersection: Intersezione interdisciplinare esatta su cui focalizzare le ricerche
-   - dizzyingRevelation: Orizzonte speculativo profondo sull'infrastruttura del cosmo
-   - directionStrikes: Array delle 5 declinazioni specifiche corrispondenti alle 5 direzioni del Loop.
+   Formula tesi argomentate e dirompenti per:
+   - cuiProdest: Smantellamento del dogma riduzionista ed emancipazione ontologica dell'uomo (2-3 frasi)
+   - groundbreakingDiscovery: Principio innovativo unificante emerso dalla sintesi (2-3 frasi)
+   - uninvestigatedBias: Pregiudizio metodologico o recinto disciplinare mai esplorato prima (2-3 frasi)
+   - researchFocusIntersection: Intersezione interdisciplinare esatta su cui indirizzare la futura sperimentazione (2-3 frasi)
+   - dizzyingRevelation: Orizzonte speculativo profondo sull'infrastruttura del cosmo e del vivente (2-3 frasi)
+   - directionStrikes: Array delle 5 declinazioni specifiche con gli stessi 5 criteri applicati a ciascuna delle 5 prospettive del Loop.
 
 Rispondi RIGOROSAMENTE con un oggetto JSON valido avente questa struttura:
 {
