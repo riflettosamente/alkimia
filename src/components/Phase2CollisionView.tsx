@@ -48,14 +48,14 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
           </p>
         </div>
 
-        {/* I due vettori in rotta di collisione */}
+        {/* I due argomenti in rotta di collisione */}
         <div className="pt-4 border-t border-[#ede7dc] flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="w-full sm:w-1/2 bg-[#faf8f5] p-4 border-l-2 border-[#b0872e] rounded-r-sm">
-            <span className="text-[11px] font-mono uppercase tracking-widest text-[#787164] block mb-1">
-              Vettore A
+            <span className="text-[11px] font-mono uppercase tracking-widest text-[#9e7627] block mb-1">
+              Primo Argomento
             </span>
             <h3 className="text-base font-serif text-[#1a1714] font-semibold">
-              {systemPair?.vectorA || 'Vettore A'}
+              {systemPair?.vectorA || 'Primo Argomento'}
             </h3>
           </div>
 
@@ -65,11 +65,11 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
           </div>
 
           <div className="w-full sm:w-1/2 bg-[#faf8f5] p-4 border-l-2 border-[#5c6e8c] rounded-r-sm">
-            <span className="text-[11px] font-mono uppercase tracking-widest text-[#787164] block mb-1">
-              Vettore B
+            <span className="text-[11px] font-mono uppercase tracking-widest text-[#475b7a] block mb-1">
+              Secondo Argomento
             </span>
             <h3 className="text-base font-serif text-[#1a1714] font-semibold">
-              {systemPair?.vectorB || 'Vettore B'}
+              {systemPair?.vectorB || 'Secondo Argomento'}
             </h3>
           </div>
         </div>
@@ -88,10 +88,10 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
               </h4>
             </div>
             <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
-              Dimentica a cosa serve ciascun argomento nella realtà empirica e guarda cosa fa sul piano astratto.
+              Dai gesti tecnici e dagli apparati dell'Archivio Empirico al verbo ontologico primario.
             </p>
             <div className="mt-2 pl-5 text-xs font-mono text-[#9e7627] font-medium">
-              Regola: Chiediti: "Qual è il verbo fondamentale che compie questo sistema?"
+              Regola: Chiediti: "Qual è il gesto operativo fondamentale che l'uomo compie con questo strumento o protocollo?"
             </div>
           </div>
 
@@ -99,25 +99,25 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 bg-[#faf8f5] border border-[#ede7dc] rounded-sm space-y-2">
                 <span className="text-xs font-mono font-bold text-[#9e7627] block uppercase">
-                  Verbo Fondamentale [A] • {systemPair?.vectorA || 'Vettore A'}
+                  Verbo Fondamentale • {systemPair?.vectorA || 'Primo Argomento'}
                 </span>
                 <p className="text-sm font-serif font-semibold text-[#1a1714]">
                   {step1StrippingFunction?.fundamentalVerbA || 'VIOLARE'}
                 </p>
                 <p className="text-xs sm:text-sm text-[#3d3830] font-serif leading-relaxed">
-                  {step1StrippingFunction?.abstractFunctionA || 'Funzione astratta primaria del primo vettore.'}
+                  {step1StrippingFunction?.abstractFunctionA || 'Funzione astratta primaria radicata negli apparati empirici.'}
                 </p>
               </div>
 
               <div className="p-4 bg-[#fcfbfa] border border-[#ede7dc] rounded-sm space-y-2">
                 <span className="text-xs font-mono font-bold text-[#475b7a] block uppercase">
-                  Verbo Fondamentale [B] • {systemPair?.vectorB || 'Vettore B'}
+                  Verbo Fondamentale • {systemPair?.vectorB || 'Secondo Argomento'}
                 </span>
                 <p className="text-sm font-serif font-semibold text-[#1a1714]">
                   {step1StrippingFunction?.fundamentalVerbB || 'ESTENDERE'}
                 </p>
                 <p className="text-xs sm:text-sm text-[#3d3830] font-serif leading-relaxed">
-                  {step1StrippingFunction?.abstractFunctionB || 'Funzione astratta primaria del secondo vettore.'}
+                  {step1StrippingFunction?.abstractFunctionB || 'Funzione astratta primaria radicata negli apparati empirici.'}
                 </p>
               </div>
             </div>
@@ -126,25 +126,25 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
               <span className="font-mono text-xs uppercase tracking-wider text-[#9e7627] font-semibold block mb-1">
                 Sintesi del Trapianto Funzionale:
               </span>
-              {step1StrippingFunction?.functionalSynthesis || 'Sintesi del punto di contatto tra i due verbi fondamentali.'}
+              {step1StrippingFunction?.functionalSynthesis || 'Sintesi del punto di contatto tra i due gesti operativi.'}
             </div>
           </div>
         </div>
 
-        {/* 2. Cercare l'Asse Cieco (Dove si toccano gli estremi) */}
+        {/* 2. Cercare l'Asse Cieco (L'Impotenza dello Strumento di Misura) */}
         <div id="collision-step-2" className="border border-[#ded7ca] bg-[#ffffff] rounded-sm overflow-hidden shadow-xs">
           <div className="bg-[#f5f1ea] px-5 py-4 border-b border-[#ded7ca]">
             <div className="flex items-baseline gap-2">
               <span className="text-xs font-mono font-bold text-[#9e7627]">§ 2</span>
               <h4 className="text-base font-serif text-[#1a1714] font-semibold">
-                Cercare l'Asse Cieco (Dove si toccano gli estremi)
+                Cercare l'Asse Cieco (L'Impotenza dello Strumento di Misura)
               </h4>
             </div>
             <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
-              Gli argomenti non si incontrano dove sono simili, ma dove l'uno diventa la prosecuzione o la crepa dell'altro.
+              Gli argomenti non si incontrano dove sono simili, ma dove lo strumento materiale tocca il suo vicolo cieco insuperabile.
             </p>
             <div className="mt-2 pl-5 text-xs font-mono text-[#9e7627] font-medium">
-              Regola: Prendi il limite o il confine del primo argomento e usalo come strumento d'accesso per il secondo.
+              Regola: Prendi il limite fisico o di risoluzione dello strumento del primo argomento e usalo come varco d'accesso al secondo.
             </div>
           </div>
 
@@ -153,20 +153,20 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
               <div className="p-4 bg-[#faf8f5] border border-[#ede7dc] rounded-sm space-y-2">
                 <div className="flex items-center gap-1.5 text-xs font-mono text-[#8a4e32] font-semibold uppercase">
                   <Unlink className="w-3.5 h-3.5" />
-                  <span>Limite / Confine del Primo Argomento (A)</span>
+                  <span>Limite / Vicolo Cieco dello Strumento</span>
                 </div>
                 <p className="text-sm text-[#2c2823] font-serif leading-relaxed">
-                  {step2BlindAxis?.boundaryA || 'Limite estremo dell\'operatività del vettore A.'}
+                  {step2BlindAxis?.boundaryA || 'Limite estremo dell\'operatività dello strumento materiale.'}
                 </p>
               </div>
 
               <div className="p-4 bg-[#faf8f5] border border-[#ede7dc] rounded-sm space-y-2">
                 <div className="flex items-center gap-1.5 text-xs font-mono text-[#475b7a] font-semibold uppercase">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Strumento d'Accesso al Secondo Argomento (B)</span>
+                  <span>Varco d'Accesso Verso il Secondo Argomento</span>
                 </div>
                 <p className="text-sm text-[#2c2823] font-serif leading-relaxed">
-                  {step2BlindAxis?.accessDoorToB || 'Varco d\'accesso che si dischiude verso il vettore B.'}
+                  {step2BlindAxis?.accessDoorToB || 'Varco d\'accesso che si dischiude dove lo strumento cessa di misurare.'}
                 </p>
               </div>
             </div>
@@ -182,20 +182,20 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
           </div>
         </div>
 
-        {/* 3. Ribaltare la Direzione (Il cortocircuito logico) */}
+        {/* 3. Ribaltare la Direzione (L'Esperimento Mentale di Laboratorio Incrociato) */}
         <div id="collision-step-3" className="border border-[#ded7ca] bg-[#ffffff] rounded-sm overflow-hidden shadow-xs">
           <div className="bg-[#f5f1ea] px-5 py-4 border-b border-[#ded7ca]">
             <div className="flex items-baseline gap-2">
               <span className="text-xs font-mono font-bold text-[#9e7627]">§ 3</span>
               <h4 className="text-base font-serif text-[#1a1714] font-semibold">
-                Ribaltare la Direzione (Il cortocircuito logico)
+                Ribaltare la Direzione (L'Esperimento di Laboratorio Incrociato)
               </h4>
             </div>
             <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
-              Di solito associamo un argomento al suo contesto naturale. Per trovare l'inedito, inverti i domini.
+              Applicare gli apparati di rilevazione, i radar o i campioni di un dominio direttamente al fenomeno dell'altro.
             </p>
             <div className="mt-2 pl-5 text-xs font-mono text-[#9e7627] font-medium">
-              Regola: Prendi il metodo o lo strumento di un argomento e applicalo al problema dell'altro.
+              Regola: Prendi lo strumento tecnologico reale del primo argomento e puntalo brutalmente sul materiale del secondo.
             </div>
           </div>
 
@@ -203,10 +203,10 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
             <div className="p-4 bg-[#faf8f5] border border-[#ede7dc] rounded-sm space-y-2">
               <div className="flex items-center gap-1.5 text-xs font-mono text-[#9e7627] font-semibold uppercase">
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span>Inversione dei Domini Operativi</span>
+                <span>Inversione dei Domini e Sperimentazione Incrociata</span>
               </div>
               <p className="text-sm font-serif text-[#2c2823] leading-relaxed">
-                {step3InvertedDirection?.methodAAppliedToB || 'Applicazione della logica del primo vettore all\'orizzonte del secondo.'}
+                {step3InvertedDirection?.methodAAppliedToB || 'Applicazione della logica sperimentale del primo apparato all\'orizzonte del secondo.'}
               </p>
             </div>
 
@@ -214,10 +214,10 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
             <div className="p-5 bg-[#faf5ec] border border-[#e4d6be] rounded-sm space-y-2 shadow-2xs">
               <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#9e7627] uppercase">
                 <HelpCircle className="w-4 h-4" />
-                <span>Quesito di Violazione Concettuale:</span>
+                <span>Quesito di Violazione Sperimentale:</span>
               </div>
               <p className="text-base sm:text-lg font-serif font-semibold text-[#1a1714] leading-relaxed italic">
-                «{step3InvertedDirection?.provocativeViolationQuestion || 'Quale anomalia si spalanca ribaltando la direzione dello sguardo?'}»
+                «{step3InvertedDirection?.provocativeViolationQuestion || 'Quale anomalia si spalanca puntando questo strumento sul dominio opposto?'}»
               </p>
             </div>
 
@@ -230,17 +230,17 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
           </div>
         </div>
 
-        {/* 4. Isolare la Metafora Comune */}
+        {/* 4. Isolare la Metafora Comune (Il Reperto Unificante) */}
         <div id="collision-step-4" className="border border-[#ded7ca] bg-[#ffffff] rounded-sm overflow-hidden shadow-xs">
           <div className="bg-[#f5f1ea] px-5 py-4 border-b border-[#ded7ca]">
             <div className="flex items-baseline gap-2">
               <span className="text-xs font-mono font-bold text-[#9e7627]">§ 4</span>
               <h4 className="text-base font-serif text-[#1a1714] font-semibold">
-                Isolare la Metafora Comune
+                Isolare la Metafora Comune (Il Reperto e il Sostrato Unificante)
               </h4>
             </div>
             <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
-              Alla fine, la vera connessione innovativa deve poggiare su una grande metafora antropologica o cosmologica che li unisce entrambi.
+              Il sostrato materiale comune in cui i due ordini di tracce e supporti umani si fondono a livello sistemico.
             </p>
           </div>
 

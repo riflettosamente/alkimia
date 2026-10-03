@@ -9,8 +9,10 @@ function isDenseEnough(val: any, minLength: number = 18): boolean {
   if (typeof val !== 'string') return false;
   const trimmed = val.trim();
   if (trimmed.length < minLength) return false;
-  const wordCount = trimmed.split(/\s+/).length;
-  if (wordCount < 3) return false;
+  if (minLength > 5) {
+    const wordCount = trimmed.split(/\s+/).length;
+    if (wordCount < 3) return false;
+  }
   return true;
 }
 
@@ -39,9 +41,9 @@ export function normalizePhase2Collision(
 
   return {
     step1StrippingFunction: {
-      fundamentalVerbA: isDenseEnough(s1?.fundamentalVerbA, 12) ? String(s1.fundamentalVerbA) : (cs1?.fundamentalVerbA || 'VIOLARE'),
+      fundamentalVerbA: isDenseEnough(s1?.fundamentalVerbA, 3) ? String(s1.fundamentalVerbA) : (cs1?.fundamentalVerbA || 'VIOLARE'),
       abstractFunctionA: isDenseEnough(s1?.abstractFunctionA) ? String(s1.abstractFunctionA) : (cs1?.abstractFunctionA || 'Funzione astratta primaria del primo vettore.'),
-      fundamentalVerbB: isDenseEnough(s1?.fundamentalVerbB, 12) ? String(s1.fundamentalVerbB) : (cs1?.fundamentalVerbB || 'ESTENDERE'),
+      fundamentalVerbB: isDenseEnough(s1?.fundamentalVerbB, 3) ? String(s1.fundamentalVerbB) : (cs1?.fundamentalVerbB || 'ESTENDERE'),
       abstractFunctionB: isDenseEnough(s1?.abstractFunctionB) ? String(s1.abstractFunctionB) : (cs1?.abstractFunctionB || 'Funzione astratta primaria del secondo vettore.'),
       functionalSynthesis: isDenseEnough(s1?.functionalSynthesis) ? String(s1.functionalSynthesis) : (cs1?.functionalSynthesis || 'Sintesi del punto di contatto tra i due verbi fondamentali.')
     },

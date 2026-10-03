@@ -14,16 +14,20 @@ import {
 import { 
   buildStep1AnalysisPrompt,
   buildStep2LiteraryEssayPrompt,
-  buildSequentialInvestigationPrompt 
+  buildSequentialInvestigationPrompt,
+  buildPhase1_5EmpiricalPrompt
 } from "./src/ai/speculativeInvestigationEngine";
 import { CURRENT_EDITORIAL_CYCLE, CURRENT_SPECULATIVE_ESSAY } from "./src/data/mockEdition";
 import { buildPhase1Decomposition } from "./src/data/canonicalDecompositions";
+import { buildPhase1EmpiricalArchive } from "./src/data/canonicalEmpiricalArchive";
 import { buildPhase2Collision } from "./src/data/canonicalCollisions";
 import { normalizePhase2Collision } from "./src/utils/phase2CollisionUtils";
 import { buildPhase2LoopFiveDirections } from "./src/data/canonicalLoopFiveDirections";
 import { normalizePhase2Loop } from "./src/utils/phase2LoopUtils";
 import { buildPhase3FinalStrike } from "./src/data/canonicalFinalStrikes";
 import { recordVectorExtraction } from "./src/server/vectorTracker";
+import { saveDossierStep, readDossier } from "./src/server/dossierTracker";
+import { fetchTopicWebContext } from "./src/server/webSearchService";
 
 dotenv.config();
 
@@ -178,7 +182,7 @@ async function generateWithGroq(systemPrompt: string, userPrompt: string, isJson
             { role: "user", content: userPrompt }
           ],
           temperature: 0.8,
-          max_tokens: 8192,
+          max_tokens: isJson ? 3800 : 3200,
           ...(isJson ? { response_format: { type: "json_object" } } : {})
         })
       });
@@ -186,8 +190,10 @@ async function generateWithGroq(systemPrompt: string, userPrompt: string, isJson
       if (!response.ok) {
         const errorBody = (await response.text()).slice(0, 400);
         if (response.status === 429 || /rate_limit/i.test(errorBody)) {
-          console.warn(`[Groq] Rate limit su ${model}: ${errorBody}`);
+          console.warn(`[Groq] Rate limit su ${model}: ${errorBody}. Passaggio al modello successivo...`);
           errors.push(`${model}: rate limit (${response.status})`);
+          // Attesa breve prima di tentare il modello di fallback
+          await new Promise((r) => setTimeout(r, 1000));
           continue;
         }
         throw new Error(`Groq error (${response.status}) su ${model}: ${errorBody}`);
@@ -406,7 +412,10 @@ async function generateWithGemini(systemPrompt: string, userPrompt: string): Pro
 async function runAiProviderChain(
   systemPrompt: string,
   userPrompt: string,
-  options?: { step?: 'analysis' | 'literary' }
+  options?: {
+    step?: 'phase1' | 'phase1_5' | 'phase2' | 'phase3' | 'phase4' | 'phase5' | 'analysis' | 'literary';
+    excludeGemini?: boolean;
+  }
 ): Promise<
   | { ok: true; text: string; provider: 'groq' | 'openrouter' | 'cloudflare' | 'gemini'; model: string; attempts: string[] }
   | { ok: false; error: string; attempts: string[] }
@@ -423,28 +432,38 @@ async function runAiProviderChain(
 
   const attempts: string[] = [];
   const step = options?.step || 'analysis';
-  const isJson = step === 'analysis';
+  const isJson = step !== 'literary' && step !== 'phase5';
 
-  // Gerarchia ottimizzata:
-  // - literary: Groq (Llama 3.3 70B) o Gemini (se disponibile e con quota), seguiti da Cloudflare e OpenRouter.
-  // - analysis: Groq (LPU ad alta velocità e JSON affidabile), seguito da Cloudflare, OpenRouter e Gemini.
-  const defaultChain: Array<{
-    provider: 'groq' | 'openrouter' | 'cloudflare' | 'gemini';
-    configured: boolean;
-    run: () => Promise<{ text: string; model: string }>;
-  }> = step === 'literary'
-    ? [
-        ...(hasGroq ? [{ provider: 'groq' as const, configured: hasGroq, run: () => generateWithGroq(systemPrompt, userPrompt, false) }] : []),
-        ...(hasGemini ? [{ provider: 'gemini' as const, configured: hasGemini, run: () => generateWithGemini(systemPrompt, userPrompt) }] : []),
-        ...(hasCloudflare ? [{ provider: 'cloudflare' as const, configured: hasCloudflare, run: () => generateWithCloudflare(systemPrompt, userPrompt) }] : []),
-        ...(hasOpenRouter ? [{ provider: 'openrouter' as const, configured: hasOpenRouter, run: () => generateWithOpenRouter(systemPrompt, userPrompt) }] : [])
-      ]
-    : [
-        ...(hasGroq ? [{ provider: 'groq' as const, configured: hasGroq, run: () => generateWithGroq(systemPrompt, userPrompt, isJson) }] : []),
-        ...(hasCloudflare ? [{ provider: 'cloudflare' as const, configured: hasCloudflare, run: () => generateWithCloudflare(systemPrompt, userPrompt) }] : []),
-        ...(hasOpenRouter ? [{ provider: 'openrouter' as const, configured: hasOpenRouter, run: () => generateWithOpenRouter(systemPrompt, userPrompt) }] : []),
-        ...(hasGemini ? [{ provider: 'gemini' as const, configured: hasGemini, run: () => generateWithGemini(systemPrompt, userPrompt) }] : [])
-      ];
+  const providers = {
+    groq: { provider: 'groq' as const, configured: hasGroq, run: () => generateWithGroq(systemPrompt, userPrompt, isJson) },
+    cloudflare: { provider: 'cloudflare' as const, configured: hasCloudflare, run: () => generateWithCloudflare(systemPrompt, userPrompt) },
+    openrouter: { provider: 'openrouter' as const, configured: hasOpenRouter, run: () => generateWithOpenRouter(systemPrompt, userPrompt) },
+    gemini: { provider: 'gemini' as const, configured: hasGemini, run: () => generateWithGemini(systemPrompt, userPrompt) }
+  };
+
+  // Gerarchia di priorità multi-AI per fase:
+  // - phase1_5: Groq -> Cloudflare -> OpenRouter (ZERO token Gemini: salvaguardia token)
+  // - phase1: Groq -> Cloudflare -> OpenRouter -> Gemini (LPU ultra-veloce per 6W)
+  // - phase2: Cloudflare -> Groq -> Gemini -> OpenRouter (Edge globale per Collisione)
+  // - phase3: Groq -> Cloudflare -> OpenRouter -> Gemini (Loop a 5 Direzioni)
+  // - phase4: Gemini -> Groq -> Cloudflare -> OpenRouter (Sintesi epistemologica e Manifesto)
+  // - phase5 / literary: Groq -> Gemini -> OpenRouter -> Cloudflare (Saggio letterario di 1.500 parole)
+  let defaultChain = [providers.groq, providers.cloudflare, providers.openrouter, providers.gemini];
+
+  if (step === 'phase1_5') {
+    defaultChain = [providers.groq, providers.cloudflare, providers.openrouter];
+  } else if (step === 'phase2') {
+    defaultChain = [providers.cloudflare, providers.groq, providers.gemini, providers.openrouter];
+  } else if (step === 'phase4') {
+    defaultChain = [providers.gemini, providers.groq, providers.cloudflare, providers.openrouter];
+  } else if (step === 'phase5' || step === 'literary') {
+    defaultChain = [providers.groq, providers.gemini, providers.openrouter, providers.cloudflare];
+  }
+
+  // Esclusione rigida di Gemini su richiesta esplicita (es. Fase 1.5 e ricerca empirica)
+  if (options?.excludeGemini) {
+    defaultChain = defaultChain.filter(entry => entry.provider !== 'gemini');
+  }
 
   for (const entry of defaultChain) {
     if (!entry.configured) {
@@ -774,7 +793,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
   if (existing) return existing;
 
   const cached = dailyEditionsCache[solarDateKey];
-  if (cached && cached.status === 'generated') return Promise.resolve();
+  if (!force && cached && cached.status === 'generated') return Promise.resolve();
   if (!force && cached && cached.status === 'generating') return Promise.resolve();
 
   const run = (async () => {
@@ -797,13 +816,29 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     );
 
     // =========================================================================
-    // PASSO 1: Analisi e Collisione Ontologica (Fasi 1, 2, 3 e 4)
+    // RICERCA WEB LIVE A COSTO ZERO (Wikipedia REST API) PER FASE 1.5
     // =========================================================================
-    console.log(`[ALKIMIA] Passo 1: Analisi e collisione preliminare in corso...`);
-    const step1Prompt = buildStep1AnalysisPrompt(selectedA, selectedB);
+    console.log(
+      `[ALKIMIA] Ricerca web live a costo zero (Wikipedia REST API) per: «${selectedA.name}» e «${selectedB.name}»...`
+    );
+    const [webA, webB] = await Promise.all([
+      fetchTopicWebContext(selectedA.name),
+      fetchTopicWebContext(selectedB.name)
+    ]);
+    saveDossierStep(solarDateKey, 'webSearchContext', { vectorA: webA, vectorB: webB });
+
+    // =========================================================================
+    // PASSO 1: Analisi e Collisione Ontologica (Fasi 1, 1.5, 2, 3 e 4)
+    // Esclusione rigida di Gemini: elaborazione affidata al cluster Groq/Cloudflare
+    // =========================================================================
+    console.log(`[ALKIMIA] Passo 1: Analisi e collisione ontologica con dati web live in corso...`);
+    const step1Prompt = buildStep1AnalysisPrompt(selectedA, selectedB, webA.combinedContext, webB.combinedContext);
     const step1SystemPrompt = buildAnalyticalSystemPrompt();
 
-    const step1Result = await runAiProviderChain(step1SystemPrompt, step1Prompt);
+    const step1Result = await runAiProviderChain(step1SystemPrompt, step1Prompt, {
+      step: 'phase1',
+      excludeGemini: true
+    });
 
     const entry = dailyEditionsCache[solarDateKey];
     if (!entry) return;
@@ -833,9 +868,39 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
       return;
     }
 
+    // Se l'Archivio Empirico non è stato compilato o è incompleto nel payload omnicomprensivo,
+    // eseguiamo una compilazione dedicata e chirurgica di Fase 1.5 con Groq (Zero Token Gemini)
+    if (
+      !parsedStep1.phase1EmpiricalArchive?.vectorA?.foundationalTexts ||
+      !parsedStep1.phase1EmpiricalArchive?.vectorB?.foundationalTexts
+    ) {
+      console.log(
+        `[ALKIMIA] Compilazione autonoma e mirata di Fase 1.5 (Archivio Empirico) tramite Groq a costo zero...`
+      );
+      try {
+        const p1_5Prompt = buildPhase1_5EmpiricalPrompt(selectedA, selectedB, webA.combinedContext, webB.combinedContext);
+        const p1_5Result = await runAiProviderChain(step1SystemPrompt, p1_5Prompt, {
+          step: 'phase1_5',
+          excludeGemini: true
+        });
+        if (p1_5Result.ok) {
+          const parsed1_5 = cleanAndParseJson(p1_5Result.text);
+          if (parsed1_5?.phase1EmpiricalArchive) {
+            parsedStep1.phase1EmpiricalArchive = parsed1_5.phase1EmpiricalArchive;
+            console.log(`[ALKIMIA] Fase 1.5 Archivio Empirico compilata con successo da ${p1_5Result.provider} (${p1_5Result.model}).`);
+          }
+        }
+      } catch (p1_5Err) {
+        console.warn(`[ALKIMIA] Fallback compilazione Fase 1.5:`, p1_5Err);
+      }
+    }
+
+    saveDossierStep(solarDateKey, 'phase1To4', parsedStep1);
+    saveDossierStep(solarDateKey, 'phase1_5_empiricalArchive', parsedStep1.phase1EmpiricalArchive);
+
     console.log(
       `[ALKIMIA] Passo 1 completato con successo via ${step1Result.provider} (${step1Result.model}). ` +
-      `Avvio Passo 2 (Composizione Letteraria Pura - Fase 5)...`
+      `Dossier salvato su file. Avvio Passo 2 (Composizione Letteraria Pura - Fase 5)...`
     );
 
     // =========================================================================
@@ -881,6 +946,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     }
 
     entry.finishedAt = Date.now();
+    saveDossierStep(solarDateKey, 'essay', parsedStep2.essay);
 
     // Esito positivo: fusione organica di Passo 1 e Passo 2 nell'edizione completa
     entry.cycle = {
@@ -905,6 +971,8 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
       },
       phase1Decomposition:
         parsedStep1.phase1Decomposition || buildPhase1Decomposition(selectedA.name, selectedB.name),
+      phase1EmpiricalArchive:
+        parsedStep1.phase1EmpiricalArchive || buildPhase1EmpiricalArchive(selectedA.name, selectedB.name),
       phase2Collision: 
         normalizePhase2Collision(parsedStep1.phase2Collision, selectedA.name, selectedB.name),
       phase2Loop: 
@@ -924,6 +992,8 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     entry.aiProvider = step2Result.provider;
     entry.aiModel = step2Result.model;
     entry.error = null;
+
+    saveDossierStep(solarDateKey, 'fullEdition', entry.edition);
 
     console.log(
       `[ALKIMIA] Saggio del Giorno ${formattedDate} redatto con successo a due passi: ` +
@@ -961,6 +1031,30 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
 
   // Costruzione dell'edizione provvisoria, deterministica e allineata alla data solare.
   const formattedDate = formatItalianDateServer(solarDateKey);
+
+  // Se esiste un dossier salvato su disco con l'edizione generata, la ripristiniamo immediatamente
+  const savedDossier = readDossier(solarDateKey);
+  if (savedDossier?.fullEdition) {
+    const loadedEntry: DailyEditionEntry = {
+      solarDateKey,
+      cycle: savedDossier.fullEdition.cycle || {
+        ...CURRENT_EDITORIAL_CYCLE,
+        cyclicalDate: formattedDate,
+        nextScheduledPublication: "Al compimento della rotazione diurna"
+      },
+      edition: savedDossier.fullEdition,
+      status: 'generated',
+      aiProvider: savedDossier.fullEdition.aiProvider || 'groq',
+      aiModel: savedDossier.fullEdition.aiModel || 'qwen/qwen3.8-27b',
+      error: null,
+      attempts: 1,
+      startedAt: null,
+      finishedAt: Date.now()
+    };
+    dailyEditionsCache[solarDateKey] = loadedEntry;
+    return stampSolarDate(syncEditionWithEntry(loadedEntry), solarDateKey);
+  }
+
   const pair = selectDailyVectorPair(solarDateKey);
   const selectedA = pair.vectorA;
   const selectedB = pair.vectorB;
@@ -986,6 +1080,7 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
       derivationTimestamp: formattedDate
     },
     phase1Decomposition: buildPhase1Decomposition(selectedA.name, selectedB.name),
+    phase1EmpiricalArchive: buildPhase1EmpiricalArchive(selectedA.name, selectedB.name),
     phase2Collision: buildPhase2Collision(selectedA.name, selectedB.name),
     phase2Loop: buildPhase2LoopFiveDirections(selectedA.name, selectedB.name),
     phase3FinalStrike: buildPhase3FinalStrike(selectedA.name, selectedB.name),
@@ -1078,7 +1173,7 @@ app.post("/api/daily-edition/regenerate", async (req, res) => {
         : new Date().toISOString().split('T')[0];
 
     await getOrCreateDailyEdition(solarDateKey);
-    const promise = startDailyAiDrafting(solarDateKey, req.body?.force === true);
+    const promise = startDailyAiDrafting(solarDateKey, req.body?.force !== false);
 
     if (req.body?.wait === true) {
       await promise;

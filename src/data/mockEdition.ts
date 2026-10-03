@@ -1,6 +1,7 @@
 import { EditorialCycle, SpeculativeEssay, EditorialEdition } from '../types';
 import { formatItalianDate } from '../utils/dateUtils';
 import { buildPhase1Decomposition } from './canonicalDecompositions';
+import { buildPhase1EmpiricalArchive } from './canonicalEmpiricalArchive';
 import { buildPhase2Collision } from './canonicalCollisions';
 import { buildPhase2LoopFiveDirections } from './canonicalLoopFiveDirections';
 import { buildPhase3FinalStrike } from './canonicalFinalStrikes';
@@ -78,6 +79,7 @@ export const EDITORIAL_FEED: EditorialEdition[] = [
     },
     essay: CURRENT_SPECULATIVE_ESSAY,
     phase1Decomposition: buildPhase1Decomposition("3. La Tecnologia CRISPR", "2. La Transcomunicazione Strumentale (TCI)"),
+    phase1EmpiricalArchive: buildPhase1EmpiricalArchive("3. La Tecnologia CRISPR", "2. La Transcomunicazione Strumentale (TCI)"),
     phase2Collision: buildPhase2Collision("3. La Tecnologia CRISPR", "2. La Transcomunicazione Strumentale (TCI)"),
     phase2Loop: buildPhase2LoopFiveDirections("3. La Tecnologia CRISPR", "2. La Transcomunicazione Strumentale (TCI)"),
     phase3FinalStrike: buildPhase3FinalStrike("3. La Tecnologia CRISPR", "2. La Transcomunicazione Strumentale (TCI)"),

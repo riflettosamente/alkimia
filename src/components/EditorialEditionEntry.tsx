@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { EditorialEdition } from '../types';
 import { SpeculativeEssayView } from './SpeculativeEssayView';
 import { Phase1StructuralDecompositionView } from './Phase1StructuralDecompositionView';
+import { EmpiricalArchiveSection } from './EmpiricalArchiveSection';
 import { Phase2CollisionView } from './Phase2CollisionView';
 import { Phase2LoopFiveDirectionsView } from './Phase2LoopFiveDirectionsView';
 import { Phase3FinalStrikeView } from './Phase3FinalStrikeView';
-import { Calendar, Layers, Zap, Repeat, Sparkles, BookOpen } from 'lucide-react';
+import { Calendar, Layers, Database, Zap, Repeat, Sparkles, BookOpen } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface EditorialEditionEntryProps {
@@ -17,8 +18,8 @@ export const EditorialEditionEntry: React.FC<EditorialEditionEntryProps> = ({
   edition,
   index
 }) => {
-  const { isLatest, cycle, essay, systemPair, phase1Decomposition, phase2Collision, phase2Loop, phase3FinalStrike } = edition;
-  const [activeTab, setActiveTab] = useState<'phase1' | 'phase2' | 'phase2_2' | 'phase3' | 'essay'>('phase1');
+  const { isLatest, cycle, essay, systemPair, phase1Decomposition, phase1EmpiricalArchive, phase2Collision, phase2Loop, phase3FinalStrike } = edition;
+  const [activeTab, setActiveTab] = useState<'phase1' | 'phase1_5' | 'phase2' | 'phase2_2' | 'phase3' | 'essay'>('phase1');
 
   return (
     <motion.article 
@@ -63,6 +64,21 @@ export const EditorialEditionEntry: React.FC<EditorialEditionEntryProps> = ({
           >
             <Layers className={`w-3.5 h-3.5 ${activeTab === 'phase1' ? 'text-[#9e7627]' : 'text-[#7e7667]'}`} />
             <span>Fase 1: Scomposizione</span>
+          </button>
+
+          <button
+            id="tab-phase-1-5"
+            role="tab"
+            aria-selected={activeTab === 'phase1_5'}
+            onClick={() => setActiveTab('phase1_5')}
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-mono tracking-wide rounded-sm transition-all cursor-pointer ${
+              activeTab === 'phase1_5'
+                ? 'bg-[#ffffff] text-[#1a1714] font-medium border border-[#c49b45]/60 shadow-xs'
+                : 'text-[#6e685c] hover:text-[#1a1714] hover:bg-[#f3efe7] border border-transparent'
+            }`}
+          >
+            <Database className={`w-3.5 h-3.5 ${activeTab === 'phase1_5' ? 'text-[#9e7627]' : 'text-[#7e7667]'}`} />
+            <span>Fase 1.5: Archivio Empirico</span>
           </button>
 
           <button
@@ -130,10 +146,16 @@ export const EditorialEditionEntry: React.FC<EditorialEditionEntryProps> = ({
       {/* Contenuto dinamico in base al Tab attivo */}
       <div className="w-full">
         {activeTab === 'phase1' && (
-          <Phase1StructuralDecompositionView 
-            systemPair={systemPair} 
-            decomposition={phase1Decomposition} 
-          />
+          <div className="space-y-12">
+            <Phase1StructuralDecompositionView 
+              systemPair={systemPair} 
+              decomposition={phase1Decomposition} 
+            />
+            <EmpiricalArchiveSection systemPair={systemPair} archive={phase1EmpiricalArchive} />
+          </div>
+        )}
+        {activeTab === 'phase1_5' && (
+          <EmpiricalArchiveSection systemPair={systemPair} archive={phase1EmpiricalArchive} />
         )}
         {activeTab === 'phase2' && (
           <Phase2CollisionView 

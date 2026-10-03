@@ -99,12 +99,26 @@ export interface OntologicalEssence {
 
 export interface VectorPhase1Decomposition {
   topicName: string;
-  whenWhere: string;      // 1. WHEN / WHERE (Contesto Storico e Spaziale): Qual è il vuoto culturale, l'epoca o il trauma collettivo in cui l'argomento si radica?
-  what: string;           // 2. WHAT (Definizione Scientifica o Fisica): Qual è la descrizione oggettiva e tecnica del fenomeno, spogliata da ogni alone di mistero?
-  how: string;            // 3. HOW (Meccanismo d'Azione): Qual è il processo specifico, il "ferro del mestiere" con cui il sistema interagisce con la materia o l'informazione?
-  who: string;            // 4. WHO (Percezione Umana): Qual è la reazione viscerale, emotiva o psicologica che l'argomento provoca nella coscienza collettiva?
-  whichBoundary: string;  // 5. WHICH BOUNDARY (Il Confine Sfidato): Quale barriera invalicabile tra noto e ignoto, tra possibile e impossibile, questo fenomeno mette in discussione?
-  whyVeiled: string;      // 6. WHY / THE VEILED REALITY (La Traccia e il Velato): Quale aspetto nascosto e poroso del cosmo ci suggerisce l'esistenza di una realtà che intuiamo ma non sappiamo ancora decifrare?
+  whenWhere: string;      // 1. WHEN / WHERE (Contesto Storico e Spaziale)
+  what: string;           // 2. WHAT (Definizione Scientifica o Fisica)
+  how: string;            // 3. HOW (Meccanismo d'Azione)
+  who: string;            // 4. WHO (Percezione Umana)
+  whichBoundary: string;  // 5. WHICH BOUNDARY (Il Confine Sfidato)
+  whyVeiled: string;      // 6. WHY / THE VEILED REALITY (La Traccia e il Velato)
+}
+
+export interface EmpiricalTopicArchive {
+  topicName: string;
+  foundationalTexts: string;          // Supporti e Opere Fondative (libri, dossier, trattati)
+  keyFiguresAndWitnesses: string;     // Persone e Testimoni (scienziati, pionieri, testimoni diretti)
+  materialEvidenceAndTools: string;   // Reperti, Strumenti e Misurazioni (tracciati radar/EEG, fotogrammi, anomalie, monumenti)
+  breakthroughTheories: string;       // Paradigmi e Teorie di Svolta (modelli interpretativi)
+}
+
+export interface Phase1EmpiricalArchive {
+  vectorA: EmpiricalTopicArchive;
+  vectorB: EmpiricalTopicArchive;
+  crossArchiveSynthesis: string;
 }
 
 export interface Phase1StructuralDecomposition {
@@ -194,6 +208,7 @@ export interface EditorialEdition {
   systemPair: SystemConceptualPair;
   essay: SpeculativeEssay;
   phase1Decomposition?: Phase1StructuralDecomposition;
+  phase1EmpiricalArchive?: Phase1EmpiricalArchive;
   phase2Collision?: Phase2CollisionDecomposition;
   phase2Loop?: Phase2LoopFiveDirections;
   phase3FinalStrike?: Phase3FinalStrike;

@@ -43,7 +43,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
             Il Protocollo a Vuoto: Cinque Faglie Ontologiche
           </h2>
           <p className="text-sm sm:text-base text-[#3d3830] font-serif leading-relaxed italic border-l-2 border-[#b0872e] pl-4 py-1 bg-[#faf8f5]">
-            «Applica la Fase 2, attraverso lo stesso identico binario concettuale con cinque angolazioni differenti, costringendo il protocollo dei 4 passaggi a girare a vuoto in cerca di attriti sempre nuovi, svelando cinque diverse faglie ontologiche.»
+            «Applica la collisione attraverso lo stesso binario d'indagine con cinque angolazioni differenti, costringendo i protocolli tecnici, gli strumenti di rilevazione e i reperti storici censiti nella Fase 1.5 a girare a vuoto in cerca di attriti sempre nuovi, svelando cinque diverse faglie ontologiche.»
           </p>
         </div>
 
@@ -51,17 +51,17 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
           {activeLoop?.theoreticalPreamble}
         </div>
 
-        {/* I due vettori del binario concettuale */}
+        {/* I due argomenti del binario concettuale */}
         <div className="pt-4 border-t border-[#ede7dc] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono">
           <div className="bg-[#faf8f5] px-3 py-1.5 border border-[#ede7dc] rounded-sm text-[#787164]">
-            <span className="text-[#9e7627] font-semibold">Binario Fisso A:</span> {systemPair?.vectorA || 'Vettore A'}
+            <span className="text-[#9e7627] font-semibold">Primo Argomento:</span> {systemPair?.vectorA || 'Primo Argomento'}
           </div>
           <div className="text-[#9e7627] flex items-center gap-1">
             <Compass className="w-3.5 h-3.5" />
             <span className="tracking-wider uppercase font-semibold">5 Inclinazioni di Faglia</span>
           </div>
           <div className="bg-[#faf8f5] px-3 py-1.5 border border-[#ede7dc] rounded-sm text-[#787164]">
-            <span className="text-[#5c6e8c] font-semibold">Binario Fisso B:</span> {systemPair?.vectorB || 'Vettore B'}
+            <span className="text-[#5c6e8c] font-semibold">Secondo Argomento:</span> {systemPair?.vectorB || 'Secondo Argomento'}
           </div>
         </div>
       </div>
@@ -152,18 +152,18 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 bg-[#faf8f5] border border-[#ede7dc] rounded-sm space-y-1.5">
                     <span className="text-xs font-mono font-bold text-[#9e7627] block uppercase">
-                      Verbo [A]: {collision?.step1StrippingFunction?.fundamentalVerbA || 'Trasporre'}
+                      Verbo del Primo Argomento: {collision?.step1StrippingFunction?.fundamentalVerbA || 'Trasporre'}
                     </span>
                     <p className="text-xs sm:text-sm text-[#3d3830] font-serif leading-relaxed">
-                      {collision?.step1StrippingFunction?.abstractFunctionA || 'Funzione astratta primaria del primo vettore.'}
+                      {collision?.step1StrippingFunction?.abstractFunctionA || 'Funzione astratta primaria del primo argomento.'}
                     </p>
                   </div>
                   <div className="p-4 bg-[#fcfbfa] border border-[#ede7dc] rounded-sm space-y-1.5">
                     <span className="text-xs font-mono font-bold text-[#475b7a] block uppercase">
-                      Verbo [B]: {collision?.step1StrippingFunction?.fundamentalVerbB || 'Persistere'}
+                      Verbo del Secondo Argomento: {collision?.step1StrippingFunction?.fundamentalVerbB || 'Persistere'}
                     </span>
                     <p className="text-xs sm:text-sm text-[#3d3830] font-serif leading-relaxed">
-                      {collision?.step1StrippingFunction?.abstractFunctionB || 'Funzione astratta primaria del secondo vettore.'}
+                      {collision?.step1StrippingFunction?.abstractFunctionB || 'Funzione astratta primaria del secondo argomento.'}
                     </p>
                   </div>
                 </div>
@@ -192,19 +192,19 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                   <div className="p-4 bg-[#faf8f5] border border-[#ede7dc] rounded-sm space-y-1">
                     <div className="flex items-center gap-1 text-xs font-mono text-[#8a4e32] font-semibold uppercase">
                       <Unlink className="w-3.5 h-3.5" />
-                      <span>Confine / Limite di A</span>
+                      <span>Limite Strumentale del Primo Argomento</span>
                     </div>
                     <p className="text-xs sm:text-sm text-[#2c2823] font-serif leading-relaxed">
-                      {collision?.step2BlindAxis?.boundaryA || 'Limite estremo dell\'operatività del vettore A.'}
+                      {collision?.step2BlindAxis?.boundaryA || 'Limite estremo dell\'apparato strumentale del primo argomento.'}
                     </p>
                   </div>
                   <div className="p-4 bg-[#faf8f5] border border-[#ede7dc] rounded-sm space-y-1">
                     <div className="flex items-center gap-1 text-xs font-mono text-[#475b7a] font-semibold uppercase">
                       <Sparkles className="w-3.5 h-3.5" />
-                      <span>Varco d'Accesso a B</span>
+                      <span>Varco d'Accesso al Secondo Argomento</span>
                     </div>
                     <p className="text-xs sm:text-sm text-[#2c2823] font-serif leading-relaxed">
-                      {collision?.step2BlindAxis?.accessDoorToB || 'Varco d\'accesso che si dischiude verso il vettore B.'}
+                      {collision?.step2BlindAxis?.accessDoorToB || 'Varco d\'accesso che si dischiude verso il secondo argomento.'}
                     </p>
                   </div>
                 </div>
