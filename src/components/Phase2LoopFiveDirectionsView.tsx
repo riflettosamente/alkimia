@@ -1,13 +1,32 @@
 import React, { useState } from 'react';
 import { Phase2LoopFiveDirections, SystemConceptualPair } from '../types';
 import { normalizePhase2Loop } from '../utils/phase2LoopUtils';
-import { Compass, Repeat, GitCommit, Unlink, Sparkles, RefreshCw, HelpCircle, ArrowRight } from 'lucide-react';
+import { Compass, Repeat, GitCommit, Unlink, Sparkles, RefreshCw, HelpCircle, ArrowRight, Database } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface Phase2LoopFiveDirectionsViewProps {
   systemPair: SystemConceptualPair;
   loop?: Phase2LoopFiveDirections;
 }
+
+const FormattedText: React.FC<{ text?: string }> = ({ text }) => {
+  if (!text) return null;
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return (
+    <span>
+      {parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return (
+            <strong key={i} className="font-semibold text-[#1a1714] bg-[#f2ebd9] px-1 py-0.5 rounded-xs">
+              {part.slice(2, -2)}
+            </strong>
+          );
+        }
+        return part;
+      })}
+    </span>
+  );
+};
 
 export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsViewProps> = ({
   systemPair,
@@ -48,7 +67,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
         </div>
 
         <div className="pt-2 text-xs sm:text-sm text-[#575043] font-serif leading-relaxed">
-          {activeLoop?.theoreticalPreamble}
+          <FormattedText text={activeLoop?.theoreticalPreamble} />
         </div>
 
         {/* I due argomenti del binario concettuale */}
@@ -58,7 +77,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
           </div>
           <div className="text-[#9e7627] flex items-center gap-1">
             <Compass className="w-3.5 h-3.5" />
-            <span className="tracking-wider uppercase font-semibold">5 Inclinazioni di Faglia</span>
+            <span className="tracking-wider uppercase font-semibold">5 Cassetti di Fase 2 × 5 Lenti</span>
           </div>
           <div className="bg-[#faf8f5] px-3 py-1.5 border border-[#ede7dc] rounded-sm text-[#787164]">
             <span className="text-[#5c6e8c] font-semibold">Secondo Argomento:</span> {systemPair?.vectorB || 'Secondo Argomento'}
@@ -123,14 +142,32 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
           transition={{ duration: 0.35 }}
           className="space-y-6"
         >
-          {/* Card di sintesi della direzione */}
-          <div className="p-5 bg-[#faf8f5] border border-[#ded7ca] rounded-sm space-y-2">
-            <div className="flex items-center gap-2 text-xs font-mono text-[#9e7627] font-semibold uppercase tracking-wider">
-              <Compass className="w-4 h-4" />
-              <span>Direzione {currentTrack?.directionNumber || selectedTrackIndex + 1} • {currentTrack?.directionTitle || 'Direzione Ontologica'}</span>
+          {/* Card di sintesi della direzione + Riquadro Reperti di Fase 2 in Esame */}
+          <div className="p-5 bg-[#faf8f5] border border-[#ded7ca] rounded-sm space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-xs font-mono text-[#9e7627] font-semibold uppercase tracking-wider">
+                <Compass className="w-4 h-4" />
+                <span>Direzione {currentTrack?.directionNumber || selectedTrackIndex + 1} • {currentTrack?.directionTitle || 'Direzione Ontologica'}</span>
+              </div>
+              {currentTrack?.empiricalDrawerLabel && (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#f2ebd9] border border-[#d8c7a3] rounded-xs text-[11px] font-mono font-semibold text-[#6e5219]">
+                  <Database className="w-3 h-3" />
+                  <span>{currentTrack.empiricalDrawerLabel}</span>
+                </div>
+              )}
             </div>
+
+            {currentTrack?.empiricalEvidenceExamined && (
+              <div className="p-3 bg-[#ffffff] border border-[#e3dacb] rounded-xs text-xs sm:text-sm font-serif text-[#2c2823]">
+                <span className="font-mono text-[11px] uppercase tracking-wider text-[#9e7627] font-bold block mb-1">
+                  Reperti di Fase 2 in Esame in questa Direzione:
+                </span>
+                <FormattedText text={currentTrack.empiricalEvidenceExamined} />
+              </div>
+            )}
+
             <p className="text-sm font-serif text-[#2c2823] leading-relaxed italic pl-6 border-l-2 border-[#9e7627]">
-              {currentTrack?.ontologicalAngle || 'Angolazione ontologica di indagine.'}
+              <FormattedText text={currentTrack?.ontologicalAngle || 'Angolazione ontologica di indagine.'} />
             </p>
           </div>
 
@@ -146,7 +183,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                     Denudare i concetti (Trapianto di Funzione)
                   </h4>
                 </div>
-                <span className="text-[11px] font-mono text-[#787164]">Verbi Fondamentali</span>
+                <span className="text-[11px] font-mono text-[#787164]">Verbi Specifici del Cassetto</span>
               </div>
               <div className="p-5 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -155,7 +192,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                       Verbo del Primo Argomento: {collision?.step1StrippingFunction?.fundamentalVerbA || 'Trasporre'}
                     </span>
                     <p className="text-xs sm:text-sm text-[#3d3830] font-serif leading-relaxed">
-                      {collision?.step1StrippingFunction?.abstractFunctionA || 'Funzione astratta primaria del primo argomento.'}
+                      <FormattedText text={collision?.step1StrippingFunction?.abstractFunctionA || 'Funzione astratta primaria del primo argomento.'} />
                     </p>
                   </div>
                   <div className="p-4 bg-[#fcfbfa] border border-[#ede7dc] rounded-sm space-y-1.5">
@@ -163,7 +200,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                       Verbo del Secondo Argomento: {collision?.step1StrippingFunction?.fundamentalVerbB || 'Persistere'}
                     </span>
                     <p className="text-xs sm:text-sm text-[#3d3830] font-serif leading-relaxed">
-                      {collision?.step1StrippingFunction?.abstractFunctionB || 'Funzione astratta primaria del secondo argomento.'}
+                      <FormattedText text={collision?.step1StrippingFunction?.abstractFunctionB || 'Funzione astratta primaria del secondo argomento.'} />
                     </p>
                   </div>
                 </div>
@@ -171,7 +208,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                   <span className="font-mono text-xs uppercase tracking-wider text-[#9e7627] font-semibold block mb-0.5">
                     Sintesi Funzionale:
                   </span>
-                  {collision?.step1StrippingFunction?.functionalSynthesis || 'Sintesi del punto di contatto tra i due verbi fondamentali.'}
+                  <FormattedText text={collision?.step1StrippingFunction?.functionalSynthesis || 'Sintesi del punto di contatto tra i due verbi fondamentali.'} />
                 </div>
               </div>
             </div>
@@ -192,10 +229,10 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                   <div className="p-4 bg-[#faf8f5] border border-[#ede7dc] rounded-sm space-y-1">
                     <div className="flex items-center gap-1 text-xs font-mono text-[#8a4e32] font-semibold uppercase">
                       <Unlink className="w-3.5 h-3.5" />
-                      <span>Limite Strumentale del Primo Argomento</span>
+                      <span>Limite del Primo Argomento</span>
                     </div>
                     <p className="text-xs sm:text-sm text-[#2c2823] font-serif leading-relaxed">
-                      {collision?.step2BlindAxis?.boundaryA || 'Limite estremo dell\'apparato strumentale del primo argomento.'}
+                      <FormattedText text={collision?.step2BlindAxis?.boundaryA || 'Limite estremo dell\'apparato strumentale del primo argomento.'} />
                     </p>
                   </div>
                   <div className="p-4 bg-[#faf8f5] border border-[#ede7dc] rounded-sm space-y-1">
@@ -204,7 +241,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                       <span>Varco d'Accesso al Secondo Argomento</span>
                     </div>
                     <p className="text-xs sm:text-sm text-[#2c2823] font-serif leading-relaxed">
-                      {collision?.step2BlindAxis?.accessDoorToB || 'Varco d\'accesso che si dischiude verso il secondo argomento.'}
+                      <FormattedText text={collision?.step2BlindAxis?.accessDoorToB || 'Varco d\'accesso che si dischiude verso il secondo argomento.'} />
                     </p>
                   </div>
                 </div>
@@ -212,7 +249,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                   <span className="font-mono not-italic text-xs uppercase tracking-wider text-[#9e7627] font-semibold block mb-0.5">
                     Crepa Asimmetrica:
                   </span>
-                  {collision?.step2BlindAxis?.creviceContactPoint || 'Punto di fessurazione in cui le due polarità divergono.'}
+                  <FormattedText text={collision?.step2BlindAxis?.creviceContactPoint || 'Punto di fessurazione in cui le due polarità divergono.'} />
                 </div>
               </div>
             </div>
@@ -235,7 +272,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                     <span>Metodo Invertito</span>
                   </div>
                   <p className="text-xs sm:text-sm font-serif text-[#2c2823] leading-relaxed">
-                    {collision?.step3InvertedDirection?.methodAAppliedToB || 'Applicazione della logica del primo vettore all\'orizzonte del secondo.'}
+                    <FormattedText text={collision?.step3InvertedDirection?.methodAAppliedToB || 'Applicazione della logica del primo vettore all\'orizzonte del secondo.'} />
                   </p>
                 </div>
 
@@ -245,7 +282,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                     <span>Quesito Provocatorio di Violazione:</span>
                   </div>
                   <p className="text-sm sm:text-base font-serif font-semibold text-[#1a1714] leading-relaxed italic">
-                    «{collision?.step3InvertedDirection?.provocativeViolationQuestion || 'Quale anomalia si spalanca ribaltando la direzione dello sguardo?'}»
+                    «<FormattedText text={collision?.step3InvertedDirection?.provocativeViolationQuestion || 'Quale anomalia si spalanca ribaltando la direzione dello sguardo?'} />»
                   </p>
                 </div>
 
@@ -253,7 +290,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                   <span className="font-mono text-xs uppercase tracking-wider text-[#475b7a] font-semibold block mb-0.5">
                     Intuizione Contro-Intuitiva:
                   </span>
-                  {collision?.step3InvertedDirection?.counterIntuitiveInsight || 'Il cortocircuito logico svela un presupposto implicito del paradigma.'}
+                  <FormattedText text={collision?.step3InvertedDirection?.counterIntuitiveInsight || 'Il cortocircuito logico svela un presupposto implicito del paradigma.'} />
                 </div>
               </div>
             </div>
@@ -275,7 +312,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                     Metafora Architetturale
                   </span>
                   <h3 className="text-base sm:text-lg font-serif font-bold text-[#1a1714]">
-                    {collision?.step4CommonMetaphor?.masterMetaphorTitle || 'LA SOGLIA DEL VELATO'}
+                    <FormattedText text={collision?.step4CommonMetaphor?.masterMetaphorTitle || 'LA SOGLIA DEL VELATO'} />
                   </h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -284,7 +321,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                       Radice Cosmologica / Antropologica
                     </span>
                     <p className="text-xs sm:text-sm text-[#3d3830] font-serif leading-relaxed">
-                      {collision?.step4CommonMetaphor?.cosmologicalAnthropologicalGround || 'Fondamento antropologico comune ai due domini d\'indagine.'}
+                      <FormattedText text={collision?.step4CommonMetaphor?.cosmologicalAnthropologicalGround || 'Fondamento antropologico comune ai due domini d\'indagine.'} />
                     </p>
                   </div>
                   <div className="p-3.5 bg-[#faf8f5] border border-[#ede7dc] rounded-sm space-y-1">
@@ -292,7 +329,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
                       Visione d'Insieme
                     </span>
                     <p className="text-xs sm:text-sm text-[#1a1714] font-serif font-medium leading-relaxed">
-                      {collision?.step4CommonMetaphor?.unifyingVision || 'La convergenza organica che riannoda i due fenomeni in un unico continuum.'}
+                      <FormattedText text={collision?.step4CommonMetaphor?.unifyingVision || 'La convergenza organica che riannoda i due fenomeni in un unico continuum.'} />
                     </p>
                   </div>
                 </div>

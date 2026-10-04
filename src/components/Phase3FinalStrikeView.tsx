@@ -1,13 +1,40 @@
 import React, { useState } from 'react';
 import { Phase3FinalStrike, SystemConceptualPair } from '../types';
 import { buildPhase3FinalStrike } from '../data/canonicalFinalStrikes';
-import { ShieldAlert, Lightbulb, SearchX, Target, Eye, Sparkles, Compass, GitCommit, ChevronRight, Layers } from 'lucide-react';
+import { ShieldAlert, Lightbulb, SearchX, Target, Eye, Sparkles, Compass, GitCommit, ChevronRight, Layers, Database } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface Phase3FinalStrikeViewProps {
   systemPair: SystemConceptualPair;
   finalStrike?: Phase3FinalStrike;
 }
+
+const DEFAULT_STRIKE_DRAWER_LABELS: Record<number, string> = {
+  1: 'Cassetto 1 di Fase 2 • Strumenti, Frequenze e Misurazioni',
+  2: 'Cassetto 2 di Fase 2 • Persone, Scienziati e Testimoni',
+  3: 'Cassetto 3 di Fase 2 • Libri, Dossier e Testi Fondativi',
+  4: 'Cassetto 4 di Fase 2 • Corpo, Tessuti e Soglie Somatiche',
+  5: 'Cassetto 5 di Fase 2 • Paradigmi, Teoremi ed Equazioni'
+};
+
+const FormattedText: React.FC<{ text?: string }> = ({ text }) => {
+  if (!text) return null;
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return (
+    <span>
+      {parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return (
+            <strong key={i} className="font-semibold text-[#1a1714] bg-[#f2ebd9] px-1 py-0.5 rounded-xs">
+              {part.slice(2, -2)}
+            </strong>
+          );
+        }
+        return part;
+      })}
+    </span>
+  );
+};
 
 export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
   systemPair,
@@ -103,7 +130,7 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
           <div className="flex items-center justify-between px-1">
             <span className="text-xs font-mono uppercase tracking-wider text-[#787164] flex items-center gap-1.5">
               <Compass className="w-3.5 h-3.5 text-[#9e7627]" />
-              <span>Seleziona la Direzione del Loop (Fase 3):</span>
+              <span>Seleziona la Direzione del Loop (Fase 4):</span>
             </span>
             <span className="text-xs font-mono text-[#9e7627] font-semibold">
               Direzione {selectedDirectionIndex + 1} di {directionStrikes.length}
@@ -144,15 +171,35 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
             })}
           </div>
 
-          {/* Intestazione della Direzione Selezionata */}
+          {/* Intestazione della Direzione Selezionata + Cassetto di Fase 2 */}
           {currentDirectionStrike && (
-            <div className="p-4 bg-[#faf8f5] border border-[#ded7ca] rounded-sm space-y-1">
-              <div className="flex items-center gap-2 text-xs font-mono text-[#9e7627] font-semibold uppercase">
-                <Compass className="w-4 h-4" />
-                <span>{currentDirectionStrike.directionTitle}</span>
+            <div className="p-4 bg-[#faf8f5] border border-[#ded7ca] rounded-sm space-y-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-xs font-mono text-[#9e7627] font-semibold uppercase">
+                  <Compass className="w-4 h-4" />
+                  <span>{currentDirectionStrike.directionTitle}</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#f2ebd9] border border-[#d8c7a3] rounded-xs text-[11px] font-mono font-semibold text-[#6e5219]">
+                  <Database className="w-3 h-3" />
+                  <span>
+                    {currentDirectionStrike.empiricalDrawerLabel ||
+                      DEFAULT_STRIKE_DRAWER_LABELS[currentDirectionStrike.directionNumber] ||
+                      DEFAULT_STRIKE_DRAWER_LABELS[selectedDirectionIndex + 1]}
+                  </span>
+                </div>
               </div>
+
+              {currentDirectionStrike.empiricalEvidenceExamined && (
+                <div className="p-3 bg-[#ffffff] border border-[#e3dacb] rounded-xs text-xs sm:text-sm font-serif text-[#2c2823]">
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#9e7627] font-bold block mb-1">
+                    Reperti di Fase 2 in Protocollo in questa Direzione:
+                  </span>
+                  <FormattedText text={currentDirectionStrike.empiricalEvidenceExamined} />
+                </div>
+              )}
+
               <p className="text-xs sm:text-sm font-serif text-[#3d3830] italic pl-6 border-l-2 border-[#9e7627]">
-                {currentDirectionStrike.ontologicalAngle}
+                <FormattedText text={currentDirectionStrike.ontologicalAngle} />
               </p>
             </div>
           )}
@@ -182,11 +229,11 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
                     <div className="flex items-baseline gap-2">
                       <span className="text-xs font-mono font-bold text-[#9e7627]">§ 1</span>
                       <h4 className="text-base font-serif text-[#1a1714] font-semibold">
-                        Cui prodest? (A chi giova?)
+                        Cui prodest? (Il Dogma Spezzato nei Testi e nelle Istituzioni di Fase 2)
                       </h4>
                     </div>
                     <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
-                      Quale blocco culturale, riduzionista o dogmatico viene smantellato in questa direzione, restituendo centralità ontologica all'essere umano?
+                      Quali istituzioni, commissioni o paradigmi storici censiti in Fase 2 vengono scardinati e quali testimoni o pionieri ne escono legittimati?
                     </p>
                   </div>
 
@@ -196,7 +243,7 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
                       <span>Smantellamento del Blocco Dogmatico</span>
                     </div>
                     <p className="text-sm sm:text-base font-serif text-[#2c2823] leading-relaxed">
-                      {strikeData.cuiProdest}
+                      <FormattedText text={strikeData.cuiProdest} />
                     </p>
                   </div>
                 </div>
@@ -207,11 +254,11 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
                     <div className="flex items-baseline gap-2">
                       <span className="text-xs font-mono font-bold text-[#9e7627]">§ 2</span>
                       <h4 className="text-base font-serif text-[#1a1714] font-semibold">
-                        Quale scoperta innovativa potremmo portare alla luce?
+                        Scoperta Cardine (La Legge Unificante tra i Reperti di Fase 2)
                       </h4>
                     </div>
                     <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
-                      La formulazione della nuova legge, principio o teoria unificante emersa dall'attrito di questa specifica faglia.
+                      La formulazione della nuova legge, principio o teoria unificante che lega per nome i teoremi e le misurazioni della Fase 2.
                     </p>
                   </div>
 
@@ -222,7 +269,7 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
                     </div>
                     <div className="p-5 bg-[#faf5ec] border border-[#e4d6be] rounded-sm shadow-2xs">
                       <p className="text-sm sm:text-base font-serif text-[#1f1c19] leading-relaxed font-medium">
-                        {strikeData.groundbreakingDiscovery}
+                        <FormattedText text={strikeData.groundbreakingDiscovery} />
                       </p>
                     </div>
                   </div>
@@ -234,21 +281,21 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
                     <div className="flex items-baseline gap-2">
                       <span className="text-xs font-mono font-bold text-[#9e7627]">§ 3</span>
                       <h4 className="text-base font-serif text-[#1a1714] font-semibold">
-                        Cos'è che non abbiamo ancora investigato?
+                        Il Bias Inesplorato (La Cecità Incrociata tra gli Specialisti di Fase 2)
                       </h4>
                     </div>
                     <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
-                      Il pregiudizio metodologico o il recinto disciplinare che finora ha impedito di collegare i due fenomeni.
+                      Perché chi utilizza il primo strumento/protocollo di Fase 2 ha finora ignorato i dati raccolti da chi utilizza il secondo strumento/protocollo di Fase 2?
                     </p>
                   </div>
 
                   <div className="p-6 space-y-3">
                     <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#8a4e32] font-semibold">
                       <SearchX className="w-4 h-4" />
-                      <span>Il Recinto Disciplinare e il Pregiudizio Accademico</span>
+                      <span>Il Recinto Disciplinare e la Cecità Strumentale</span>
                     </div>
                     <p className="text-sm sm:text-base font-serif text-[#2c2823] leading-relaxed">
-                      {strikeData.uninvestigatedBias}
+                      <FormattedText text={strikeData.uninvestigatedBias} />
                     </p>
                   </div>
                 </div>
@@ -259,22 +306,22 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
                     <div className="flex items-baseline gap-2">
                       <span className="text-xs font-mono font-bold text-[#9e7627]">§ 4</span>
                       <h4 className="text-base font-serif text-[#1a1714] font-semibold">
-                        Dove dovremmo focalizzare la nostra ricerca?
+                        Intersezione di Ricerca (Il Protocollo di Laboratorio Reale con gli Strumenti di Fase 2)
                       </h4>
                     </div>
                     <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
-                      L'intersezione esatta tra discipline diverse (es. fisica topologica, biochimica, neurofenomenologia) in cui puntare i riflettori.
+                      L'esperimento concreto di laboratorio che incrocia gli strumenti reali, le frequenze, i tracciati e i campioni censiti nella Fase 2.
                     </p>
                   </div>
 
                   <div className="p-6 space-y-3">
                     <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#475b7a] font-semibold">
                       <Target className="w-4 h-4" />
-                      <span>Intersezione Transdisciplinare dei Riflettori</span>
+                      <span>Protocollo Sperimentale sugli Apparati di Fase 2</span>
                     </div>
                     <div className="p-5 bg-[#faf8f5] border border-[#ede7dc] rounded-sm">
                       <p className="text-sm sm:text-base font-serif text-[#2c2823] leading-relaxed">
-                        {strikeData.researchFocusIntersection}
+                        <FormattedText text={strikeData.researchFocusIntersection} />
                       </p>
                     </div>
                   </div>
@@ -286,11 +333,11 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
                     <div className="flex items-baseline gap-2">
                       <span className="text-xs font-mono font-bold text-[#9e7627]">§ 5</span>
                       <h4 className="text-base font-serif text-[#1a1714] font-semibold">
-                        Cosa potremmo scoprire? (La Vertigine Finale)
+                        Rivelazione Vertiginosa (L'Orizzonte Ontologico Finale)
                       </h4>
                     </div>
                     <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
-                      La vertigine finale: la svelazione di come è strutturata la "stanza" in cui viviamo e quali porte girevoli collegano i nostri mondi apparentemente separati.
+                      La svelazione finale a partire dal reperto più estremo della Fase 2: come è strutturata la "stanza" del reale e cosa prepara il Saggio di Fase 6.
                     </p>
                   </div>
 
@@ -301,7 +348,7 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
                     </div>
                     <div className="p-6 bg-[#fbf9f4] border-l-2 border-[#b0872e] rounded-r-sm space-y-2">
                       <p className="text-base sm:text-lg font-serif italic text-[#1a1714] leading-relaxed">
-                        «{strikeData.dizzyingRevelation}»
+                        «<FormattedText text={strikeData.dizzyingRevelation} />»
                       </p>
                     </div>
                   </div>

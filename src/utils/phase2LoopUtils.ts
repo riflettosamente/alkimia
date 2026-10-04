@@ -20,6 +20,14 @@ function isDenseEnough(val: any, minLength: number = 18): boolean {
   return true;
 }
 
+const DEFAULT_DRAWER_LABELS: Record<number, string> = {
+  1: 'Cassetto 1 di Fase 2 • Reperti, Strumenti e Misurazioni (materialEvidenceAndTools)',
+  2: 'Cassetto 2 di Fase 2 • Persone, Scienziati e Testimoni (keyFiguresAndWitnesses)',
+  3: 'Cassetto 3 di Fase 2 • Supporti, Libri e Dossier Fondativi (foundationalTexts)',
+  4: 'Cassetto 4 di Fase 2 • Biologia, Corpo e Soglie Somatiche (materialEvidenceAndTools + keyFiguresAndWitnesses)',
+  5: 'Cassetto 5 di Fase 2 • Paradigmi, Teoremi ed Equazioni (breakthroughTheories + crossArchiveSynthesis)'
+};
+
 export function normalizePhase2Loop(
   rawLoop: any,
   vectorAName?: string,
@@ -38,6 +46,10 @@ export function normalizePhase2Loop(
     const dirNumber = typeof rawTrack.directionNumber === 'number' ? rawTrack.directionNumber : index + 1;
     const dirTitle = rawTrack.directionTitle || canonicalTrack.directionTitle;
     const dirAngle = rawTrack.ontologicalAngle || canonicalTrack.ontologicalAngle;
+    const empiricalDrawerLabel = rawTrack.empiricalDrawerLabel || DEFAULT_DRAWER_LABELS[dirNumber] || DEFAULT_DRAWER_LABELS[index + 1];
+    const empiricalEvidenceExamined = isDenseEnough(rawTrack.empiricalEvidenceExamined, 10)
+      ? String(rawTrack.empiricalEvidenceExamined)
+      : undefined;
     const trackId = `track-${dirNumber}-${index}-${rawTrack.id || canonicalTrack.id || 'dir'}`;
 
     // Validazione profonda di collision
@@ -91,6 +103,8 @@ export function normalizePhase2Loop(
       id: trackId,
       directionNumber: dirNumber,
       directionTitle: dirTitle,
+      empiricalDrawerLabel,
+      empiricalEvidenceExamined,
       ontologicalAngle: dirAngle,
       collision: safeCollision
     };

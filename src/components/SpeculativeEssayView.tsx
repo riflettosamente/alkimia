@@ -11,8 +11,10 @@ export const SpeculativeEssayView: React.FC<SpeculativeEssayViewProps> = ({
   essay,
   isLatest = false,
 }) => {
+  const cleanLiteraryText = (text?: string) => (text ? text.replace(/\*\*(.*?)\*\*/g, '$1') : '');
+
   // Estrazione dei paragrafi narrativi continui privi di elenchi o marcatori procedurali
-  const paragraphs: string[] = essay.narrativeParagraphs && essay.narrativeParagraphs.length > 0
+  const rawParagraphs: string[] = essay.narrativeParagraphs && essay.narrativeParagraphs.length > 0
     ? essay.narrativeParagraphs
     : [
         essay.preamble,
@@ -20,6 +22,8 @@ export const SpeculativeEssayView: React.FC<SpeculativeEssayViewProps> = ({
         essay.corollaries.join(' '),
         essay.openAporias.join(' ')
       ].filter(Boolean);
+
+  const paragraphs = rawParagraphs.map(p => cleanLiteraryText(p));
 
   return (
     <motion.article 
@@ -50,17 +54,17 @@ export const SpeculativeEssayView: React.FC<SpeculativeEssayViewProps> = ({
         </div>
 
         <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-serif font-bold text-[#1a1714] leading-[1.22] tracking-tight max-w-2xl mx-auto">
-          {essay.title}
+          {cleanLiteraryText(essay.title)}
         </h2>
 
         <p className="text-lg sm:text-xl italic text-[#544d42] max-w-xl mx-auto leading-[1.8] pt-1">
-          {essay.subtitle}
+          {cleanLiteraryText(essay.subtitle)}
         </p>
 
         {/* Tesi Ontologica Incastonata all'Esordio */}
         <div className="mt-8 p-6 sm:p-7 bg-[#faf8f5] border-l-2 border-[#b0872e] text-left rounded-r-xs shadow-2xs">
           <p className="text-lg sm:text-[19.5px] font-serif text-[#1f1c19] leading-[1.9] italic">
-            «{essay.ontologicalThesis}»
+            «{cleanLiteraryText(essay.ontologicalThesis)}»
           </p>
         </div>
       </motion.header>

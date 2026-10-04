@@ -163,6 +163,8 @@ export interface Phase2DirectionTrack {
   id: string;
   directionNumber: number;
   directionTitle: string;
+  empiricalDrawerLabel?: string;
+  empiricalEvidenceExamined?: string;
   ontologicalAngle: string;
   collision: Phase2CollisionDecomposition;
 }
@@ -175,6 +177,8 @@ export interface Phase2LoopFiveDirections {
 export interface DirectionFinalStrikeItem {
   directionNumber: number;
   directionTitle: string;
+  empiricalDrawerLabel?: string;
+  empiricalEvidenceExamined?: string;
   ontologicalAngle: string;
   cuiProdest: string;
   groundbreakingDiscovery: string;

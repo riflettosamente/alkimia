@@ -198,38 +198,39 @@ REGOLA FONDAMENTALE DI PUREZZA LESSICALE (LINGUA ITALIANA IMPECCABILE)
 - Sintassi: nobile, armoniosa, priva di ridondanze o ampollose affettazioni barocche.
 
 ================================================================================
-METAFORA GUIDA: IL TACCUINO DI BOTTEGA E L'OPERA COMPIUTA
+METAFORA GUIDA: DAL TACCUINO SPERIMENTALE AL GRANDE SAGGIO D'AUTORE
 ================================================================================
-Hai a disposizione gli appunti di laboratorio e l'indagine analitica svolta nella prima fase.
-Quegli appunti rappresentano l'impalcatura grezza del cantiere, i calcoli preparatori.
-Ora devi comporre l'opera letteraria finita:
-- L'impalcatura tecnica scompare completamente;
-- I concetti, le asimmetrie e le intuizioni del taccuino vengono sciolti in una narrazione fluida, densa, avvolgente ed evocativa;
-- Non compili un modulo, non rispondi a un questionario: scrivi un saggio magistrale in prosa continua per una lettura lenta e contemplativa.
+Hai a disposizione l'indagine svolta nelle fasi precedenti (Coordinate, Archivio Empirico dei 5 Cassetti, Collisione, Loop a 5 Lenti e Protocollo Sperimentale).
+- Ciò che deve SCOMPARIRE completamente è solo l'impalcatura scolastica e procedurale (i numeri delle fasi, le parole "Cassetto", "Loop", "Asse cieco", "Passo 1", e qualsiasi asterisco o grassetto Markdown **...**).
+- Ciò che invece DEVE RESTARE VIVO E INCARDINATO NELLA PROSA sono i FATTI REALI dell'Archivio Empirico: i nomi propri degli scienziati e dei testimoni, le date storiche esatte, i titoli delle opere e dei dossier, i nomi degli strumenti tecnologici, le frequenze e i teoremi.
+- Come nei grandi saggi di Roberto Calasso, Jorge Luis Borges o Oliver Sacks, la potenza letteraria nasce dall'incastonare il dettaglio storico, l'anno esatto, il manoscritto antico o la frequenza del radiotelescopio dentro una prosa purissima, fluida e priva di grassetti.
 
 ================================================================================
 NEGATIVE CONSTRAINT LIST (LISTA NERA ASSOLUTA - VIETATO USARE NEL TESTO)
 ================================================================================
 Nel testo del saggio (titolo, sottotitolo, tesi ontologica, paragrafi) è TASSATIVAMENTE VIETATO:
-1. Usare formule e etichette procedurali o gergo da prompt:
+1. Usare asterischi o grassetti Markdown (**termine**): la pagina è puramente letteraria, nessun grassetto deve comparire nel testo.
+2. Usare formule vaghe ed evasive ("alcuni scienziati", "noti esperimenti", "antichi testi") al posto dei nomi e delle date reali presenti nel dossier.
+3. Usare etichette procedurali o gergo da prompt:
+   - VIETATO: "Vettore A", "Vettore B", "Primo Argomento", "Secondo Argomento", "Cassetto 1", "Cassetto 2"
    - VIETATO: "Cui prodest", "Cui prodest?", "A chi giova"
    - VIETATO: "La vertigine finale", "vertigine finale"
-   - VIETATO: "Stanza del reale", "porte girevoli tra i piani" (non usare formule preconfezionate)
-   - VIETATO: "Fase 1", "Fase 2", "Fase 3", "Fase 4", "Fase 5", "Passo 1", "Passo 2"
+   - VIETATO: "Stanza del reale", "porte girevoli tra i piani"
+   - VIETATO: "Fase 1", "Fase 2", "Fase 3", "Fase 4", "Fase 5", "Fase 6", "Passo 1", "Passo 2"
    - VIETATO: "Loop cognitivo", "5 direzioni", "5 lenti", "5 prospettive", "Asse cieco", "Trapianto di funzione", "Inversione di dominio", "Metafora comune"
    - VIETATO: "When", "Where", "What", "How", "Who", "Why", "Il Velato", "6W"
-2. Usare elenchi puntati, elenchi numerati, notazioni schematiche (§), o titoletti interni ai paragrafi.
-3. Usare formule metanarrative da chatbot o didattiche (es. "In questo saggio esploreremo...", "Come abbiamo analizzato...", "Passiamo ora a considerare...").
+4. Usare elenchi puntati, elenchi numerati, notazioni schematiche (§), o titoletti interni ai paragrafi.
+5. Usare formule metanarrative da chatbot o didattiche (es. "In questo saggio esploreremo...", "Come abbiamo analizzato...", "Passiamo ora a considerare...").
 
 ================================================================================
-ARCHITETTURA NARRATIVA DEL SAGGIO (PROSA CONTINUA DI 1.200 - 1.800 PAROLE)
+ARCHITETTURA NARRATIVA DEI 5 PARAGRAFI (PROSA CONTINUA DI 1.200 - 1.800 PAROLE)
 ================================================================================
-Il saggio deve articolarsi in ampi paragrafi narrativi continui e densi:
-- Paragrafo 1: Esordio speculativo e apertura destabilizzante sulla natura fenomenica dei due elementi indagati.
-- Paragrafo 2: Approfondimento filosofico e scioglimento della dicotomia apparente; anatomia della soglia che separa i due domini.
-- Paragrafo 3: La collisione profonda: elezione delle connessioni e intuizioni più dirompenti scoperte nel loop d'indagine, trasformate in argomentazione continua.
-- Paragrafo 4: Decostruzione dei paradigmi culturali ed epistemologici dominanti, emancipazione ontologica del soggetto conoscente e indicazione delle nuove frontiere di indagine.
-- Paragrafo 5: Orizzonte speculativo conclusivo: visione cosmologica ad ampio respiro sull'infrastruttura del reale e sulla continuità tra visibile e invisibile.
+Il saggio deve articolarsi in 5 ampi paragrafi narrativi continui e densi (senza grassetti):
+- Paragrafo 1 (L'Incipit Storico e Fenomenico): Non aprire con generalità astratte, ma entra in medias res mettendo in scena due episodi storici, due date esatte, due testimoni o due opere fondative reali dell'Archivio Empirico, mostrando subito la tensione tra i due mondi.
+- Paragrafo 2 (L'Anatomia degli Strumenti e la Soglia Cieca): Porta il lettore dentro i laboratori; nomina gli strumenti reali, i rilevatori e le frequenze dell'Archivio Empirico e racconta in prosa letteraria il limite strumentale e l'esperimento incrociato emersi nella Collisione.
+- Paragrafo 3 (L'Attraversamento delle Faglie: Materia, Lingua, Corpo e Sistema): Il cuore speculativo centrale; intreccia in un unico flusso narrativo le scoperte emerse dai 5 Cassetti (l'entropia dei sensori, la risposta immunitaria dei testimoni, l'intraducibilità dei dossier e dei libri, la mutazione fisiologica del corpo dell'osservatore e l'architettura dei teoremi), senza mai nominare le parole "Loop", "Cassetto" o "Direzione".
+- Paragrafo 4 (La Frattura del Dogma e il Nuovo Orizzonte Sperimentale): Trasforma in alta prosa civile ed epistemologica il superamento del dogma, la cecità incrociata tra gli specialisti e il protocollo sperimentale di laboratorio, citando per nome i modelli teorici, i formulatori e gli apparati coinvolti.
+- Paragrafo 5 (Il Sigillo Cosmologico e la Metafora Madre): Riprende la Metafora Comune generatrice e la porta al massimo respiro filosofico e poetico, chiudendo il cerchio aperto nel primo paragrafo.
 
 Ogni paragrafo deve essere ricco, approfondito e articolato per raggiungere rigorosamente l'estensione complessiva di 1.200 - 1.800 parole in italiano letterario autentico, filosoficamente denso e lessicalmente ineccepibile.
 
