@@ -20,9 +20,9 @@ import {
 export { getSolarDateKey, formatItalianDate, formatTimeUntilNextCycle };
 export const getTimeUntilNextSolarCycle = getTimeUntilNextSolarMidnight;
 
-// v14: la versione precedente poteva contenere il ripiego locale spacciato per saggio generato.
-const CACHE_KEY_CURRENT = 'alkimia_daily_edition_cache_v14';
-const CACHE_KEY_ARCHIVE = 'alkimia_chronological_archive_v14';
+// v15: valida anche la presenza effettiva dei paragrafi del saggio (Fase 6) prima di salvare in cache locale.
+const CACHE_KEY_CURRENT = 'alkimia_daily_edition_cache_v15';
+const CACHE_KEY_ARCHIVE = 'alkimia_chronological_archive_v15';
 
 export interface DailyCachedPayload {
   solarDateKey: string;
@@ -47,7 +47,9 @@ export function getLocalDailyCache(): DailyCachedPayload | null {
       'ontological_daily_edition_cache_v11',
       'alkimia_daily_edition_cache_v12',
       'alkimia_daily_edition_cache_v13',
-      'alkimia_chronological_archive_v13'
+      'alkimia_chronological_archive_v13',
+      'alkimia_daily_edition_cache_v14',
+      'alkimia_chronological_archive_v14'
     ].forEach(k => {
       if (localStorage.getItem(k)) localStorage.removeItem(k);
     });
@@ -139,6 +141,11 @@ export const PROVISIONAL_POLL_INTERVAL_MS = 15000;
 function isPersistable(editions: EditorialEdition[]): boolean {
   const lead = editions[0];
   if (!lead) return false;
+  const hasEssayParagraphs =
+    Boolean(lead.essay?.title) &&
+    Array.isArray(lead.essay?.narrativeParagraphs) &&
+    lead.essay.narrativeParagraphs.length > 0;
+  if (!hasEssayParagraphs) return false;
   const status = lead.generationStatus;
   // Le edizioni d'archivio precedenti alla correzione non riportano lo stato: si accettano
   // solo se dichiarano un provider reale.

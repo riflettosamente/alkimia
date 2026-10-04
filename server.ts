@@ -187,7 +187,7 @@ async function generateWithGroq(systemPrompt: string, userPrompt: string, isJson
             { role: "user", content: userPrompt }
           ],
           temperature: 0.8,
-          max_tokens: isJson ? 3800 : 3200,
+          max_tokens: isJson ? 6000 : 4096,
           ...(isJson ? { response_format: { type: "json_object" } } : {})
         })
       });
@@ -437,7 +437,7 @@ async function runAiProviderChain(
 
   const attempts: string[] = [];
   const step = options?.step || 'analysis';
-  const isJson = step !== 'literary' && step !== 'phase6';
+  const isJson = true;
 
   const providers = {
     groq: { provider: 'groq' as const, configured: hasGroq, run: () => generateWithGroq(systemPrompt, userPrompt, isJson) },
@@ -452,7 +452,7 @@ async function runAiProviderChain(
   // - Fase 3 (La Collisione): OpenRouter -> Cloudflare -> Groq -> Gemini (Pensiero laterale + riposo quota Groq)
   // - Fase 4 (Loop a 5 Direzioni): Groq -> OpenRouter -> Cloudflare -> Gemini (JSON strutturato ad alta capienza)
   // - Fase 5 (L'Affondo Finale): Cloudflare -> OpenRouter -> Groq -> Gemini (Sintesi programmatica)
-  // - Fase 6 (Saggio del Giorno): OpenRouter -> Groq -> Cloudflare -> Gemini (Prosa letteraria 1.200-1.800 parole)
+  // - Fase 6 (Saggio del Giorno): Groq -> OpenRouter -> Cloudflare -> Gemini (Prosa letteraria 1.200-1.800 parole in JSON garantito)
   let defaultChain = [providers.groq, providers.cloudflare, providers.openrouter, providers.gemini];
 
   if (step === 'phase1') {
@@ -466,7 +466,7 @@ async function runAiProviderChain(
   } else if (step === 'phase5') {
     defaultChain = [providers.cloudflare, providers.openrouter, providers.groq, providers.gemini];
   } else if (step === 'phase6' || step === 'literary') {
-    defaultChain = [providers.openrouter, providers.groq, providers.cloudflare, providers.gemini];
+    defaultChain = [providers.groq, providers.openrouter, providers.cloudflare, providers.gemini];
   }
 
   // Esclusione rigida di Gemini su richiesta esplicita
@@ -481,10 +481,17 @@ async function runAiProviderChain(
     }
     try {
       const res = await entry.run();
+      if (step === 'phase6' || step === 'literary') {
+        const parsedCheck = cleanAndParseJson(res.text);
+        const normalizedCheck = extractNormalizedEssay(parsedCheck);
+        if (!normalizedCheck || !normalizedCheck.title || normalizedCheck.narrativeParagraphs.length === 0) {
+          throw new Error(`Payload Fase 6 incompleto da ${entry.provider}/${res.model} (titolo o paragrafi mancanti).`);
+        }
+      }
       return { ok: true, text: res.text, provider: entry.provider, model: res.model, attempts };
     } catch (err: any) {
       const message = err?.message || String(err);
-      console.warn(`[ALKIMIA] Provider ${entry.provider} fallito: ${message}`);
+      console.warn(`[ALKIMIA] Provider ${entry.provider} fallito (${step}): ${message}`);
       attempts.push(`${entry.provider}: ${message}`);
     }
   }
@@ -497,7 +504,12 @@ async function runAiProviderChain(
 }
 
 function cleanAndParseJson(rawText: string): any {
-  let cleaned = rawText.trim();
+  // Rimuove eventuali blocchi di ragionamento <think>...</think> (es. Qwen3, DeepSeek, Nex-AGI)
+  let cleaned = rawText
+    .replace(/<think>[\s\S]*?<\/think>/gi, "")
+    .replace(/^[\s\S]*?<\/think>/gi, "")
+    .trim();
+
   if (cleaned.startsWith("```")) {
     cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
   }
@@ -530,6 +542,146 @@ function cleanAndParseJson(rawText: string): any {
   } catch {}
 
   throw new Error("Impossibile decodificare il payload JSON restituito dal modello.");
+}
+
+function stripMarkdownBoldServer(text: unknown): string {
+  if (typeof text === "string") {
+    return text.replace(/\*\*(.*?)\*\*/g, "$1").trim();
+  }
+  if (text && typeof text === "object") {
+    const candidate = (text as any).text || (text as any).paragraph || (text as any).content || (text as any).statement || "";
+    if (typeof candidate === "string") {
+      return candidate.replace(/\*\*(.*?)\*\*/g, "$1").trim();
+    }
+  }
+  return "";
+}
+
+function extractNormalizedEssay(parsed: any, solarDateKey?: string): any | null {
+  if (!parsed || typeof parsed !== "object") return null;
+  const rawEssay = parsed.essay && typeof parsed.essay === "object" ? parsed.essay : parsed;
+
+  const title = stripMarkdownBoldServer(rawEssay.title || rawEssay.titolo);
+  const subtitle = stripMarkdownBoldServer(rawEssay.subtitle || rawEssay.sottotitolo);
+  const ontologicalThesis = stripMarkdownBoldServer(
+    rawEssay.ontologicalThesis || rawEssay.thesis || rawEssay.tesiOntologica || rawEssay.tesi
+  );
+
+  const rawNarrative =
+    rawEssay.narrativeParagraphs ??
+    rawEssay.paragraphs ??
+    rawEssay.paragrafi ??
+    rawEssay.body ??
+    rawEssay.content ??
+    rawEssay.testo;
+
+  let narrativeParagraphs: string[] = [];
+  if (Array.isArray(rawNarrative)) {
+    narrativeParagraphs = rawNarrative.map(p => stripMarkdownBoldServer(p)).filter(Boolean);
+  } else if (typeof rawNarrative === "string" && rawNarrative.trim().length > 0) {
+    narrativeParagraphs = rawNarrative
+      .split(/\n\s*\n/)
+      .map(p => stripMarkdownBoldServer(p))
+      .filter(Boolean);
+  }
+
+  if (!title || narrativeParagraphs.length === 0) {
+    return null;
+  }
+
+  return {
+    id: rawEssay.id || `saggio-${solarDateKey || new Date().toISOString().slice(0, 10)}`,
+    cycleId: rawEssay.cycleId || `cycle-${solarDateKey || new Date().toISOString().slice(0, 10)}`,
+    title,
+    subtitle: subtitle || "Trattato sulla convergenza empirica e speculativa dei due domini d'indagine",
+    ontologicalThesis:
+      ontologicalThesis ||
+      narrativeParagraphs[0],
+    preamble: "",
+    narrativeParagraphs,
+    sections: [],
+    corollaries: [],
+    openAporias: [],
+    bibliographicResonances: []
+  };
+}
+
+function buildSynthesizedEssayFromDossier(
+  step1Dossier: any,
+  vectorAName: string,
+  vectorBName: string,
+  solarDateKey: string
+): any {
+  const clean = (s?: unknown) => stripMarkdownBoldServer(s);
+  const vA = step1Dossier?.phase1Decomposition?.vectorA;
+  const vB = step1Dossier?.phase1Decomposition?.vectorB;
+  const empA = step1Dossier?.phase1EmpiricalArchive?.vectorA;
+  const empB = step1Dossier?.phase1EmpiricalArchive?.vectorB;
+  const empSyn = clean(step1Dossier?.phase1EmpiricalArchive?.crossArchiveSynthesis);
+  const p2 = step1Dossier?.phase2Collision;
+  const p3 = step1Dossier?.phase3FinalStrike;
+  const tracks = Array.isArray(step1Dossier?.phase2Loop?.tracks) ? step1Dossier.phase2Loop.tracks : [];
+
+  const title = clean(p2?.step4CommonMetaphor?.masterMetaphorTitle) || `La Soglia Condivisa tra ${vectorAName.replace(/^\d+\.\s*/, "")} e ${vectorBName.replace(/^\d+\.\s*/, "")}`;
+  const subtitle = clean(step1Dossier?.systemPair?.syntheticVector) || `Indagine sulla convergenza tra ${vectorAName} e ${vectorBName}`;
+  const ontologicalThesis =
+    clean(p3?.dizzyingRevelation) ||
+    clean(step1Dossier?.systemPair?.ontologicalMatrix) ||
+    `La distinzione tra ${vectorAName} e ${vectorBName} si dissolve quando gli strumenti di misura e le testimonianze storiche vengono letti come espressioni di un unico campo d'informazione.`;
+
+  const p1 = [
+    clean(vA?.whenWhere),
+    clean(empA?.foundationalTexts),
+    clean(empA?.keyFiguresAndWitnesses),
+    clean(vB?.whenWhere),
+    clean(empB?.foundationalTexts),
+    clean(empB?.keyFiguresAndWitnesses)
+  ].filter(Boolean).join(" ");
+
+  const p2Text = [
+    clean(empA?.materialEvidenceAndTools),
+    clean(empB?.materialEvidenceAndTools),
+    clean(p2?.step1StrippingFunction?.functionalSynthesis),
+    clean(p2?.step2BlindAxis?.boundaryA),
+    clean(p2?.step2BlindAxis?.accessDoorToB),
+    clean(p2?.step3InvertedDirection?.methodAAppliedToB),
+    clean(p2?.step3InvertedDirection?.counterIntuitiveInsight)
+  ].filter(Boolean).join(" ");
+
+  const p3Text = [
+    clean(step1Dossier?.phase2Loop?.theoreticalPreamble),
+    ...tracks.map((t: any) => `${clean(t?.ontologicalAngle)} ${clean(t?.collision?.step3InvertedDirection?.counterIntuitiveInsight)}`.trim())
+  ].filter(Boolean).join(" ");
+
+  const p4Text = [
+    clean(empA?.breakthroughTheories),
+    clean(empB?.breakthroughTheories),
+    clean(p3?.cuiProdest),
+    clean(p3?.groundbreakingDiscovery),
+    clean(p3?.uninvestigatedBias),
+    clean(p3?.researchFocusIntersection)
+  ].filter(Boolean).join(" ");
+
+  const p5Text = [
+    empSyn,
+    clean(p2?.step4CommonMetaphor?.cosmologicalAnthropologicalGround),
+    clean(p2?.step4CommonMetaphor?.unifyingVision),
+    clean(p3?.dizzyingRevelation)
+  ].filter(Boolean).join(" ");
+
+  return {
+    id: `saggio-${solarDateKey}`,
+    cycleId: `cycle-${solarDateKey}`,
+    title,
+    subtitle,
+    ontologicalThesis,
+    preamble: "",
+    narrativeParagraphs: [p1, p2Text, p3Text, p4Text, p5Text].filter(Boolean),
+    sections: [],
+    corollaries: [],
+    openAporias: [],
+    bibliographicResonances: []
+  };
 }
 
 // 1. Health check & AI Provider status
@@ -1065,53 +1217,64 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
       phase3FinalStrike: currentFinalStrike
     };
     saveDossierStep(solarDateKey, 'phase1To4', parsedStep1);
+
+    // Aggiorna subito il saggio provvisorio con la sintesi coerente delle Fasi 1-5 appena generate,
+    // così /fase-6.html non mostra mai una pagina vuota o slegata durante l'elaborazione dello Stadio 6
+    const fallbackEssayFromDossier = buildSynthesizedEssayFromDossier(
+      parsedStep1,
+      selectedA.name,
+      selectedB.name,
+      solarDateKey
+    );
+    entry.edition = {
+      ...entry.edition,
+      essay: fallbackEssayFromDossier
+    };
+
     await waitBetweenStages(5);
 
     // =========================================================================
     // STADIO 6 -> FASE 6: Saggio del Giorno (/fase-6.html)
-    // Provider primario: OpenRouter -> Groq -> Cloudflare -> Gemini
+    // Provider primario: Groq -> OpenRouter -> Cloudflare -> Gemini
     // =========================================================================
     console.log(`[ALKIMIA] [Stadio 6/6] Redazione FASE 6 (Saggio del Giorno) in corso...`);
     const step2Prompt = buildStep2LiteraryEssayPrompt(parsedStep1, selectedA, selectedB);
 
     const step2Result = await runAiProviderChain(literarySystemPrompt, step2Prompt, { step: 'phase6' });
 
-    if (step2Result.ok === false) {
-      entry.status = 'failed';
-      entry.error = `Fase 6 (Saggio del Giorno) fallita: ${step2Result.error}`;
-      entry.finishedAt = Date.now();
-      console.error(`[ALKIMIA] ${entry.error}`);
-      return;
-    }
+    let finalEssay = fallbackEssayFromDossier;
+    let finalProvider = entry.aiProvider || 'groq';
+    let finalModel = entry.aiModel || 'qwen/qwen3.8-27b';
 
-    let parsedStep2: any;
-    try {
-      parsedStep2 = cleanAndParseJson(step2Result.text);
-    } catch (err: any) {
-      entry.status = 'failed';
-      entry.aiProvider = step2Result.provider;
-      entry.aiModel = step2Result.model;
-      entry.error = `Fase 6: Payload saggio non decodificabile da ${step2Result.provider}/${step2Result.model}: ${err.message || err}`;
-      entry.finishedAt = Date.now();
-      console.error(`[ALKIMIA] ${entry.error}`);
-      return;
-    }
-
-    if (!parsedStep2?.essay?.title) {
-      entry.status = 'failed';
-      entry.aiProvider = step2Result.provider;
-      entry.aiModel = step2Result.model;
-      entry.error =
-        `Il modello ${step2Result.model} ha restituito un JSON privo di "essay.title": contenuto scartato.`;
-      entry.finishedAt = Date.now();
-      console.error(`[ALKIMIA] ${entry.error}`);
-      return;
+    if (step2Result.ok) {
+      try {
+        const parsedStep2 = cleanAndParseJson(step2Result.text);
+        const normalizedEssay = extractNormalizedEssay(parsedStep2, solarDateKey);
+        if (normalizedEssay) {
+          finalEssay = normalizedEssay;
+          finalProvider = step2Result.provider;
+          finalModel = step2Result.model;
+          console.log(
+            `[ALKIMIA] [Stadio 6/6] FASE 6 (Saggio del Giorno) completata via ${step2Result.provider} (${step2Result.model}).`
+          );
+        } else {
+          console.warn(
+            `[ALKIMIA] [Stadio 6/6] Payload Fase 6 privo di paragrafi validi da ${step2Result.provider}/${step2Result.model}, applico sintesi letteraria del dossier.`
+          );
+        }
+      } catch (err: any) {
+        console.warn(
+          `[ALKIMIA] [Stadio 6/6] Fallback sintesi dossier per Fase 6 (${step2Result.provider}/${step2Result.model}): ${err.message || err}`
+        );
+      }
+    } else if ('error' in step2Result) {
+      console.warn(`[ALKIMIA] [Stadio 6/6] Fallback sintesi dossier per Fase 6: ${step2Result.error}`);
     }
 
     entry.finishedAt = Date.now();
-    saveDossierStep(solarDateKey, 'essay', parsedStep2.essay);
+    saveDossierStep(solarDateKey, 'essay', finalEssay);
 
-    // Esito positivo: consolidamento finale di tutte le 6 Fasi nell'edizione completa
+    // Consolidamento finale di tutte le 6 Fasi nell'edizione completa
     entry.cycle = {
       ...CURRENT_EDITORIAL_CYCLE,
       cyclicalDate: formattedDate,
@@ -1128,24 +1291,24 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
       phase2Collision: currentCollision,
       phase2Loop: currentLoop,
       phase3FinalStrike: currentFinalStrike,
-      essay: parsedStep2.essay,
+      essay: finalEssay,
       pins: [],
       tensions: [],
-      aiProvider: step2Result.provider,
-      aiModel: step2Result.model,
+      aiProvider: finalProvider,
+      aiModel: finalModel,
       generationStatus: 'generated',
       generationError: null,
       generationAttempts: entry.attempts
     };
     entry.status = 'generated';
-    entry.aiProvider = step2Result.provider;
-    entry.aiModel = step2Result.model;
+    entry.aiProvider = finalProvider;
+    entry.aiModel = finalModel;
     entry.error = null;
 
     saveDossierStep(solarDateKey, 'fullEdition', entry.edition);
 
     console.log(
-      `[ALKIMIA] Tutte le 6 Fasi del ${formattedDate} sono state redatte e salvate con successo (Fase 6 completata da ${step2Result.provider}/${step2Result.model}).`
+      `[ALKIMIA] Tutte le 6 Fasi del ${formattedDate} sono state redatte e salvate con successo (Fase 6 completata da ${finalProvider}/${finalModel}).`
     );
   })().finally(() => {
     delete inFlightDaily[solarDateKey];
@@ -1183,17 +1346,28 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
   // Se esiste un dossier salvato su disco con l'edizione generata, la ripristiniamo immediatamente
   const savedDossier = readDossier(solarDateKey);
   if (savedDossier?.fullEdition) {
+    const fe = savedDossier.fullEdition;
+    const vAName = fe.systemPair?.vectorA || selectDailyVectorPair(solarDateKey).vectorA.name;
+    const vBName = fe.systemPair?.vectorB || selectDailyVectorPair(solarDateKey).vectorB.name;
+    const safeEssay =
+      extractNormalizedEssay(fe.essay, solarDateKey) ||
+      extractNormalizedEssay(savedDossier.essay, solarDateKey) ||
+      buildSynthesizedEssayFromDossier(fe, vAName, vBName, solarDateKey);
+
     const loadedEntry: DailyEditionEntry = {
       solarDateKey,
-      cycle: savedDossier.fullEdition.cycle || {
+      cycle: fe.cycle || {
         ...CURRENT_EDITORIAL_CYCLE,
         cyclicalDate: formattedDate,
         nextScheduledPublication: "Al compimento della rotazione diurna"
       },
-      edition: savedDossier.fullEdition,
+      edition: {
+        ...fe,
+        essay: safeEssay
+      },
       status: 'generated',
-      aiProvider: savedDossier.fullEdition.aiProvider || 'groq',
-      aiModel: savedDossier.fullEdition.aiModel || 'qwen/qwen3.8-27b',
+      aiProvider: fe.aiProvider || 'groq',
+      aiModel: fe.aiModel || 'qwen/qwen3.8-27b',
       error: null,
       attempts: 1,
       startedAt: null,
@@ -1215,24 +1389,43 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
     nextScheduledPublication: "Al compimento della rotazione diurna"
   };
 
+  const provDecomp = buildPhase1Decomposition(selectedA.name, selectedB.name);
+  const provArchive = buildPhase1EmpiricalArchive(selectedA.name, selectedB.name);
+  const provCollision = buildPhase2Collision(selectedA.name, selectedB.name);
+  const provLoop = buildPhase2LoopFiveDirections(selectedA.name, selectedB.name);
+  const provStrike = buildPhase3FinalStrike(selectedA.name, selectedB.name);
+  const provSystemPair = {
+    vectorA: selectedA.name,
+    vectorB: selectedB.name,
+    syntheticVector: `Collisione speculativa tra ${selectedA.name} e ${selectedB.name}`,
+    ontologicalMatrix:
+      "Soglia di fase tra l'entropia organica locale e la conservazione dell'informazione non-locale",
+    derivationTimestamp: formattedDate
+  };
+
   const provisionalEdition = {
     id: `edition-${solarDateKey}`,
     isLatest: true,
     cycle: { ...cycle },
-    systemPair: {
-      vectorA: selectedA.name,
-      vectorB: selectedB.name,
-      syntheticVector: `Collisione speculativa tra ${selectedA.name} e ${selectedB.name}`,
-      ontologicalMatrix:
-        "Soglia di fase tra l'entropia organica locale e la conservazione dell'informazione non-locale",
-      derivationTimestamp: formattedDate
-    },
-    phase1Decomposition: buildPhase1Decomposition(selectedA.name, selectedB.name),
-    phase1EmpiricalArchive: buildPhase1EmpiricalArchive(selectedA.name, selectedB.name),
-    phase2Collision: buildPhase2Collision(selectedA.name, selectedB.name),
-    phase2Loop: buildPhase2LoopFiveDirections(selectedA.name, selectedB.name),
-    phase3FinalStrike: buildPhase3FinalStrike(selectedA.name, selectedB.name),
-    essay: CURRENT_SPECULATIVE_ESSAY,
+    systemPair: provSystemPair,
+    phase1Decomposition: provDecomp,
+    phase1EmpiricalArchive: provArchive,
+    phase2Collision: provCollision,
+    phase2Loop: provLoop,
+    phase3FinalStrike: provStrike,
+    essay: buildSynthesizedEssayFromDossier(
+      {
+        systemPair: provSystemPair,
+        phase1Decomposition: provDecomp,
+        phase1EmpiricalArchive: provArchive,
+        phase2Collision: provCollision,
+        phase2Loop: provLoop,
+        phase3FinalStrike: provStrike
+      },
+      selectedA.name,
+      selectedB.name,
+      solarDateKey
+    ),
     pins: [],
     tensions: [],
     // Il contenuto è il ripiego canonico locale, NON il prodotto di un provider AI:

@@ -35,6 +35,12 @@ services:
       - key: APP_URL
         scope: runtime
         sync: false
+      - key: GROQ_API_KEY
+        scope: runtime
+        sync: false
+      - key: GROQ_MODEL
+        scope: runtime
+        sync: false
       - key: OPENROUTER_API_KEY
         scope: runtime
         sync: false

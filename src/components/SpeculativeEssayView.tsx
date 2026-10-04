@@ -11,19 +11,63 @@ export const SpeculativeEssayView: React.FC<SpeculativeEssayViewProps> = ({
   essay,
   isLatest = false,
 }) => {
-  const cleanLiteraryText = (text?: string) => (text ? text.replace(/\*\*(.*?)\*\*/g, '$1') : '');
+  const cleanLiteraryText = (text?: unknown): string => {
+    if (typeof text === 'string') {
+      return text.replace(/\*\*(.*?)\*\*/g, '$1').trim();
+    }
+    if (text && typeof text === 'object') {
+      const candidate = (text as any).text || (text as any).paragraph || (text as any).content || (text as any).statement || '';
+      if (typeof candidate === 'string') {
+        return candidate.replace(/\*\*(.*?)\*\*/g, '$1').trim();
+      }
+    }
+    return '';
+  };
 
-  // Estrazione dei paragrafi narrativi continui privi di elenchi o marcatori procedurali
-  const rawParagraphs: string[] = essay.narrativeParagraphs && essay.narrativeParagraphs.length > 0
-    ? essay.narrativeParagraphs
-    : [
-        essay.preamble,
-        ...essay.sections.flatMap(s => s.propositions.map(p => `${p.statement} ${p.commentary || ''}`)),
-        essay.corollaries.join(' '),
-        essay.openAporias.join(' ')
-      ].filter(Boolean);
+  if (!essay) {
+    return null;
+  }
 
-  const paragraphs = rawParagraphs.map(p => cleanLiteraryText(p));
+  // Normalizzazione difensiva dei paragrafi narrativi (evita qualsiasi crash se sections/corollaries sono assenti o se narrativeParagraphs è stringa/oggetto)
+  const rawNarrative =
+    (essay as any).narrativeParagraphs ??
+    (essay as any).paragraphs ??
+    (essay as any).body ??
+    (essay as any).content;
+
+  let extractedParagraphs: string[] = [];
+
+  if (Array.isArray(rawNarrative) && rawNarrative.length > 0) {
+    extractedParagraphs = rawNarrative.map(p => cleanLiteraryText(p)).filter(Boolean);
+  } else if (typeof rawNarrative === 'string' && rawNarrative.trim().length > 0) {
+    extractedParagraphs = rawNarrative
+      .split(/\n\s*\n/)
+      .map(p => cleanLiteraryText(p))
+      .filter(Boolean);
+  }
+
+  if (extractedParagraphs.length === 0) {
+    const safeSections = Array.isArray(essay.sections)
+      ? essay.sections.flatMap(s =>
+          Array.isArray(s?.propositions)
+            ? s.propositions.map(p => `${p?.statement || ''} ${p?.commentary || ''}`.trim())
+            : []
+        )
+      : [];
+    const safeCorollaries = Array.isArray(essay.corollaries) ? essay.corollaries.join(' ') : '';
+    const safeAporias = Array.isArray(essay.openAporias) ? essay.openAporias.join(' ') : '';
+
+    extractedParagraphs = [
+      essay.preamble,
+      ...safeSections,
+      safeCorollaries,
+      safeAporias
+    ]
+      .map(p => cleanLiteraryText(p))
+      .filter(Boolean);
+  }
+
+  const paragraphs = extractedParagraphs;
 
   return (
     <motion.article 
