@@ -15,7 +15,12 @@ import {
   buildStep1AnalysisPrompt,
   buildStep2LiteraryEssayPrompt,
   buildSequentialInvestigationPrompt,
-  buildPhase1_5EmpiricalPrompt
+  buildPhase1_5EmpiricalPrompt,
+  buildStage1DecompositionPrompt,
+  buildStage2EmpiricalPrompt,
+  buildStage3CollisionPrompt,
+  buildStage4LoopPrompt,
+  buildStage5FinalStrikePrompt
 } from "./src/ai/speculativeInvestigationEngine";
 import { CURRENT_EDITORIAL_CYCLE, CURRENT_SPECULATIVE_ESSAY } from "./src/data/mockEdition";
 import { buildPhase1Decomposition } from "./src/data/canonicalDecompositions";
@@ -413,7 +418,7 @@ async function runAiProviderChain(
   systemPrompt: string,
   userPrompt: string,
   options?: {
-    step?: 'phase1' | 'phase1_5' | 'phase2' | 'phase3' | 'phase4' | 'phase5' | 'analysis' | 'literary';
+    step?: 'phase1' | 'phase1_5' | 'phase2' | 'phase3' | 'phase4' | 'phase5' | 'phase6' | 'analysis' | 'literary';
     excludeGemini?: boolean;
   }
 ): Promise<
@@ -432,7 +437,7 @@ async function runAiProviderChain(
 
   const attempts: string[] = [];
   const step = options?.step || 'analysis';
-  const isJson = step !== 'literary' && step !== 'phase5';
+  const isJson = step !== 'literary' && step !== 'phase6';
 
   const providers = {
     groq: { provider: 'groq' as const, configured: hasGroq, run: () => generateWithGroq(systemPrompt, userPrompt, isJson) },
@@ -441,26 +446,30 @@ async function runAiProviderChain(
     gemini: { provider: 'gemini' as const, configured: hasGemini, run: () => generateWithGemini(systemPrompt, userPrompt) }
   };
 
-  // Gerarchia di priorità multi-AI per fase:
-  // - phase1_5: Groq -> Cloudflare -> OpenRouter (ZERO token Gemini: salvaguardia token)
-  // - phase1: Groq -> Cloudflare -> OpenRouter -> Gemini (LPU ultra-veloce per 6W)
-  // - phase2: Cloudflare -> Groq -> Gemini -> OpenRouter (Edge globale per Collisione)
-  // - phase3: Groq -> Cloudflare -> OpenRouter -> Gemini (Loop a 5 Direzioni)
-  // - phase4: Gemini -> Groq -> Cloudflare -> OpenRouter (Sintesi epistemologica e Manifesto)
-  // - phase5 / literary: Groq -> Gemini -> OpenRouter -> Cloudflare (Saggio letterario di 1.500 parole)
+  // Orchestrazione Multi-LLM per le 6 Fasi (con Gemini rigorosamente in coda come ultimo fallback):
+  // - Fase 1 (Scomposizione Strutturale): Groq -> Cloudflare -> OpenRouter -> Gemini
+  // - Fase 2 (Archivio Empirico): Groq -> OpenRouter -> Cloudflare (Zero token Gemini)
+  // - Fase 3 (La Collisione): OpenRouter -> Cloudflare -> Groq -> Gemini (Pensiero laterale + riposo quota Groq)
+  // - Fase 4 (Loop a 5 Direzioni): Groq -> OpenRouter -> Cloudflare -> Gemini (JSON strutturato ad alta capienza)
+  // - Fase 5 (L'Affondo Finale): Cloudflare -> OpenRouter -> Groq -> Gemini (Sintesi programmatica)
+  // - Fase 6 (Saggio del Giorno): OpenRouter -> Groq -> Cloudflare -> Gemini (Prosa letteraria 1.200-1.800 parole)
   let defaultChain = [providers.groq, providers.cloudflare, providers.openrouter, providers.gemini];
 
-  if (step === 'phase1_5') {
-    defaultChain = [providers.groq, providers.cloudflare, providers.openrouter];
-  } else if (step === 'phase2') {
-    defaultChain = [providers.cloudflare, providers.groq, providers.gemini, providers.openrouter];
+  if (step === 'phase1') {
+    defaultChain = [providers.groq, providers.cloudflare, providers.openrouter, providers.gemini];
+  } else if (step === 'phase2' || step === 'phase1_5') {
+    defaultChain = [providers.groq, providers.openrouter, providers.cloudflare];
+  } else if (step === 'phase3') {
+    defaultChain = [providers.openrouter, providers.cloudflare, providers.groq, providers.gemini];
   } else if (step === 'phase4') {
-    defaultChain = [providers.gemini, providers.groq, providers.cloudflare, providers.openrouter];
-  } else if (step === 'phase5' || step === 'literary') {
-    defaultChain = [providers.groq, providers.gemini, providers.openrouter, providers.cloudflare];
+    defaultChain = [providers.groq, providers.openrouter, providers.cloudflare, providers.gemini];
+  } else if (step === 'phase5') {
+    defaultChain = [providers.cloudflare, providers.openrouter, providers.groq, providers.gemini];
+  } else if (step === 'phase6' || step === 'literary') {
+    defaultChain = [providers.openrouter, providers.groq, providers.cloudflare, providers.gemini];
   }
 
-  // Esclusione rigida di Gemini su richiesta esplicita (es. Fase 1.5 e ricerca empirica)
+  // Esclusione rigida di Gemini su richiesta esplicita
   if (options?.excludeGemini) {
     defaultChain = defaultChain.filter(entry => entry.provider !== 'gemini');
   }
@@ -811,12 +820,25 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     recordVectorExtraction(solarDateKey, selectedA.name, selectedB.name, 'daily_edition');
 
     console.log(
-      `[ALKIMIA] Avvio redazione a due passi del Saggio del Giorno ${solarDateKey} — ` +
-      `Vettore A «${selectedA.name}» × Vettore B «${selectedB.name}».`
+      `[ALKIMIA] Avvio redazione sequenziale in 6 Stadi del Saggio del Giorno ${solarDateKey} — ` +
+      `Primo Argomento «${selectedA.name}» × Secondo Argomento «${selectedB.name}».`
     );
 
+    const STAGE_PAUSE_MS = Number(process.env.STAGE_PAUSE_MS) || 6000;
+    const waitBetweenStages = (stageNum: number) => {
+      console.log(`[ALKIMIA] Pausa di consolidamento (${STAGE_PAUSE_MS / 1000}s) dopo Fase ${stageNum} — pagina /fase-${stageNum}.html salvata e aggiornata...`);
+      return new Promise((r) => setTimeout(r, STAGE_PAUSE_MS));
+    };
+
+    const entry = dailyEditionsCache[solarDateKey];
+    if (!entry) return;
+    entry.attempts += 1;
+
+    const analyticalSystemPrompt = buildAnalyticalSystemPrompt();
+    const literarySystemPrompt = buildLiteraryEssaySystemPrompt();
+
     // =========================================================================
-    // RICERCA WEB LIVE A COSTO ZERO (Wikipedia REST API) PER FASE 1.5
+    // PRE-STADIO: Ricerca Web Live a Costo Zero (Wikipedia REST API)
     // =========================================================================
     console.log(
       `[ALKIMIA] Ricerca web live a costo zero (Wikipedia REST API) per: «${selectedA.name}» e «${selectedB.name}»...`
@@ -828,94 +850,235 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     saveDossierStep(solarDateKey, 'webSearchContext', { vectorA: webA, vectorB: webB });
 
     // =========================================================================
-    // PASSO 1: Analisi e Collisione Ontologica (Fasi 1, 1.5, 2, 3 e 4)
-    // Esclusione rigida di Gemini: elaborazione affidata al cluster Groq/Cloudflare
+    // STADIO 1 -> FASE 1: Scomposizione Strutturale (/fase-1.html)
+    // Provider primario: Groq -> Cloudflare -> OpenRouter -> Gemini
     // =========================================================================
-    console.log(`[ALKIMIA] Passo 1: Analisi e collisione ontologica con dati web live in corso...`);
-    const step1Prompt = buildStep1AnalysisPrompt(selectedA, selectedB, webA.combinedContext, webB.combinedContext);
-    const step1SystemPrompt = buildAnalyticalSystemPrompt();
+    console.log(`[ALKIMIA] [Stadio 1/6] Redazione FASE 1 (Scomposizione Strutturale) in corso...`);
+    const stage1Prompt = buildStage1DecompositionPrompt(selectedA, selectedB, webA.combinedContext, webB.combinedContext);
+    const stage1Result = await runAiProviderChain(analyticalSystemPrompt, stage1Prompt, { step: 'phase1' });
 
-    const step1Result = await runAiProviderChain(step1SystemPrompt, step1Prompt, {
-      step: 'phase1',
+    let currentSystemPair = {
+      vectorA: selectedA.name,
+      vectorB: selectedB.name,
+      syntheticVector: `Collisione speculativa tra ${selectedA.name} e ${selectedB.name}`,
+      ontologicalMatrix: "Matrice d'Attrito Ontologico",
+      derivationTimestamp: formattedDate
+    };
+    let currentDecomposition = buildPhase1Decomposition(selectedA.name, selectedB.name);
+
+    if (stage1Result.ok) {
+      try {
+        const parsed1 = cleanAndParseJson(stage1Result.text);
+        if (parsed1?.systemPair) {
+          currentSystemPair = {
+            vectorA: selectedA.name,
+            vectorB: selectedB.name,
+            syntheticVector: parsed1.systemPair.syntheticVector || currentSystemPair.syntheticVector,
+            ontologicalMatrix: parsed1.systemPair.ontologicalMatrix || currentSystemPair.ontologicalMatrix,
+            derivationTimestamp: formattedDate
+          };
+        }
+        if (parsed1?.phase1Decomposition) {
+          currentDecomposition = parsed1.phase1Decomposition;
+        }
+        entry.aiProvider = stage1Result.provider;
+        entry.aiModel = stage1Result.model;
+        console.log(`[ALKIMIA] [Stadio 1/6] FASE 1 completata via ${stage1Result.provider} (${stage1Result.model}).`);
+      } catch (e: any) {
+        console.warn(`[ALKIMIA] [Stadio 1/6] Fallback locale decodifica Fase 1:`, e.message || e);
+      }
+    } else if ('error' in stage1Result) {
+      console.warn(`[ALKIMIA] [Stadio 1/6] Fallback locale Fase 1: ${stage1Result.error}`);
+    }
+
+    entry.edition = {
+      ...entry.edition,
+      systemPair: currentSystemPair,
+      phase1Decomposition: currentDecomposition
+    };
+    saveDossierStep(solarDateKey, 'phase1_decomposition', {
+      systemPair: currentSystemPair,
+      phase1Decomposition: currentDecomposition
+    });
+    await waitBetweenStages(1);
+
+    // =========================================================================
+    // STADIO 2 -> FASE 2: Archivio Empirico (/fase-2.html)
+    // Provider primario: Groq -> OpenRouter -> Cloudflare (Zero Token Gemini)
+    // =========================================================================
+    console.log(`[ALKIMIA] [Stadio 2/6] Redazione FASE 2 (Archivio Empirico) con dati web live in corso...`);
+    const stage2Prompt = buildStage2EmpiricalPrompt(
+      selectedA,
+      selectedB,
+      webA.combinedContext,
+      webB.combinedContext,
+      currentDecomposition
+    );
+    const stage2Result = await runAiProviderChain(analyticalSystemPrompt, stage2Prompt, {
+      step: 'phase2',
       excludeGemini: true
     });
 
-    const entry = dailyEditionsCache[solarDateKey];
-    if (!entry) return;
-
-    entry.attempts += 1;
-
-    if (step1Result.ok === false) {
-      entry.status = 'failed';
-      entry.aiProvider = null;
-      entry.aiModel = null;
-      entry.error = `Passo 1 (Analisi) fallito: ${step1Result.error}`;
-      entry.finishedAt = Date.now();
-      console.error(`[ALKIMIA] ${entry.error}`);
-      return;
-    }
-
-    let parsedStep1: any;
-    try {
-      parsedStep1 = cleanAndParseJson(step1Result.text);
-    } catch (err: any) {
-      entry.status = 'failed';
-      entry.aiProvider = step1Result.provider;
-      entry.aiModel = step1Result.model;
-      entry.error = `Passo 1: Payload analitico non decodificabile da ${step1Result.provider}/${step1Result.model}: ${err.message || err}`;
-      entry.finishedAt = Date.now();
-      console.error(`[ALKIMIA] ${entry.error}`);
-      return;
-    }
-
-    // Se l'Archivio Empirico non è stato compilato o è incompleto nel payload omnicomprensivo,
-    // eseguiamo una compilazione dedicata e chirurgica di Fase 1.5 con Groq (Zero Token Gemini)
-    if (
-      !parsedStep1.phase1EmpiricalArchive?.vectorA?.foundationalTexts ||
-      !parsedStep1.phase1EmpiricalArchive?.vectorB?.foundationalTexts
-    ) {
-      console.log(
-        `[ALKIMIA] Compilazione autonoma e mirata di Fase 1.5 (Archivio Empirico) tramite Groq a costo zero...`
-      );
+    let currentEmpiricalArchive = buildPhase1EmpiricalArchive(selectedA.name, selectedB.name);
+    if (stage2Result.ok) {
       try {
-        const p1_5Prompt = buildPhase1_5EmpiricalPrompt(selectedA, selectedB, webA.combinedContext, webB.combinedContext);
-        const p1_5Result = await runAiProviderChain(step1SystemPrompt, p1_5Prompt, {
-          step: 'phase1_5',
-          excludeGemini: true
-        });
-        if (p1_5Result.ok) {
-          const parsed1_5 = cleanAndParseJson(p1_5Result.text);
-          if (parsed1_5?.phase1EmpiricalArchive) {
-            parsedStep1.phase1EmpiricalArchive = parsed1_5.phase1EmpiricalArchive;
-            console.log(`[ALKIMIA] Fase 1.5 Archivio Empirico compilata con successo da ${p1_5Result.provider} (${p1_5Result.model}).`);
-          }
+        const parsed2 = cleanAndParseJson(stage2Result.text);
+        if (parsed2?.phase1EmpiricalArchive) {
+          currentEmpiricalArchive = parsed2.phase1EmpiricalArchive;
+          entry.aiProvider = stage2Result.provider;
+          entry.aiModel = stage2Result.model;
+          console.log(`[ALKIMIA] [Stadio 2/6] FASE 2 (Archivio Empirico) completata via ${stage2Result.provider} (${stage2Result.model}).`);
         }
-      } catch (p1_5Err) {
-        console.warn(`[ALKIMIA] Fallback compilazione Fase 1.5:`, p1_5Err);
+      } catch (e: any) {
+        console.warn(`[ALKIMIA] [Stadio 2/6] Fallback locale decodifica Fase 2:`, e.message || e);
       }
+    } else if ('error' in stage2Result) {
+      console.warn(`[ALKIMIA] [Stadio 2/6] Fallback locale Fase 2: ${stage2Result.error}`);
     }
 
-    saveDossierStep(solarDateKey, 'phase1To4', parsedStep1);
-    saveDossierStep(solarDateKey, 'phase1_5_empiricalArchive', parsedStep1.phase1EmpiricalArchive);
+    entry.edition = {
+      ...entry.edition,
+      phase1EmpiricalArchive: currentEmpiricalArchive
+    };
+    saveDossierStep(solarDateKey, 'phase1_5_empiricalArchive', currentEmpiricalArchive);
+    saveDossierStep(solarDateKey, 'phase2_empiricalArchive', currentEmpiricalArchive);
+    await waitBetweenStages(2);
 
-    console.log(
-      `[ALKIMIA] Passo 1 completato con successo via ${step1Result.provider} (${step1Result.model}). ` +
-      `Dossier salvato su file. Avvio Passo 2 (Composizione Letteraria Pura - Fase 5)...`
+    // =========================================================================
+    // STADIO 3 -> FASE 3: La Collisione (/fase-3.html)
+    // Riceve in ingresso l'Archivio Empirico appena salvato nella Fase 2!
+    // Provider primario: OpenRouter -> Cloudflare -> Groq -> Gemini
+    // =========================================================================
+    console.log(`[ALKIMIA] [Stadio 3/6] Redazione FASE 3 (La Collisione fondata sull'Archivio di Fase 2) in corso...`);
+    const stage3Prompt = buildStage3CollisionPrompt(
+      selectedA,
+      selectedB,
+      currentDecomposition,
+      currentEmpiricalArchive
     );
+    const stage3Result = await runAiProviderChain(analyticalSystemPrompt, stage3Prompt, { step: 'phase3' });
+
+    let rawCollision: any = null;
+    if (stage3Result.ok) {
+      try {
+        const parsed3 = cleanAndParseJson(stage3Result.text);
+        rawCollision = parsed3?.phase2Collision || parsed3;
+        entry.aiProvider = stage3Result.provider;
+        entry.aiModel = stage3Result.model;
+        console.log(`[ALKIMIA] [Stadio 3/6] FASE 3 (La Collisione) completata via ${stage3Result.provider} (${stage3Result.model}).`);
+      } catch (e: any) {
+        console.warn(`[ALKIMIA] [Stadio 3/6] Fallback locale decodifica Fase 3:`, e.message || e);
+      }
+    } else if ('error' in stage3Result) {
+      console.warn(`[ALKIMIA] [Stadio 3/6] Fallback locale Fase 3: ${stage3Result.error}`);
+    }
+
+    const currentCollision = normalizePhase2Collision(rawCollision, selectedA.name, selectedB.name);
+    entry.edition = {
+      ...entry.edition,
+      phase2Collision: currentCollision
+    };
+    saveDossierStep(solarDateKey, 'phase3_collision', currentCollision);
+    await waitBetweenStages(3);
 
     // =========================================================================
-    // PASSO 2: Composizione Letteraria Pura (Fase 5: Saggio del Giorno)
+    // STADIO 4 -> FASE 4: Loop a 5 Direzioni (/fase-4.html)
+    // Riceve in ingresso l'Archivio di Fase 2 e la Collisione di Fase 3!
+    // Provider primario: Groq -> OpenRouter -> Cloudflare -> Gemini
     // =========================================================================
+    console.log(`[ALKIMIA] [Stadio 4/6] Redazione FASE 4 (Loop a 5 Direzioni) in corso...`);
+    const stage4Prompt = buildStage4LoopPrompt(
+      selectedA,
+      selectedB,
+      currentEmpiricalArchive,
+      currentCollision
+    );
+    const stage4Result = await runAiProviderChain(analyticalSystemPrompt, stage4Prompt, { step: 'phase4' });
+
+    let rawLoop: any = null;
+    if (stage4Result.ok) {
+      try {
+        const parsed4 = cleanAndParseJson(stage4Result.text);
+        rawLoop = parsed4?.phase2Loop || parsed4;
+        entry.aiProvider = stage4Result.provider;
+        entry.aiModel = stage4Result.model;
+        console.log(`[ALKIMIA] [Stadio 4/6] FASE 4 (Loop a 5 Direzioni) completata via ${stage4Result.provider} (${stage4Result.model}).`);
+      } catch (e: any) {
+        console.warn(`[ALKIMIA] [Stadio 4/6] Fallback locale decodifica Fase 4:`, e.message || e);
+      }
+    } else if ('error' in stage4Result) {
+      console.warn(`[ALKIMIA] [Stadio 4/6] Fallback locale Fase 4: ${stage4Result.error}`);
+    }
+
+    const currentLoop = normalizePhase2Loop(rawLoop, selectedA.name, selectedB.name);
+    entry.edition = {
+      ...entry.edition,
+      phase2Loop: currentLoop
+    };
+    saveDossierStep(solarDateKey, 'phase4_loop', currentLoop);
+    await waitBetweenStages(4);
+
+    // =========================================================================
+    // STADIO 5 -> FASE 5: L'Affondo Finale (/fase-5.html)
+    // Riceve in ingresso i risultati del Loop di Fase 4, Fase 3 e Fase 2!
+    // Provider primario: Cloudflare -> OpenRouter -> Groq -> Gemini
+    // =========================================================================
+    console.log(`[ALKIMIA] [Stadio 5/6] Redazione FASE 5 (L'Affondo Finale) in corso...`);
+    const stage5Prompt = buildStage5FinalStrikePrompt(
+      selectedA,
+      selectedB,
+      currentEmpiricalArchive,
+      currentCollision,
+      currentLoop
+    );
+    const stage5Result = await runAiProviderChain(analyticalSystemPrompt, stage5Prompt, { step: 'phase5' });
+
+    let currentFinalStrike = buildPhase3FinalStrike(selectedA.name, selectedB.name);
+    if (stage5Result.ok) {
+      try {
+        const parsed5 = cleanAndParseJson(stage5Result.text);
+        if (parsed5?.phase3FinalStrike) {
+          currentFinalStrike = parsed5.phase3FinalStrike;
+        }
+        entry.aiProvider = stage5Result.provider;
+        entry.aiModel = stage5Result.model;
+        console.log(`[ALKIMIA] [Stadio 5/6] FASE 5 (L'Affondo Finale) completata via ${stage5Result.provider} (${stage5Result.model}).`);
+      } catch (e: any) {
+        console.warn(`[ALKIMIA] [Stadio 5/6] Fallback locale decodifica Fase 5:`, e.message || e);
+      }
+    } else if ('error' in stage5Result) {
+      console.warn(`[ALKIMIA] [Stadio 5/6] Fallback locale Fase 5: ${stage5Result.error}`);
+    }
+
+    entry.edition = {
+      ...entry.edition,
+      phase3FinalStrike: currentFinalStrike
+    };
+    saveDossierStep(solarDateKey, 'phase5_finalStrike', currentFinalStrike);
+
+    const parsedStep1 = {
+      systemPair: currentSystemPair,
+      phase1Decomposition: currentDecomposition,
+      phase1EmpiricalArchive: currentEmpiricalArchive,
+      phase2Collision: currentCollision,
+      phase2Loop: currentLoop,
+      phase3FinalStrike: currentFinalStrike
+    };
+    saveDossierStep(solarDateKey, 'phase1To4', parsedStep1);
+    await waitBetweenStages(5);
+
+    // =========================================================================
+    // STADIO 6 -> FASE 6: Saggio del Giorno (/fase-6.html)
+    // Provider primario: OpenRouter -> Groq -> Cloudflare -> Gemini
+    // =========================================================================
+    console.log(`[ALKIMIA] [Stadio 6/6] Redazione FASE 6 (Saggio del Giorno) in corso...`);
     const step2Prompt = buildStep2LiteraryEssayPrompt(parsedStep1, selectedA, selectedB);
-    const step2SystemPrompt = buildLiteraryEssaySystemPrompt();
 
-    const step2Result = await runAiProviderChain(step2SystemPrompt, step2Prompt, { step: 'literary' });
+    const step2Result = await runAiProviderChain(literarySystemPrompt, step2Prompt, { step: 'phase6' });
 
     if (step2Result.ok === false) {
       entry.status = 'failed';
-      entry.aiProvider = step1Result.provider;
-      entry.aiModel = step1Result.model;
-      entry.error = `Passo 2 (Saggio Letterario) fallito: ${step2Result.error}`;
+      entry.error = `Fase 6 (Saggio del Giorno) fallita: ${step2Result.error}`;
       entry.finishedAt = Date.now();
       console.error(`[ALKIMIA] ${entry.error}`);
       return;
@@ -928,7 +1091,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
       entry.status = 'failed';
       entry.aiProvider = step2Result.provider;
       entry.aiModel = step2Result.model;
-      entry.error = `Passo 2: Payload saggio non decodificabile da ${step2Result.provider}/${step2Result.model}: ${err.message || err}`;
+      entry.error = `Fase 6: Payload saggio non decodificabile da ${step2Result.provider}/${step2Result.model}: ${err.message || err}`;
       entry.finishedAt = Date.now();
       console.error(`[ALKIMIA] ${entry.error}`);
       return;
@@ -948,7 +1111,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     entry.finishedAt = Date.now();
     saveDossierStep(solarDateKey, 'essay', parsedStep2.essay);
 
-    // Esito positivo: fusione organica di Passo 1 e Passo 2 nell'edizione completa
+    // Esito positivo: consolidamento finale di tutte le 6 Fasi nell'edizione completa
     entry.cycle = {
       ...CURRENT_EDITORIAL_CYCLE,
       cyclicalDate: formattedDate,
@@ -959,26 +1122,12 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
       id: `edition-${solarDateKey}`,
       isLatest: true,
       cycle: { ...entry.cycle },
-      systemPair: {
-        vectorA: selectedA.name,
-        vectorB: selectedB.name,
-        syntheticVector:
-          parsedStep1.systemPair?.syntheticVector ||
-          `Collisione speculativa tra ${selectedA.name} e ${selectedB.name}`,
-        ontologicalMatrix:
-          parsedStep1.systemPair?.ontologicalMatrix || "Matrice d'Attrito Ontologico",
-        derivationTimestamp: formattedDate
-      },
-      phase1Decomposition:
-        parsedStep1.phase1Decomposition || buildPhase1Decomposition(selectedA.name, selectedB.name),
-      phase1EmpiricalArchive:
-        parsedStep1.phase1EmpiricalArchive || buildPhase1EmpiricalArchive(selectedA.name, selectedB.name),
-      phase2Collision: 
-        normalizePhase2Collision(parsedStep1.phase2Collision, selectedA.name, selectedB.name),
-      phase2Loop: 
-        normalizePhase2Loop(parsedStep1.phase2Loop, selectedA.name, selectedB.name),
-      phase3FinalStrike: 
-        parsedStep1.phase3FinalStrike || buildPhase3FinalStrike(selectedA.name, selectedB.name),
+      systemPair: currentSystemPair,
+      phase1Decomposition: currentDecomposition,
+      phase1EmpiricalArchive: currentEmpiricalArchive,
+      phase2Collision: currentCollision,
+      phase2Loop: currentLoop,
+      phase3FinalStrike: currentFinalStrike,
       essay: parsedStep2.essay,
       pins: [],
       tensions: [],
@@ -996,8 +1145,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     saveDossierStep(solarDateKey, 'fullEdition', entry.edition);
 
     console.log(
-      `[ALKIMIA] Saggio del Giorno ${formattedDate} redatto con successo a due passi: ` +
-      `Passo 1 (${step1Result.provider}/${step1Result.model}) + Passo 2 (${step2Result.provider}/${step2Result.model}).`
+      `[ALKIMIA] Tutte le 6 Fasi del ${formattedDate} sono state redatte e salvate con successo (Fase 6 completata da ${step2Result.provider}/${step2Result.model}).`
     );
   })().finally(() => {
     delete inFlightDaily[solarDateKey];
@@ -1231,13 +1379,24 @@ async function startServer() {
       server: { middlewareMode: true },
       appType: "spa",
     });
+    // Redirect clean paths /fase-1 .. /fase-6 to /fase-1.html .. /fase-6.html
+    app.get(/^\/fase-([1-6])$/, (req, res) => {
+      res.redirect(`/fase-${req.params[0]}.html`);
+    });
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
+    app.get(/^\/fase-([1-6])$/, (req, res) => {
+      res.redirect(`/fase-${req.params[0]}.html`);
+    });
     app.use(express.static(distPath));
     app.get("*", (req, res, next) => {
       // Non mascherare mai un errore API restituendo l'HTML dell'SPA.
       if (req.path.startsWith("/api/")) return next();
+      const phaseMatch = req.path.match(/^\/fase-([1-6])\.html$/);
+      if (phaseMatch) {
+        return res.sendFile(path.join(distPath, `fase-${phaseMatch[1]}.html`));
+      }
       res.sendFile(path.join(distPath, "index.html"));
     });
   }

@@ -35,7 +35,7 @@ export const SpeculativeEssayView: React.FC<SpeculativeEssayViewProps> = ({
       
       {/* Nastro discreto superiore */}
       <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#f4efe6] border border-[#d8d0c2] text-[10px] font-mono uppercase tracking-widest px-4 py-0.5 shadow-xs rotate-[-0.5deg] text-[#6b6456]">
-        {isLatest ? "Saggio del Giorno • Lettura Contemplativa" : "Fascicolo d'Indagine Archiviato"}
+        {isLatest ? "FASE 6 • Saggio del Giorno • Lettura Contemplativa" : "FASE 6 • Fascicolo d'Indagine Archiviato"}
       </div>
 
       {/* Titolo e Sottotitolo del Saggio */}

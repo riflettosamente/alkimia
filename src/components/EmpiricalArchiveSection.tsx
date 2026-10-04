@@ -117,7 +117,7 @@ export const EmpiricalArchiveSection: React.FC<EmpiricalArchiveSectionProps> = (
       <div className="border border-[#ded7ca] bg-[#ffffff] p-6 sm:p-8 rounded-sm space-y-3 shadow-xs">
         <div className="flex items-center gap-2 text-xs font-mono tracking-wider uppercase text-[#9e7627]">
           <Database className="w-4 h-4" />
-          <span>FASE 1.5: Archivio dei Fatti e dei Reperti Concreti (Ancoraggio Empirico)</span>
+          <span>FASE 2: Archivio dei Fatti e dei Reperti Concreti (Ancoraggio Empirico)</span>
         </div>
         
         <p className="text-sm sm:text-base text-[#3d3830] font-serif leading-relaxed">

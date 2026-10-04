@@ -31,11 +31,11 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="space-y-8"
     >
-      {/* Testata di Presentazione della Fase 2.2 */}
+      {/* Testata di Presentazione della Fase 4 */}
       <div className="border border-[#ded7ca] bg-[#ffffff] p-6 sm:p-8 rounded-sm space-y-4 shadow-xs">
         <div className="flex items-center gap-2 text-xs font-mono tracking-wider uppercase text-[#9e7627]">
           <Repeat className="w-4 h-4" />
-          <span>FASE 3: Loop Fase a 5 Direzioni</span>
+          <span>FASE 4: Loop a 5 Direzioni</span>
         </div>
 
         <div className="space-y-2">
@@ -43,7 +43,7 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
             Il Protocollo a Vuoto: Cinque Faglie Ontologiche
           </h2>
           <p className="text-sm sm:text-base text-[#3d3830] font-serif leading-relaxed italic border-l-2 border-[#b0872e] pl-4 py-1 bg-[#faf8f5]">
-            «Applica la collisione attraverso lo stesso binario d'indagine con cinque angolazioni differenti, costringendo i protocolli tecnici, gli strumenti di rilevazione e i reperti storici censiti nella Fase 1.5 a girare a vuoto in cerca di attriti sempre nuovi, svelando cinque diverse faglie ontologiche.»
+            «Applica la collisione attraverso lo stesso binario d'indagine con cinque angolazioni differenti, costringendo i protocolli tecnici, gli strumenti di rilevazione e i reperti storici censiti nella Fase 2 (Archivio Empirico) a girare a vuoto in cerca di attriti sempre nuovi, svelando cinque diverse faglie ontologiche.»
           </p>
         </div>
 

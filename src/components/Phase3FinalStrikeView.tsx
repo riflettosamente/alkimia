@@ -32,11 +32,11 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="space-y-8"
     >
-      {/* Testata di Presentazione della Fase 4 */}
+      {/* Testata di Presentazione della Fase 5 */}
       <div className="border border-[#ded7ca] bg-[#ffffff] p-6 sm:p-8 rounded-sm space-y-4 shadow-xs">
         <div className="flex items-center gap-2 text-xs font-mono tracking-wider uppercase text-[#9e7627]">
           <Sparkles className="w-4 h-4" />
-          <span>FASE 4: L'Affondo Finale (Il Sigillo della Ricerca)</span>
+          <span>FASE 5: L'Affondo Finale (Il Sigillo della Ricerca)</span>
         </div>
 
         <div className="space-y-2">
@@ -44,21 +44,21 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
             Manifesto Operativo dell'Indagine Speculativa
           </h2>
           <p className="text-sm sm:text-base text-[#3d3830] font-serif leading-relaxed italic border-l-2 border-[#b0872e] pl-4 py-1 bg-[#faf8f5]">
-            «Trasformazione dell'intuizione speculativa in un manifesto operativo attraverso i cinque interrogativi strategici, declinati sull'asse complessivo e nelle 5 Direzioni del Loop di Fase 3.»
+            «Trasformazione dell'intuizione speculativa in un manifesto operativo attraverso i cinque interrogativi strategici, declinati sull'asse complessivo e nelle 5 Direzioni del Loop di Fase 4.»
           </p>
         </div>
 
-        {/* I due vettori al vaglio del sigillo */}
+        {/* I due argomenti al vaglio del sigillo */}
         <div className="pt-4 border-t border-[#ede7dc] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-[#6e685c]">
           <div className="bg-[#faf8f5] px-3 py-1.5 border border-[#ede7dc] rounded-sm">
-            <span className="text-[#9e7627] font-semibold">Vettore A:</span> {systemPair.vectorA}
+            <span className="text-[#9e7627] font-semibold">Primo Argomento:</span> {systemPair.vectorA}
           </div>
           <div className="text-[#9e7627] flex items-center gap-1.5 font-semibold uppercase">
             <Layers className="w-3.5 h-3.5" />
             <span>5 Interrogativi × 5 Faglie Ontologiche</span>
           </div>
           <div className="bg-[#faf8f5] px-3 py-1.5 border border-[#ede7dc] rounded-sm">
-            <span className="text-[#5c6e8c] font-semibold">Vettore B:</span> {systemPair.vectorB}
+            <span className="text-[#5c6e8c] font-semibold">Secondo Argomento:</span> {systemPair.vectorB}
           </div>
         </div>
       </div>

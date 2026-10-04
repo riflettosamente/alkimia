@@ -9,6 +9,25 @@ interface Phase2CollisionViewProps {
   collision?: Phase2CollisionDecomposition;
 }
 
+const FormattedText: React.FC<{ text: string }> = ({ text }) => {
+  if (!text) return null;
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return (
+    <span>
+      {parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return (
+            <strong key={i} className="font-semibold text-[#1a1714] bg-[#f2ebd9] px-1 py-0.5 rounded-xs">
+              {part.slice(2, -2)}
+            </strong>
+          );
+        }
+        return part;
+      })}
+    </span>
+  );
+};
+
 export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
   systemPair,
   collision
@@ -32,11 +51,11 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="space-y-10"
     >
-      {/* Intestazione e Regola d'Oro della Fase 2 */}
+      {/* Intestazione e Regola d'Oro della Fase 3 */}
       <div className="border border-[#ded7ca] bg-[#ffffff] p-6 sm:p-8 rounded-sm space-y-4 shadow-xs">
         <div className="flex items-center gap-2 text-xs font-mono tracking-wider uppercase text-[#9e7627]">
           <Zap className="w-4 h-4" />
-          <span>FASE 2: La Collisione (I 4 Passaggi)</span>
+          <span>FASE 3: La Collisione (I 4 Passaggi)</span>
         </div>
 
         <div className="space-y-2">
@@ -105,7 +124,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                   {step1StrippingFunction?.fundamentalVerbA || 'VIOLARE'}
                 </p>
                 <p className="text-xs sm:text-sm text-[#3d3830] font-serif leading-relaxed">
-                  {step1StrippingFunction?.abstractFunctionA || 'Funzione astratta primaria radicata negli apparati empirici.'}
+                  <FormattedText text={step1StrippingFunction?.abstractFunctionA || 'Funzione astratta primaria radicata negli apparati empirici.'} />
                 </p>
               </div>
 
@@ -117,7 +136,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                   {step1StrippingFunction?.fundamentalVerbB || 'ESTENDERE'}
                 </p>
                 <p className="text-xs sm:text-sm text-[#3d3830] font-serif leading-relaxed">
-                  {step1StrippingFunction?.abstractFunctionB || 'Funzione astratta primaria radicata negli apparati empirici.'}
+                  <FormattedText text={step1StrippingFunction?.abstractFunctionB || 'Funzione astratta primaria radicata negli apparati empirici.'} />
                 </p>
               </div>
             </div>
@@ -126,7 +145,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
               <span className="font-mono text-xs uppercase tracking-wider text-[#9e7627] font-semibold block mb-1">
                 Sintesi del Trapianto Funzionale:
               </span>
-              {step1StrippingFunction?.functionalSynthesis || 'Sintesi del punto di contatto tra i due gesti operativi.'}
+              <FormattedText text={step1StrippingFunction?.functionalSynthesis || 'Sintesi del punto di contatto tra i due gesti operativi.'} />
             </div>
           </div>
         </div>
@@ -156,7 +175,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                   <span>Limite / Vicolo Cieco dello Strumento</span>
                 </div>
                 <p className="text-sm text-[#2c2823] font-serif leading-relaxed">
-                  {step2BlindAxis?.boundaryA || 'Limite estremo dell\'operatività dello strumento materiale.'}
+                  <FormattedText text={step2BlindAxis?.boundaryA || 'Limite estremo dell\'operatività dello strumento materiale.'} />
                 </p>
               </div>
 
@@ -166,7 +185,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                   <span>Varco d'Accesso Verso il Secondo Argomento</span>
                 </div>
                 <p className="text-sm text-[#2c2823] font-serif leading-relaxed">
-                  {step2BlindAxis?.accessDoorToB || 'Varco d\'accesso che si dischiude dove lo strumento cessa di misurare.'}
+                  <FormattedText text={step2BlindAxis?.accessDoorToB || 'Varco d\'accesso che si dischiude dove lo strumento cessa di misurare.'} />
                 </p>
               </div>
             </div>
@@ -176,7 +195,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                 Punto di Contatto sulla Crepa:
               </span>
               <p className="text-sm font-serif text-[#1f1c19] leading-relaxed italic">
-                {step2BlindAxis?.creviceContactPoint || 'Punto di fessurazione in cui le due polarità divergono.'}
+                <FormattedText text={step2BlindAxis?.creviceContactPoint || 'Punto di fessurazione in cui le due polarità divergono.'} />
               </p>
             </div>
           </div>
@@ -206,7 +225,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                 <span>Inversione dei Domini e Sperimentazione Incrociata</span>
               </div>
               <p className="text-sm font-serif text-[#2c2823] leading-relaxed">
-                {step3InvertedDirection?.methodAAppliedToB || 'Applicazione della logica sperimentale del primo apparato all\'orizzonte del secondo.'}
+                <FormattedText text={step3InvertedDirection?.methodAAppliedToB || 'Applicazione della logica sperimentale del primo apparato all\'orizzonte del secondo.'} />
               </p>
             </div>
 
@@ -217,7 +236,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                 <span>Quesito di Violazione Sperimentale:</span>
               </div>
               <p className="text-base sm:text-lg font-serif font-semibold text-[#1a1714] leading-relaxed italic">
-                «{step3InvertedDirection?.provocativeViolationQuestion || 'Quale anomalia si spalanca puntando questo strumento sul dominio opposto?'}»
+                «<FormattedText text={step3InvertedDirection?.provocativeViolationQuestion || 'Quale anomalia si spalanca puntando questo strumento sul dominio opposto?'} />»
               </p>
             </div>
 
@@ -225,7 +244,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
               <span className="font-mono text-xs uppercase tracking-wider text-[#475b7a] font-semibold block mb-1">
                 Intuizione Contro-Intuitiva (Cortocircuito):
               </span>
-              {step3InvertedDirection?.counterIntuitiveInsight || 'Il cortocircuito logico svela un presupposto implicito del paradigma.'}
+              <FormattedText text={step3InvertedDirection?.counterIntuitiveInsight || 'Il cortocircuito logico svela un presupposto implicito del paradigma.'} />
             </div>
           </div>
         </div>
@@ -260,7 +279,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                   Radice Antropologica / Cosmologica
                 </span>
                 <p className="text-sm text-[#3d3830] font-serif leading-relaxed">
-                  {step4CommonMetaphor?.cosmologicalAnthropologicalGround || 'Fondamento antropologico comune ai due domini d\'indagine.'}
+                  <FormattedText text={step4CommonMetaphor?.cosmologicalAnthropologicalGround || 'Fondamento antropologico comune ai due domini d\'indagine.'} />
                 </p>
               </div>
 
@@ -269,7 +288,7 @@ export const Phase2CollisionView: React.FC<Phase2CollisionViewProps> = ({
                   Visione Unificante Finale
                 </span>
                 <p className="text-sm text-[#1a1714] font-serif font-medium leading-relaxed">
-                  {step4CommonMetaphor?.unifyingVision || 'La convergenza organica che riannoda i due fenomeni in un unico continuum.'}
+                  <FormattedText text={step4CommonMetaphor?.unifyingVision || 'La convergenza organica che riannoda i due fenomeni in un unico continuum.'} />
                 </p>
               </div>
             </div>

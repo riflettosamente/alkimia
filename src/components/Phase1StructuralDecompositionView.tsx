@@ -97,7 +97,7 @@ export const Phase1StructuralDecompositionView: React.FC<Phase1StructuralDecompo
         <div className="pt-4 border-t border-[#ede7dc] grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-[#faf8f5] p-4 border-l-2 border-[#b0872e] rounded-r-sm">
             <span className="text-[11px] font-mono uppercase tracking-widest text-[#787164] block mb-1">
-              Argomento I (Vettore A)
+              Primo Argomento
             </span>
             <h3 className="text-base font-serif text-[#1a1714] font-semibold">
               {vectorA.topicName}
@@ -106,7 +106,7 @@ export const Phase1StructuralDecompositionView: React.FC<Phase1StructuralDecompo
 
           <div className="bg-[#faf8f5] p-4 border-l-2 border-[#5c6e8c] rounded-r-sm">
             <span className="text-[11px] font-mono uppercase tracking-widest text-[#787164] block mb-1">
-              Argomento II (Vettore B)
+              Secondo Argomento
             </span>
             <h3 className="text-base font-serif text-[#1a1714] font-semibold">
               {vectorB.topicName}
