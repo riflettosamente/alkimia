@@ -41,11 +41,26 @@ export function normalizePhase2Loop(
     ? rawLoop.tracks
     : [];
 
+  const enrichIfTooShort = (rawVal: any, canonVal: string, minChars: number = 220): string => {
+    if (!isDenseEnough(rawVal, 15)) return canonVal;
+    const rawStr = String(rawVal).trim();
+    if (rawStr.length >= minChars || !canonVal) return rawStr;
+    // Se un dossier salvato in precedenza aveva una sola frase telegrafica (< 220 caratteri),
+    // la integra con l'approfondimento narrativo canonico della direzione corrispondente
+    // così tutte le 4 sezioni risultano subito ricche, articolate e complete.
+    if (rawStr.includes(canonVal.slice(0, 35))) return rawStr;
+    return `${rawStr}\n\n${canonVal}`;
+  };
+
   const safeTracks: Phase2DirectionTrack[] = canonicalFallback.tracks.map((canonicalTrack, index) => {
-    const rawTrack = rawTracks[index] || {};
-    const dirNumber = typeof rawTrack.directionNumber === 'number' ? rawTrack.directionNumber : index + 1;
+    const targetDirNum = index + 1;
+    const rawTrack =
+      rawTracks.find((t: any) => Number(t?.directionNumber) === targetDirNum) ||
+      rawTracks[index] ||
+      {};
+    const dirNumber = typeof rawTrack.directionNumber === 'number' ? rawTrack.directionNumber : targetDirNum;
     const dirTitle = rawTrack.directionTitle || canonicalTrack.directionTitle;
-    const dirAngle = rawTrack.ontologicalAngle || canonicalTrack.ontologicalAngle;
+    const dirAngle = enrichIfTooShort(rawTrack.ontologicalAngle, canonicalTrack.ontologicalAngle, 180);
     const empiricalDrawerLabel = rawTrack.empiricalDrawerLabel || DEFAULT_DRAWER_LABELS[dirNumber] || DEFAULT_DRAWER_LABELS[index + 1];
     const empiricalEvidenceExamined = isDenseEnough(rawTrack.empiricalEvidenceExamined, 10)
       ? String(rawTrack.empiricalEvidenceExamined)
@@ -74,25 +89,25 @@ export function normalizePhase2Loop(
       safeCollision = {
         step1StrippingFunction: {
           fundamentalVerbA: isDenseEnough(s1?.fundamentalVerbA, 3) ? String(s1.fundamentalVerbA) : (cs1?.fundamentalVerbA || 'VIOLARE'),
-          abstractFunctionA: isDenseEnough(s1?.abstractFunctionA) ? String(s1.abstractFunctionA) : (cs1?.abstractFunctionA || 'Funzione astratta primaria del primo vettore.'),
+          abstractFunctionA: enrichIfTooShort(s1?.abstractFunctionA, cs1?.abstractFunctionA || 'Funzione astratta primaria del primo argomento.', 220),
           fundamentalVerbB: isDenseEnough(s1?.fundamentalVerbB, 3) ? String(s1.fundamentalVerbB) : (cs1?.fundamentalVerbB || 'ESTENDERE'),
-          abstractFunctionB: isDenseEnough(s1?.abstractFunctionB) ? String(s1.abstractFunctionB) : (cs1?.abstractFunctionB || 'Funzione astratta primaria del secondo vettore.'),
-          functionalSynthesis: isDenseEnough(s1?.functionalSynthesis) ? String(s1.functionalSynthesis) : (cs1?.functionalSynthesis || 'Sintesi del punto di contatto tra i due verbi fondamentali.')
+          abstractFunctionB: enrichIfTooShort(s1?.abstractFunctionB, cs1?.abstractFunctionB || 'Funzione astratta primaria del secondo argomento.', 220),
+          functionalSynthesis: enrichIfTooShort(s1?.functionalSynthesis, cs1?.functionalSynthesis || 'Sintesi del punto di contatto tra i due verbi fondamentali.', 340)
         },
         step2BlindAxis: {
-          boundaryA: isDenseEnough(s2?.boundaryA) ? String(s2.boundaryA) : (cs2?.boundaryA || 'Limite estremo dell\'operatività del vettore A.'),
-          accessDoorToB: isDenseEnough(s2?.accessDoorToB) ? String(s2.accessDoorToB) : (cs2?.accessDoorToB || 'Varco d\'accesso che si dischiude verso il vettore B.'),
-          creviceContactPoint: isDenseEnough(s2?.creviceContactPoint) ? String(s2.creviceContactPoint) : (cs2?.creviceContactPoint || 'Punto di fessurazione in cui le due polarità divergono.')
+          boundaryA: enrichIfTooShort(s2?.boundaryA, cs2?.boundaryA || 'Limite estremo dell\'operatività del primo argomento.', 220),
+          accessDoorToB: enrichIfTooShort(s2?.accessDoorToB, cs2?.accessDoorToB || 'Varco d\'accesso che si dischiude verso il secondo argomento.', 220),
+          creviceContactPoint: enrichIfTooShort(s2?.creviceContactPoint, cs2?.creviceContactPoint || 'Punto di fessurazione in cui le due polarità si incontrano.', 340)
         },
         step3InvertedDirection: {
-          methodAAppliedToB: isDenseEnough(s3?.methodAAppliedToB) ? String(s3.methodAAppliedToB) : (cs3?.methodAAppliedToB || 'Applicazione della logica del primo vettore all\'orizzonte del secondo.'),
+          methodAAppliedToB: enrichIfTooShort(s3?.methodAAppliedToB, cs3?.methodAAppliedToB || 'Applicazione della logica del primo argomento all\'orizzonte del secondo.', 220),
           provocativeViolationQuestion: isDenseEnough(s3?.provocativeViolationQuestion) ? String(s3.provocativeViolationQuestion) : (cs3?.provocativeViolationQuestion || 'Quale anomalia si spalanca ribaltando la direzione dello sguardo?'),
-          counterIntuitiveInsight: isDenseEnough(s3?.counterIntuitiveInsight) ? String(s3.counterIntuitiveInsight) : (cs3?.counterIntuitiveInsight || 'Il cortocircuito logico svela un presupposto implicito del paradigma.')
+          counterIntuitiveInsight: enrichIfTooShort(s3?.counterIntuitiveInsight, cs3?.counterIntuitiveInsight || 'Il cortocircuito logico svela un presupposto implicito del paradigma.', 340)
         },
         step4CommonMetaphor: {
           masterMetaphorTitle: isDenseEnough(s4?.masterMetaphorTitle, 8) ? String(s4.masterMetaphorTitle) : (cs4?.masterMetaphorTitle || 'LA SOGLIA DEL VELATO'),
-          cosmologicalAnthropologicalGround: isDenseEnough(s4?.cosmologicalAnthropologicalGround) ? String(s4.cosmologicalAnthropologicalGround) : (cs4?.cosmologicalAnthropologicalGround || 'Fondamento antropologico comune ai due domini d\'indagine.'),
-          unifyingVision: isDenseEnough(s4?.unifyingVision) ? String(s4.unifyingVision) : (cs4?.unifyingVision || 'La convergenza organica che riannoda i due fenomeni in un unico continuum.')
+          cosmologicalAnthropologicalGround: enrichIfTooShort(s4?.cosmologicalAnthropologicalGround, cs4?.cosmologicalAnthropologicalGround || 'Fondamento antropologico comune ai due domini d\'indagine.', 220),
+          unifyingVision: enrichIfTooShort(s4?.unifyingVision, cs4?.unifyingVision || 'La convergenza organica che riannoda i due fenomeni in un unico continuum.', 220)
         }
       };
     } else {

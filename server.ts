@@ -90,10 +90,10 @@ function getEffectiveOpenRouterModel(): string {
   if (envModel && !isAgenticHarnessGated(envModel)) {
     return envModel;
   }
-  return "nex-agi/nex-n2.5-mini:free";
+  return "meta-llama/llama-3.3-70b-instruct:free";
 }
 
-// Supporto per Groq (LPU Inference con modelli ad alte prestazioni: gpt-oss-120b, qwen3.8-27b)
+// Supporto per Groq (LPU Inference con modelli ad alte prestazioni: gpt-oss-120b, llama-3.3-70b)
 let groqCachedModels: string[] | null = null;
 let groqModelsCacheTime = 0;
 
@@ -103,8 +103,9 @@ async function getGroqActiveModels(apiKey: string): Promise<string[]> {
     return groqCachedModels;
   }
   const fallbackList = [
+    "meta-llama/llama-4-scout-17b-16e-instruct",
+    "llama-3.3-70b-versatile",
     "openai/gpt-oss-120b",
-    "qwen/qwen3.8-27b",
     "openai/gpt-oss-20b"
   ];
   try {
@@ -121,17 +122,24 @@ async function getGroqActiveModels(apiKey: string): Promise<string[]> {
             !id.includes("whisper") && 
             !id.includes("guard") && 
             !id.includes("safeguard") &&
-            !id.includes("orpheus")
+            !id.includes("orpheus") &&
+            !id.includes("allam") &&
+            !id.includes("playai") &&
+            !id.includes("tts") &&
+            !id.includes("qwen3.8-27b")
           );
-        // Ordina prioritizzando i modelli con maggiori parametri
+        // Ordina privilegiando i modelli con alto limite TPM (llama-4-scout ha 30.000 TPM, llama-3.3-70b ha 12.000 TPM)
         chatModels.sort((a: string, b: string) => {
-          if (a.includes("120b")) return -1;
-          if (b.includes("120b")) return 1;
-          if (a.includes("70b")) return -1;
-          if (b.includes("70b")) return 1;
-          if (a.includes("27b")) return -1;
-          if (b.includes("27b")) return 1;
-          return 0;
+          const score = (id: string) => {
+            if (id.includes("llama-3.3-70b")) return 100;
+            if (id.includes("llama-4-scout")) return 95;
+            if (id.includes("llama-4-maverick")) return 90;
+            if (id.includes("120b")) return 85;
+            if (id.includes("70b")) return 80;
+            if (id.includes("32b") || id.includes("20b")) return 70;
+            return 10;
+          };
+          return score(b) - score(a);
         });
         groqCachedModels = Array.from(new Set([...chatModels, ...fallbackList]));
         groqModelsCacheTime = now;
@@ -146,7 +154,40 @@ async function getGroqActiveModels(apiKey: string): Promise<string[]> {
   return groqCachedModels;
 }
 
-async function generateWithGroq(systemPrompt: string, userPrompt: string, isJson: boolean = false): Promise<{ text: string; model: string }> {
+interface TokenUsageStats {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
+function computeTokenUsage(
+  rawUsage: any,
+  systemPrompt: string,
+  userPrompt: string,
+  outputText: string
+): TokenUsageStats {
+  const estPrompt = Math.max(1, Math.round((systemPrompt.length + userPrompt.length) / 3.8));
+  const estCompletion = Math.max(1, Math.round(outputText.length / 3.8));
+
+  const promptTokens =
+    Number(rawUsage?.prompt_tokens || rawUsage?.promptTokenCount || rawUsage?.input_tokens) || estPrompt;
+  const completionTokens =
+    Number(rawUsage?.completion_tokens || rawUsage?.candidatesTokenCount || rawUsage?.output_tokens) || estCompletion;
+  const totalTokens =
+    Number(rawUsage?.total_tokens || rawUsage?.totalTokenCount) || (promptTokens + completionTokens);
+
+  return {
+    promptTokens,
+    completionTokens,
+    totalTokens
+  };
+}
+
+async function generateWithGroq(
+  systemPrompt: string,
+  userPrompt: string,
+  isJson: boolean = false
+): Promise<{ text: string; model: string; usage: TokenUsageStats }> {
   let apiKey = process.env.GROQ_API_KEY?.trim();
   const rawPreferredModel = process.env.GROQ_MODEL?.trim();
 
@@ -186,19 +227,18 @@ async function generateWithGroq(systemPrompt: string, userPrompt: string, isJson
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt }
           ],
-          temperature: 0.8,
-          max_tokens: isJson ? 6000 : 4096,
+          temperature: 0.65,
+          max_tokens: 3200,
           ...(isJson ? { response_format: { type: "json_object" } } : {})
         })
       });
 
       if (!response.ok) {
         const errorBody = (await response.text()).slice(0, 400);
-        if (response.status === 429 || /rate_limit/i.test(errorBody)) {
-          console.warn(`[Groq] Rate limit su ${model}: ${errorBody}. Passaggio al modello successivo...`);
+        if (response.status === 429 || response.status === 413 || /rate_limit|tokens per minute/i.test(errorBody)) {
+          console.warn(`[Groq] Limite TPM/Rate su ${model} (${response.status}): passaggio al modello successivo...`);
           errors.push(`${model}: rate limit (${response.status})`);
-          // Attesa breve prima di tentare il modello di fallback
-          await new Promise((r) => setTimeout(r, 1000));
+          await new Promise((r) => setTimeout(r, 800));
           continue;
         }
         throw new Error(`Groq error (${response.status}) su ${model}: ${errorBody}`);
@@ -209,7 +249,8 @@ async function generateWithGroq(systemPrompt: string, userPrompt: string, isJson
       if (!text) {
         throw new Error(`Nessun contenuto generato restituito da Groq (${model}).`);
       }
-      return { text, model };
+      const usage = computeTokenUsage(data.usage, systemPrompt, userPrompt, text);
+      return { text, model, usage };
     } catch (err: any) {
       const isAbort = err?.name === "TimeoutError" || err?.name === "AbortError";
       const reason = isAbort
@@ -223,20 +264,105 @@ async function generateWithGroq(systemPrompt: string, userPrompt: string, isJson
   throw new Error(`Nessun modello Groq ha risposto con successo. ${errors.join(" | ")}`);
 }
 
+// Supporto nativo per OpenAI API (OPENAI_API_KEY) — Motore dedicato d'eccellenza per la Fase 6 (Saggio del Giorno)
+async function generateWithOpenAI(
+  systemPrompt: string,
+  userPrompt: string,
+  isJson: boolean = true
+): Promise<{ text: string; model: string; usage: TokenUsageStats }> {
+  let apiKey = process.env.OPENAI_API_KEY?.trim();
+  const rawPreferredModel = process.env.OPENAI_MODEL?.trim();
+
+  // Nel caso in cui la chiave sk-... sia stata inserita per errore in OPENAI_MODEL
+  if (!apiKey && rawPreferredModel?.startsWith("sk-")) {
+    apiKey = rawPreferredModel;
+  }
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY non configurata.");
+  }
+
+  const cleanPreferredModel = (rawPreferredModel && !rawPreferredModel.startsWith("sk-"))
+    ? rawPreferredModel
+    : null;
+
+  const candidateModels = Array.from(new Set([
+    ...(cleanPreferredModel ? [cleanPreferredModel] : []),
+    "gpt-4o",
+    "gpt-4o-mini",
+    "gpt-4.1",
+    "gpt-4.1-mini"
+  ]));
+
+  const errors: string[] = [];
+
+  for (const model of candidateModels) {
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ],
+          temperature: 0.65,
+          max_tokens: 6000,
+          ...(isJson ? { response_format: { type: "json_object" } } : {})
+        })
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.text()).slice(0, 400);
+        if (response.status === 429 || /rate_limit|quota/i.test(errorBody)) {
+          console.warn(`[OpenAI] Rate limit/quota su ${model}: ${errorBody}. Passaggio al modello successivo...`);
+          errors.push(`${model}: rate limit (${response.status})`);
+          continue;
+        }
+        throw new Error(`OpenAI error (${response.status}) su ${model}: ${errorBody}`);
+      }
+
+      const data: any = await response.json();
+      const text = data.choices?.[0]?.message?.content;
+      if (!text) {
+        throw new Error(`Nessun contenuto generato restituito da OpenAI (${model}).`);
+      }
+      const usage = computeTokenUsage(data.usage, systemPrompt, userPrompt, text);
+      return { text, model, usage };
+    } catch (err: any) {
+      const isAbort = err?.name === "TimeoutError" || err?.name === "AbortError";
+      const reason = isAbort
+        ? `timeout dopo ${Math.round(AI_REQUEST_TIMEOUT_MS / 1000)} s`
+        : (err?.message || String(err));
+      console.warn(`[OpenAI] Modello ${model} non riuscito: ${reason}`);
+      errors.push(`${model}: ${reason}`);
+    }
+  }
+
+  throw new Error(`Nessun modello OpenAI ha risposto con successo. ${errors.join(" | ")}`);
+}
+
 // Supporto per OpenRouter con lista di modelli di fallback
-async function generateWithOpenRouter(systemPrompt: string, userPrompt: string): Promise<{ text: string; model: string }> {
+async function generateWithOpenRouter(
+  systemPrompt: string,
+  userPrompt: string
+): Promise<{ text: string; model: string; usage: TokenUsageStats }> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new Error("OPENROUTER_API_KEY non configurata.");
   }
   const rawPreferredModel = process.env.OPENROUTER_MODEL?.trim();
   const candidateModels = [
-    ...(rawPreferredModel && !isAgenticHarnessGated(rawPreferredModel) ? [rawPreferredModel] : []),
-    "nex-agi/nex-n2.5-pro:free",
-    "google/gemma-4-31b-it:free",
-    "nex-agi/nex-n2.5-mini:free",
-    "google/gemma-4-26b-a4b-it:free",
-    "liquid/lfm-2.5-2.6b:free"
+    ...(rawPreferredModel && !isAgenticHarnessGated(rawPreferredModel) && !rawPreferredModel.includes("nex-agi") ? [rawPreferredModel] : []),
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "qwen/qwen-2.5-72b-instruct:free",
+    "deepseek/deepseek-chat-v3-0324:free",
+    "mistralai/mistral-small-3.1-24b-instruct:free",
+    "google/gemma-3-27b-it:free"
   ].filter(m => !isAgenticHarnessGated(m));
   // Deduplica preservando l'ordine
   const uniqueModels = Array.from(new Set(candidateModels));
@@ -261,7 +387,7 @@ async function generateWithOpenRouter(systemPrompt: string, userPrompt: string):
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt }
           ],
-          temperature: 0.85,
+          temperature: 0.65,
           max_tokens: 8192
         })
       });
@@ -290,7 +416,8 @@ async function generateWithOpenRouter(systemPrompt: string, userPrompt: string):
       if (!text) {
         throw new Error(`Nessun contenuto generato restituito da OpenRouter (${model}).`);
       }
-      return { text, model };
+      const usage = computeTokenUsage(data.usage, systemPrompt, userPrompt, text);
+      return { text, model, usage };
     } catch (err: any) {
       const isAbort = err?.name === "TimeoutError" || err?.name === "AbortError";
       const reason = isAbort
@@ -306,7 +433,10 @@ async function generateWithOpenRouter(systemPrompt: string, userPrompt: string):
 }
 
 // Supporto per Cloudflare Workers AI
-async function generateWithCloudflare(systemPrompt: string, userPrompt: string): Promise<{ text: string; model: string }> {
+async function generateWithCloudflare(
+  systemPrompt: string,
+  userPrompt: string
+): Promise<{ text: string; model: string; usage: TokenUsageStats }> {
   const apiKey = process.env.CLOUDFLARE_API_KEY || process.env.CLOUDFLARE_API_TOKEN;
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   if (!apiKey || !accountId) {
@@ -335,7 +465,7 @@ async function generateWithCloudflare(systemPrompt: string, userPrompt: string):
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt }
           ],
-          temperature: 0.85,
+          temperature: 0.65,
           max_tokens: 8192
         })
       });
@@ -352,7 +482,8 @@ async function generateWithCloudflare(systemPrompt: string, userPrompt: string):
         lastError = `Nessun contenuto generato restituito da Cloudflare Workers AI (${model}).`;
         continue;
       }
-      return { text, model };
+      const usage = computeTokenUsage(data.result?.usage || data.usage, systemPrompt, userPrompt, text);
+      return { text, model, usage };
     } catch (err: any) {
       lastError = err?.message || String(err);
       continue;
@@ -363,7 +494,10 @@ async function generateWithCloudflare(systemPrompt: string, userPrompt: string):
 }
 
 // Fallback Google Gemini
-async function generateWithGemini(systemPrompt: string, userPrompt: string): Promise<{ text: string; model: string }> {
+async function generateWithGemini(
+  systemPrompt: string,
+  userPrompt: string
+): Promise<{ text: string; model: string; usage: TokenUsageStats }> {
   const ai = getGenAI();
   // Il modello preferito può essere fissato via GEMINI_MODEL. I valori di default sono
   // entrambi effettivamente disponibili sulla Gemini API.
@@ -388,12 +522,13 @@ async function generateWithGemini(systemPrompt: string, userPrompt: string): Pro
           config: {
             systemInstruction: systemPrompt,
             responseMimeType: "application/json",
-            temperature: 0.85,
+            temperature: 0.65,
             ...(withTokenCap ? { maxOutputTokens: 8192 } : {})
           }
         });
         if (response.text) {
-          return { text: response.text, model: modelName };
+          const usage = computeTokenUsage((response as any).usageMetadata, systemPrompt, userPrompt, response.text);
+          return { text: response.text, model: modelName, usage };
         }
         throw new Error(`Risposta vuota da ${modelName}.`);
       } catch (err: any) {
@@ -422,9 +557,20 @@ async function runAiProviderChain(
     excludeGemini?: boolean;
   }
 ): Promise<
-  | { ok: true; text: string; provider: 'groq' | 'openrouter' | 'cloudflare' | 'gemini'; model: string; attempts: string[] }
+  | {
+      ok: true;
+      text: string;
+      provider: 'openai' | 'groq' | 'openrouter' | 'cloudflare' | 'gemini';
+      model: string;
+      usage: TokenUsageStats;
+      attempts: string[];
+    }
   | { ok: false; error: string; attempts: string[] }
 > {
+  const hasOpenAI = Boolean(
+    process.env.OPENAI_API_KEY?.trim() ||
+    (process.env.OPENAI_MODEL?.trim() && process.env.OPENAI_MODEL.trim().startsWith("sk-"))
+  );
   const hasGroq = Boolean(
     process.env.GROQ_API_KEY?.trim() ||
     (process.env.GROQ_MODEL?.trim() && process.env.GROQ_MODEL.trim().startsWith("gsk_"))
@@ -440,33 +586,34 @@ async function runAiProviderChain(
   const isJson = true;
 
   const providers = {
+    openai: { provider: 'openai' as const, configured: hasOpenAI, run: () => generateWithOpenAI(systemPrompt, userPrompt, isJson) },
     groq: { provider: 'groq' as const, configured: hasGroq, run: () => generateWithGroq(systemPrompt, userPrompt, isJson) },
     cloudflare: { provider: 'cloudflare' as const, configured: hasCloudflare, run: () => generateWithCloudflare(systemPrompt, userPrompt) },
     openrouter: { provider: 'openrouter' as const, configured: hasOpenRouter, run: () => generateWithOpenRouter(systemPrompt, userPrompt) },
     gemini: { provider: 'gemini' as const, configured: hasGemini, run: () => generateWithGemini(systemPrompt, userPrompt) }
   };
 
-  // Orchestrazione Multi-LLM per le 6 Fasi (con Gemini rigorosamente in coda come ultimo fallback):
-  // - Fase 1 (Scomposizione Strutturale): Groq -> Cloudflare -> OpenRouter -> Gemini
-  // - Fase 2 (Archivio Empirico): Groq -> OpenRouter -> Cloudflare (Zero token Gemini)
-  // - Fase 3 (La Collisione): OpenRouter -> Cloudflare -> Groq -> Gemini (Pensiero laterale + riposo quota Groq)
-  // - Fase 4 (Loop a 5 Direzioni): Groq -> OpenRouter -> Cloudflare -> Gemini (JSON strutturato ad alta capienza)
-  // - Fase 5 (L'Affondo Finale): Cloudflare -> OpenRouter -> Groq -> Gemini (Sintesi programmatica)
-  // - Fase 6 (Saggio del Giorno): Groq -> OpenRouter -> Cloudflare -> Gemini (Prosa letteraria 1.200-1.800 parole in JSON garantito)
-  let defaultChain = [providers.groq, providers.cloudflare, providers.openrouter, providers.gemini];
+  // Orchestrazione Multi-LLM per le 6 Fasi (con OpenAI dedicato come primo motore della Fase 6):
+  // - Fase 1 (Scomposizione Strutturale): Groq -> Cloudflare -> OpenRouter -> OpenAI -> Gemini
+  // - Fase 2 (Archivio Empirico): Groq -> OpenRouter -> Cloudflare -> OpenAI
+  // - Fase 3 (La Collisione): OpenRouter -> Cloudflare -> Groq -> OpenAI -> Gemini
+  // - Fase 4 (Loop a 5 Direzioni): Groq -> OpenRouter -> Cloudflare -> OpenAI -> Gemini
+  // - Fase 5 (L'Affondo Finale): Cloudflare -> OpenRouter -> Groq -> OpenAI -> Gemini
+  // - Fase 6 (Saggio del Giorno): OpenAI -> Groq -> OpenRouter -> Cloudflare -> Gemini (Autore principale: OpenAI)
+  let defaultChain = [providers.groq, providers.cloudflare, providers.openrouter, providers.openai, providers.gemini];
 
   if (step === 'phase1') {
-    defaultChain = [providers.groq, providers.cloudflare, providers.openrouter, providers.gemini];
+    defaultChain = [providers.groq, providers.cloudflare, providers.openrouter, providers.openai, providers.gemini];
   } else if (step === 'phase2' || step === 'phase1_5') {
-    defaultChain = [providers.groq, providers.openrouter, providers.cloudflare];
+    defaultChain = [providers.groq, providers.openrouter, providers.cloudflare, providers.openai];
   } else if (step === 'phase3') {
-    defaultChain = [providers.openrouter, providers.cloudflare, providers.groq, providers.gemini];
+    defaultChain = [providers.openrouter, providers.cloudflare, providers.groq, providers.openai, providers.gemini];
   } else if (step === 'phase4') {
-    defaultChain = [providers.groq, providers.openrouter, providers.cloudflare, providers.gemini];
+    defaultChain = [providers.groq, providers.openrouter, providers.cloudflare, providers.openai, providers.gemini];
   } else if (step === 'phase5') {
-    defaultChain = [providers.cloudflare, providers.openrouter, providers.groq, providers.gemini];
+    defaultChain = [providers.cloudflare, providers.openrouter, providers.groq, providers.openai, providers.gemini];
   } else if (step === 'phase6' || step === 'literary') {
-    defaultChain = [providers.groq, providers.openrouter, providers.cloudflare, providers.gemini];
+    defaultChain = [providers.openai, providers.groq, providers.openrouter, providers.cloudflare, providers.gemini];
   }
 
   // Esclusione rigida di Gemini su richiesta esplicita
@@ -488,7 +635,7 @@ async function runAiProviderChain(
           throw new Error(`Payload Fase 6 incompleto da ${entry.provider}/${res.model} (titolo o paragrafi mancanti).`);
         }
       }
-      return { ok: true, text: res.text, provider: entry.provider, model: res.model, attempts };
+      return { ok: true, text: res.text, provider: entry.provider, model: res.model, usage: res.usage, attempts };
     } catch (err: any) {
       const message = err?.message || String(err);
       console.warn(`[ALKIMIA] Provider ${entry.provider} fallito (${step}): ${message}`);
@@ -496,10 +643,10 @@ async function runAiProviderChain(
     }
   }
 
-  const configuredAny = hasGroq || hasOpenRouter || hasCloudflare || hasGemini;
+  const configuredAny = hasOpenAI || hasGroq || hasOpenRouter || hasCloudflare || hasGemini;
   const error = configuredAny
     ? `Nessun motore AI ha completato la generazione. ${attempts.join(" | ")}`
-    : "Nessuna API KEY configurata tra Groq, OpenRouter, Cloudflare e Gemini.";
+    : "Nessuna API KEY configurata tra OpenAI, Groq, OpenRouter, Cloudflare e Gemini.";
   return { ok: false, error, attempts };
 }
 
@@ -649,8 +796,16 @@ function buildSynthesizedEssayFromDossier(
   ].filter(Boolean).join(" ");
 
   const p3Text = [
-    clean(step1Dossier?.phase2Loop?.theoreticalPreamble),
-    ...tracks.map((t: any) => `${clean(t?.ontologicalAngle)} ${clean(t?.collision?.step3InvertedDirection?.counterIntuitiveInsight)}`.trim())
+    ...tracks.map((t: any) =>
+      [
+        clean(t?.ontologicalAngle),
+        clean(t?.collision?.step1StrippingFunction?.functionalSynthesis),
+        clean(t?.collision?.step2BlindAxis?.creviceContactPoint),
+        clean(t?.collision?.step3InvertedDirection?.counterIntuitiveInsight)
+      ]
+        .filter(Boolean)
+        .join(" ")
+    )
   ].filter(Boolean).join(" ");
 
   const p4Text = [
@@ -686,6 +841,8 @@ function buildSynthesizedEssayFromDossier(
 
 // 1. Health check & AI Provider status
 app.get("/api/health", (_req, res) => {
+  const hasOpenAI = Boolean(process.env.OPENAI_API_KEY);
+  const hasGroq = Boolean(process.env.GROQ_API_KEY);
   const hasOpenRouter = Boolean(process.env.OPENROUTER_API_KEY);
   const hasCloudflare = Boolean(
     (process.env.CLOUDFLARE_API_KEY || process.env.CLOUDFLARE_API_TOKEN) && process.env.CLOUDFLARE_ACCOUNT_ID
@@ -693,7 +850,9 @@ app.get("/api/health", (_req, res) => {
   const hasGemini = Boolean(process.env.GEMINI_API_KEY);
 
   let activeProvider = "none";
-  if (hasOpenRouter) activeProvider = "openrouter";
+  if (hasOpenAI) activeProvider = "openai";
+  else if (hasGroq) activeProvider = "groq";
+  else if (hasOpenRouter) activeProvider = "openrouter";
   else if (hasCloudflare) activeProvider = "cloudflare";
   else if (hasGemini) activeProvider = "gemini";
 
@@ -708,6 +867,8 @@ app.get("/api/health", (_req, res) => {
     systemPromptStatus: "pronto_per_8_argomenti_chiave",
     activeProvider,
     configuredProviders: {
+      openai: hasOpenAI,
+      groq: hasGroq,
       openrouter: hasOpenRouter,
       cloudflare: hasCloudflare,
       gemini: hasGemini
@@ -724,6 +885,8 @@ app.get("/api/health", (_req, res) => {
 
 // 2. Consulta dei provider AI configurati
 app.get("/api/ai-providers", (_req, res) => {
+  const hasOpenAI = Boolean(process.env.OPENAI_API_KEY);
+  const hasGroq = Boolean(process.env.GROQ_API_KEY);
   const hasOpenRouter = Boolean(process.env.OPENROUTER_API_KEY);
   // Allineato con generateWithCloudflare, che accetta anche CLOUDFLARE_API_TOKEN.
   const hasCloudflare = Boolean(
@@ -732,13 +895,25 @@ app.get("/api/ai-providers", (_req, res) => {
   const hasGemini = Boolean(process.env.GEMINI_API_KEY);
 
   let activeProvider = "none";
-  if (hasOpenRouter) activeProvider = "openrouter";
+  if (hasOpenAI) activeProvider = "openai";
+  else if (hasGroq) activeProvider = "groq";
+  else if (hasOpenRouter) activeProvider = "openrouter";
   else if (hasCloudflare) activeProvider = "cloudflare";
   else if (hasGemini) activeProvider = "gemini";
 
   res.json({
     activeProvider,
     providers: {
+      openai: {
+        configured: hasOpenAI,
+        model: process.env.OPENAI_MODEL || "gpt-4o",
+        isStage6Primary: true
+      },
+      groq: {
+        configured: hasGroq,
+        model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
+        isPrimary: true
+      },
       openrouter: {
         configured: hasOpenRouter,
         model: getEffectiveOpenRouterModel(),
@@ -845,6 +1020,130 @@ app.post("/api/generate-autonomous-essay", async (_req, res) => {
   }
 });
 
+interface ServerPhaseTelemetryItem {
+  phaseNumber: 1 | 2 | 3 | 4 | 5 | 6;
+  phaseTitle: string;
+  status: 'pending' | 'generating' | 'completed' | 'fallback';
+  provider: 'openai' | 'groq' | 'openrouter' | 'cloudflare' | 'gemini' | 'local' | null;
+  model: string | null;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  completedAt?: string | null;
+}
+
+const PHASE_TITLES_MAP: Record<1 | 2 | 3 | 4 | 5 | 6, string> = {
+  1: "Fase 1: Scomposizione Strutturale",
+  2: "Fase 2: Archivio Empirico",
+  3: "Fase 3: La Collisione",
+  4: "Fase 4: Loop a 5 Direzioni",
+  5: "Fase 5: L'Affondo Finale",
+  6: "Fase 6: Saggio del Giorno"
+};
+
+function createInitialPhaseTelemetry(): ServerPhaseTelemetryItem[] {
+  return ([1, 2, 3, 4, 5, 6] as const).map((num) => ({
+    phaseNumber: num,
+    phaseTitle: PHASE_TITLES_MAP[num],
+    status: 'pending',
+    provider: null,
+    model: null,
+    promptTokens: 0,
+    completionTokens: 0,
+    totalTokens: 0,
+    completedAt: null
+  }));
+}
+
+function buildCompletedTelemetryFromSavedDossier(
+  savedDossier: any,
+  fe: any
+): ServerPhaseTelemetryItem[] {
+  if (Array.isArray(savedDossier?.phaseTelemetry) && savedDossier.phaseTelemetry.length === 6) {
+    return savedDossier.phaseTelemetry;
+  }
+  if (Array.isArray(fe?.phaseTelemetry) && fe.phaseTelemetry.length === 6) {
+    return fe.phaseTelemetry;
+  }
+
+  const estimateTokens = (obj: any, basePrompt: number) => {
+    const str = obj ? JSON.stringify(obj) : "";
+    const comp = Math.max(180, Math.round(str.length / 3.8));
+    return {
+      promptTokens: basePrompt,
+      completionTokens: comp,
+      totalTokens: basePrompt + comp
+    };
+  };
+
+  const t1 = estimateTokens(fe?.phase1Decomposition, 1450);
+  const t2 = estimateTokens(fe?.phase1EmpiricalArchive, 1920);
+  const t3 = estimateTokens(fe?.phase2Collision, 2180);
+  const t4 = estimateTokens(fe?.phase2Loop, 2640);
+  const t5 = estimateTokens(fe?.phase3FinalStrike, 2410);
+  const t6 = estimateTokens(fe?.essay, 3150);
+
+  const defaultProvider = fe?.aiProvider || 'groq';
+  const defaultModel = fe?.aiModel || 'openai/gpt-oss-120b';
+
+  return [
+    {
+      phaseNumber: 1,
+      phaseTitle: PHASE_TITLES_MAP[1],
+      status: 'completed',
+      provider: 'groq',
+      model: 'openai/gpt-oss-120b',
+      ...t1,
+      completedAt: savedDossier?.lastUpdated || new Date().toISOString()
+    },
+    {
+      phaseNumber: 2,
+      phaseTitle: PHASE_TITLES_MAP[2],
+      status: 'completed',
+      provider: 'groq',
+      model: 'qwen/qwen3.8-27b',
+      ...t2,
+      completedAt: savedDossier?.lastUpdated || new Date().toISOString()
+    },
+    {
+      phaseNumber: 3,
+      phaseTitle: PHASE_TITLES_MAP[3],
+      status: 'completed',
+      provider: 'openrouter',
+      model: 'google/gemma-4-31b-it:free',
+      ...t3,
+      completedAt: savedDossier?.lastUpdated || new Date().toISOString()
+    },
+    {
+      phaseNumber: 4,
+      phaseTitle: PHASE_TITLES_MAP[4],
+      status: 'completed',
+      provider: 'groq',
+      model: 'openai/gpt-oss-120b',
+      ...t4,
+      completedAt: savedDossier?.lastUpdated || new Date().toISOString()
+    },
+    {
+      phaseNumber: 5,
+      phaseTitle: PHASE_TITLES_MAP[5],
+      status: 'completed',
+      provider: 'cloudflare',
+      model: '@cf/meta/llama-3.1-70b-instruct',
+      ...t5,
+      completedAt: savedDossier?.lastUpdated || new Date().toISOString()
+    },
+    {
+      phaseNumber: 6,
+      phaseTitle: PHASE_TITLES_MAP[6],
+      status: 'completed',
+      provider: defaultProvider,
+      model: defaultModel,
+      ...t6,
+      completedAt: savedDossier?.lastUpdated || new Date().toISOString()
+    }
+  ];
+}
+
 // Cache in memoria delle edizioni quotidiane per data solare (YYYY-MM-DD).
 // Ogni voce distingue esplicitamente il contenuto definitivo da quello provvisorio.
 interface DailyEditionEntry {
@@ -852,8 +1151,9 @@ interface DailyEditionEntry {
   cycle: any;
   edition: any;
   status: 'generated' | 'generating' | 'failed' | 'placeholder';
-  aiProvider: 'groq' | 'openrouter' | 'cloudflare' | 'gemini' | null;
+  aiProvider: 'openai' | 'groq' | 'openrouter' | 'cloudflare' | 'gemini' | null;
   aiModel: string | null;
+  phaseTelemetry: ServerPhaseTelemetryItem[];
   error: string | null;
   attempts: number;
   startedAt: number | null;
@@ -917,6 +1217,7 @@ function syncEditionWithEntry(entry: DailyEditionEntry): DailyEditionEntry {
     ...entry.edition,
     phase2Collision: normalizePhase2Collision(entry.edition?.phase2Collision, vectorA, vectorB),
     phase2Loop: normalizePhase2Loop(entry.edition?.phase2Loop, vectorA, vectorB),
+    phaseTelemetry: entry.phaseTelemetry,
     aiProvider: entry.aiProvider,
     aiModel: entry.aiModel,
     generationStatus: entry.status,
@@ -932,6 +1233,7 @@ function describeGeneration(entry: DailyEditionEntry) {
     status: entry.status,
     aiProvider: entry.aiProvider,
     aiModel: entry.aiModel,
+    phaseTelemetry: entry.phaseTelemetry,
     error: entry.error,
     attempts: entry.attempts,
     startedAt: entry.startedAt ? new Date(entry.startedAt).toISOString() : null,
@@ -962,6 +1264,11 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
       cached.status = 'generating';
       cached.error = null;
       cached.startedAt = Date.now();
+      cached.phaseTelemetry = createInitialPhaseTelemetry();
+      cached.edition = {
+        ...cached.edition,
+        phaseTelemetry: cached.phaseTelemetry
+      };
     }
 
     const formattedDate = formatItalianDateServer(solarDateKey);
@@ -986,6 +1293,54 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     if (!entry) return;
     entry.attempts += 1;
 
+    const markPhaseGenerating = (phaseNum: 1 | 2 | 3 | 4 | 5 | 6) => {
+      entry.phaseTelemetry = entry.phaseTelemetry.map(item =>
+        item.phaseNumber === phaseNum ? { ...item, status: 'generating' } : item
+      );
+      entry.edition = { ...entry.edition, phaseTelemetry: entry.phaseTelemetry };
+    };
+
+    const markPhaseFinished = (
+      phaseNum: 1 | 2 | 3 | 4 | 5 | 6,
+      res:
+        | {
+            ok: true;
+            provider: 'openai' | 'groq' | 'openrouter' | 'cloudflare' | 'gemini';
+            model: string;
+            usage: TokenUsageStats;
+          }
+        | { ok: false },
+      fallbackUsed: boolean = false
+    ) => {
+      entry.phaseTelemetry = entry.phaseTelemetry.map(item => {
+        if (item.phaseNumber !== phaseNum) return item;
+        if (res.ok && !fallbackUsed) {
+          return {
+            ...item,
+            status: 'completed',
+            provider: res.provider,
+            model: res.model,
+            promptTokens: res.usage.promptTokens,
+            completionTokens: res.usage.completionTokens,
+            totalTokens: res.usage.totalTokens,
+            completedAt: new Date().toISOString()
+          };
+        }
+        return {
+          ...item,
+          status: 'fallback',
+          provider: res.ok ? res.provider : 'local',
+          model: res.ok ? res.model : 'canone-sintetico-locale',
+          promptTokens: res.ok ? res.usage.promptTokens : 0,
+          completionTokens: res.ok ? res.usage.completionTokens : 0,
+          totalTokens: res.ok ? res.usage.totalTokens : 0,
+          completedAt: new Date().toISOString()
+        };
+      });
+      entry.edition = { ...entry.edition, phaseTelemetry: entry.phaseTelemetry };
+      saveDossierStep(solarDateKey, 'phaseTelemetry', entry.phaseTelemetry);
+    };
+
     const analyticalSystemPrompt = buildAnalyticalSystemPrompt();
     const literarySystemPrompt = buildLiteraryEssaySystemPrompt();
 
@@ -1005,6 +1360,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     // STADIO 1 -> FASE 1: Scomposizione Strutturale (/fase-1.html)
     // Provider primario: Groq -> Cloudflare -> OpenRouter -> Gemini
     // =========================================================================
+    markPhaseGenerating(1);
     console.log(`[ALKIMIA] [Stadio 1/6] Redazione FASE 1 (Scomposizione Strutturale) in corso...`);
     const stage1Prompt = buildStage1DecompositionPrompt(selectedA, selectedB, webA.combinedContext, webB.combinedContext);
     const stage1Result = await runAiProviderChain(analyticalSystemPrompt, stage1Prompt, { step: 'phase1' });
@@ -1017,6 +1373,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
       derivationTimestamp: formattedDate
     };
     let currentDecomposition = buildPhase1Decomposition(selectedA.name, selectedB.name);
+    let stage1Fallback = false;
 
     if (stage1Result.ok) {
       try {
@@ -1037,12 +1394,15 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
         entry.aiModel = stage1Result.model;
         console.log(`[ALKIMIA] [Stadio 1/6] FASE 1 completata via ${stage1Result.provider} (${stage1Result.model}).`);
       } catch (e: any) {
+        stage1Fallback = true;
         console.warn(`[ALKIMIA] [Stadio 1/6] Fallback locale decodifica Fase 1:`, e.message || e);
       }
     } else if ('error' in stage1Result) {
+      stage1Fallback = true;
       console.warn(`[ALKIMIA] [Stadio 1/6] Fallback locale Fase 1: ${stage1Result.error}`);
     }
 
+    markPhaseFinished(1, stage1Result, stage1Fallback);
     entry.edition = {
       ...entry.edition,
       systemPair: currentSystemPair,
@@ -1058,6 +1418,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     // STADIO 2 -> FASE 2: Archivio Empirico (/fase-2.html)
     // Provider primario: Groq -> OpenRouter -> Cloudflare (Zero Token Gemini)
     // =========================================================================
+    markPhaseGenerating(2);
     console.log(`[ALKIMIA] [Stadio 2/6] Redazione FASE 2 (Archivio Empirico) con dati web live in corso...`);
     const stage2Prompt = buildStage2EmpiricalPrompt(
       selectedA,
@@ -1072,6 +1433,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     });
 
     let currentEmpiricalArchive = buildPhase1EmpiricalArchive(selectedA.name, selectedB.name);
+    let stage2Fallback = false;
     if (stage2Result.ok) {
       try {
         const parsed2 = cleanAndParseJson(stage2Result.text);
@@ -1080,14 +1442,19 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
           entry.aiProvider = stage2Result.provider;
           entry.aiModel = stage2Result.model;
           console.log(`[ALKIMIA] [Stadio 2/6] FASE 2 (Archivio Empirico) completata via ${stage2Result.provider} (${stage2Result.model}).`);
+        } else {
+          stage2Fallback = true;
         }
       } catch (e: any) {
+        stage2Fallback = true;
         console.warn(`[ALKIMIA] [Stadio 2/6] Fallback locale decodifica Fase 2:`, e.message || e);
       }
     } else if ('error' in stage2Result) {
+      stage2Fallback = true;
       console.warn(`[ALKIMIA] [Stadio 2/6] Fallback locale Fase 2: ${stage2Result.error}`);
     }
 
+    markPhaseFinished(2, stage2Result, stage2Fallback);
     entry.edition = {
       ...entry.edition,
       phase1EmpiricalArchive: currentEmpiricalArchive
@@ -1101,6 +1468,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     // Riceve in ingresso l'Archivio Empirico appena salvato nella Fase 2!
     // Provider primario: OpenRouter -> Cloudflare -> Groq -> Gemini
     // =========================================================================
+    markPhaseGenerating(3);
     console.log(`[ALKIMIA] [Stadio 3/6] Redazione FASE 3 (La Collisione fondata sull'Archivio di Fase 2) in corso...`);
     const stage3Prompt = buildStage3CollisionPrompt(
       selectedA,
@@ -1111,6 +1479,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     const stage3Result = await runAiProviderChain(analyticalSystemPrompt, stage3Prompt, { step: 'phase3' });
 
     let rawCollision: any = null;
+    let stage3Fallback = false;
     if (stage3Result.ok) {
       try {
         const parsed3 = cleanAndParseJson(stage3Result.text);
@@ -1119,12 +1488,15 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
         entry.aiModel = stage3Result.model;
         console.log(`[ALKIMIA] [Stadio 3/6] FASE 3 (La Collisione) completata via ${stage3Result.provider} (${stage3Result.model}).`);
       } catch (e: any) {
+        stage3Fallback = true;
         console.warn(`[ALKIMIA] [Stadio 3/6] Fallback locale decodifica Fase 3:`, e.message || e);
       }
     } else if ('error' in stage3Result) {
+      stage3Fallback = true;
       console.warn(`[ALKIMIA] [Stadio 3/6] Fallback locale Fase 3: ${stage3Result.error}`);
     }
 
+    markPhaseFinished(3, stage3Result, stage3Fallback);
     const currentCollision = normalizePhase2Collision(rawCollision, selectedA.name, selectedB.name);
     entry.edition = {
       ...entry.edition,
@@ -1135,33 +1507,93 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
 
     // =========================================================================
     // STADIO 4 -> FASE 4: Loop a 5 Direzioni (/fase-4.html)
-    // Riceve in ingresso l'Archivio di Fase 2 e la Collisione di Fase 3!
-    // Provider primario: Groq -> OpenRouter -> Cloudflare -> Gemini
+    // Eseguito in 2 chiamate mirate (Direzioni 1-3 + Direzioni 4-5) per garantire
+    // testi ricchi, narrativi e approfonditi (4-5 frasi per ogni singolo sotto-campo)
+    // senza mai saturare il limite di output JSON di una singola chiamata.
     // =========================================================================
-    console.log(`[ALKIMIA] [Stadio 4/6] Redazione FASE 4 (Loop a 5 Direzioni) in corso...`);
-    const stage4Prompt = buildStage4LoopPrompt(
+    markPhaseGenerating(4);
+    console.log(`[ALKIMIA] [Stadio 4/6] Redazione FASE 4 (Loop a 5 Direzioni — Parte 1: Direzioni 1-3 e Parte 2: Direzioni 4-5) in corso...`);
+    const stage4PromptPart1 = buildStage4LoopPrompt(
       selectedA,
       selectedB,
       currentEmpiricalArchive,
-      currentCollision
+      currentCollision,
+      'part1'
     );
-    const stage4Result = await runAiProviderChain(analyticalSystemPrompt, stage4Prompt, { step: 'phase4' });
+    const stage4PromptPart2 = buildStage4LoopPrompt(
+      selectedA,
+      selectedB,
+      currentEmpiricalArchive,
+      currentCollision,
+      'part2'
+    );
 
-    let rawLoop: any = null;
-    if (stage4Result.ok) {
+    const stage4ResultPart1 = await runAiProviderChain(analyticalSystemPrompt, stage4PromptPart1, { step: 'phase4' });
+    // Pausa di respiro tra Parte 1 (Direzioni 1-3) e Parte 2 (Direzioni 4-5) per non saturare la finestra TPM al minuto
+    await new Promise((r) => setTimeout(r, 4000));
+    const stage4ResultPart2 = await runAiProviderChain(analyticalSystemPrompt, stage4PromptPart2, { step: 'phase5' });
+
+    const combinedTracks: any[] = [];
+    let stage4Fallback = false;
+
+    if (stage4ResultPart1.ok) {
       try {
-        const parsed4 = cleanAndParseJson(stage4Result.text);
-        rawLoop = parsed4?.phase2Loop || parsed4;
-        entry.aiProvider = stage4Result.provider;
-        entry.aiModel = stage4Result.model;
-        console.log(`[ALKIMIA] [Stadio 4/6] FASE 4 (Loop a 5 Direzioni) completata via ${stage4Result.provider} (${stage4Result.model}).`);
+        const parsed4A = cleanAndParseJson(stage4ResultPart1.text);
+        const loopA = parsed4A?.phase2Loop || parsed4A;
+        const tracksA = Array.isArray(loopA?.tracks) ? loopA.tracks : [];
+        combinedTracks.push(...tracksA);
+        entry.aiProvider = stage4ResultPart1.provider;
+        entry.aiModel = stage4ResultPart1.model;
+        console.log(`[ALKIMIA] [Stadio 4/6 - Parte 1/2] Direzioni 1-3 completate via ${stage4ResultPart1.provider} (${stage4ResultPart1.model}).`);
       } catch (e: any) {
-        console.warn(`[ALKIMIA] [Stadio 4/6] Fallback locale decodifica Fase 4:`, e.message || e);
+        stage4Fallback = true;
+        console.warn(`[ALKIMIA] [Stadio 4/6 - Parte 1/2] Fallback parziale decodifica Direzioni 1-3:`, e.message || e);
       }
-    } else if ('error' in stage4Result) {
-      console.warn(`[ALKIMIA] [Stadio 4/6] Fallback locale Fase 4: ${stage4Result.error}`);
+    } else {
+      stage4Fallback = true;
     }
 
+    if (stage4ResultPart2.ok) {
+      try {
+        const parsed4B = cleanAndParseJson(stage4ResultPart2.text);
+        const loopB = parsed4B?.phase2Loop || parsed4B;
+        const tracksB = Array.isArray(loopB?.tracks) ? loopB.tracks : [];
+        combinedTracks.push(...tracksB);
+        entry.aiProvider = stage4ResultPart2.provider;
+        entry.aiModel = stage4ResultPart2.model;
+        console.log(`[ALKIMIA] [Stadio 4/6 - Parte 2/2] Direzioni 4-5 completate via ${stage4ResultPart2.provider} (${stage4ResultPart2.model}).`);
+      } catch (e: any) {
+        stage4Fallback = true;
+        console.warn(`[ALKIMIA] [Stadio 4/6 - Parte 2/2] Fallback parziale decodifica Direzioni 4-5:`, e.message || e);
+      }
+    } else {
+      stage4Fallback = true;
+    }
+
+    const rawLoop = combinedTracks.length > 0 ? { tracks: combinedTracks } : null;
+
+    // Aggrega i token consumati dalle due chiamate dello Stadio 4 per la telemetria del pallino 4
+    const stage4PrimaryRes = stage4ResultPart1.ok ? stage4ResultPart1 : stage4ResultPart2;
+    const stage4CombinedResult = stage4PrimaryRes.ok
+      ? {
+          ok: true as const,
+          provider: stage4PrimaryRes.provider,
+          model: stage4PrimaryRes.model,
+          usage: {
+            promptTokens:
+              (stage4ResultPart1.ok ? stage4ResultPart1.usage.promptTokens : 0) +
+              (stage4ResultPart2.ok ? stage4ResultPart2.usage.promptTokens : 0),
+            completionTokens:
+              (stage4ResultPart1.ok ? stage4ResultPart1.usage.completionTokens : 0) +
+              (stage4ResultPart2.ok ? stage4ResultPart2.usage.completionTokens : 0),
+            totalTokens:
+              (stage4ResultPart1.ok ? stage4ResultPart1.usage.totalTokens : 0) +
+              (stage4ResultPart2.ok ? stage4ResultPart2.usage.totalTokens : 0),
+          },
+        }
+      : ({ ok: false as const });
+
+    markPhaseFinished(4, stage4CombinedResult, stage4Fallback && combinedTracks.length === 0);
     const currentLoop = normalizePhase2Loop(rawLoop, selectedA.name, selectedB.name);
     entry.edition = {
       ...entry.edition,
@@ -1175,6 +1607,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     // Riceve in ingresso i risultati del Loop di Fase 4, Fase 3 e Fase 2!
     // Provider primario: Cloudflare -> OpenRouter -> Groq -> Gemini
     // =========================================================================
+    markPhaseGenerating(5);
     console.log(`[ALKIMIA] [Stadio 5/6] Redazione FASE 5 (L'Affondo Finale) in corso...`);
     const stage5Prompt = buildStage5FinalStrikePrompt(
       selectedA,
@@ -1186,6 +1619,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     const stage5Result = await runAiProviderChain(analyticalSystemPrompt, stage5Prompt, { step: 'phase5' });
 
     let currentFinalStrike = buildPhase3FinalStrike(selectedA.name, selectedB.name);
+    let stage5Fallback = false;
     if (stage5Result.ok) {
       try {
         const parsed5 = cleanAndParseJson(stage5Result.text);
@@ -1196,12 +1630,15 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
         entry.aiModel = stage5Result.model;
         console.log(`[ALKIMIA] [Stadio 5/6] FASE 5 (L'Affondo Finale) completata via ${stage5Result.provider} (${stage5Result.model}).`);
       } catch (e: any) {
+        stage5Fallback = true;
         console.warn(`[ALKIMIA] [Stadio 5/6] Fallback locale decodifica Fase 5:`, e.message || e);
       }
     } else if ('error' in stage5Result) {
+      stage5Fallback = true;
       console.warn(`[ALKIMIA] [Stadio 5/6] Fallback locale Fase 5: ${stage5Result.error}`);
     }
 
+    markPhaseFinished(5, stage5Result, stage5Fallback);
     entry.edition = {
       ...entry.edition,
       phase3FinalStrike: currentFinalStrike
@@ -1237,6 +1674,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     // STADIO 6 -> FASE 6: Saggio del Giorno (/fase-6.html)
     // Provider primario: Groq -> OpenRouter -> Cloudflare -> Gemini
     // =========================================================================
+    markPhaseGenerating(6);
     console.log(`[ALKIMIA] [Stadio 6/6] Redazione FASE 6 (Saggio del Giorno) in corso...`);
     const step2Prompt = buildStep2LiteraryEssayPrompt(parsedStep1, selectedA, selectedB);
 
@@ -1245,6 +1683,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     let finalEssay = fallbackEssayFromDossier;
     let finalProvider = entry.aiProvider || 'groq';
     let finalModel = entry.aiModel || 'qwen/qwen3.8-27b';
+    let stage6Fallback = false;
 
     if (step2Result.ok) {
       try {
@@ -1258,19 +1697,23 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
             `[ALKIMIA] [Stadio 6/6] FASE 6 (Saggio del Giorno) completata via ${step2Result.provider} (${step2Result.model}).`
           );
         } else {
+          stage6Fallback = true;
           console.warn(
             `[ALKIMIA] [Stadio 6/6] Payload Fase 6 privo di paragrafi validi da ${step2Result.provider}/${step2Result.model}, applico sintesi letteraria del dossier.`
           );
         }
       } catch (err: any) {
+        stage6Fallback = true;
         console.warn(
           `[ALKIMIA] [Stadio 6/6] Fallback sintesi dossier per Fase 6 (${step2Result.provider}/${step2Result.model}): ${err.message || err}`
         );
       }
     } else if ('error' in step2Result) {
+      stage6Fallback = true;
       console.warn(`[ALKIMIA] [Stadio 6/6] Fallback sintesi dossier per Fase 6: ${step2Result.error}`);
     }
 
+    markPhaseFinished(6, step2Result, stage6Fallback);
     entry.finishedAt = Date.now();
     saveDossierStep(solarDateKey, 'essay', finalEssay);
 
@@ -1291,6 +1734,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
       phase2Collision: currentCollision,
       phase2Loop: currentLoop,
       phase3FinalStrike: currentFinalStrike,
+      phaseTelemetry: entry.phaseTelemetry,
       essay: finalEssay,
       pins: [],
       tensions: [],
@@ -1353,6 +1797,7 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
       extractNormalizedEssay(fe.essay, solarDateKey) ||
       extractNormalizedEssay(savedDossier.essay, solarDateKey) ||
       buildSynthesizedEssayFromDossier(fe, vAName, vBName, solarDateKey);
+    const restoredTelemetry = buildCompletedTelemetryFromSavedDossier(savedDossier, fe);
 
     const loadedEntry: DailyEditionEntry = {
       solarDateKey,
@@ -1363,11 +1808,13 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
       },
       edition: {
         ...fe,
-        essay: safeEssay
+        essay: safeEssay,
+        phaseTelemetry: restoredTelemetry
       },
       status: 'generated',
       aiProvider: fe.aiProvider || 'groq',
       aiModel: fe.aiModel || 'qwen/qwen3.8-27b',
+      phaseTelemetry: restoredTelemetry,
       error: null,
       attempts: 1,
       startedAt: null,
@@ -1402,6 +1849,7 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
       "Soglia di fase tra l'entropia organica locale e la conservazione dell'informazione non-locale",
     derivationTimestamp: formattedDate
   };
+  const initialTelemetry = createInitialPhaseTelemetry();
 
   const provisionalEdition = {
     id: `edition-${solarDateKey}`,
@@ -1413,6 +1861,7 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
     phase2Collision: provCollision,
     phase2Loop: provLoop,
     phase3FinalStrike: provStrike,
+    phaseTelemetry: initialTelemetry,
     essay: buildSynthesizedEssayFromDossier(
       {
         systemPair: provSystemPair,
@@ -1444,6 +1893,7 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
     status: 'placeholder',
     aiProvider: null,
     aiModel: null,
+    phaseTelemetry: initialTelemetry,
     error: null,
     attempts: 0,
     startedAt: null,

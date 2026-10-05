@@ -171,156 +171,158 @@ export function buildPhase2LoopFiveDirections(vectorAName?: string, vectorBName?
   }
 
   // Fallback per Ghiandola Pineale (A) & Aldilà (B) o altre coppie
+  const vA = vectorAName || 'il Primo Argomento';
+  const vB = vectorBName || 'il Secondo Argomento';
   return {
-    theoreticalPreamble: `Il protocollo dei 4 passaggi viene applicato a vuoto sul binario concettuale formato da ${vectorAName} e ${vectorBName} lungo cinque direzioni angolari complementari, rivelando cinque fratture ontologiche distinte e inaspettate.`,
+    theoreticalPreamble: `Il protocollo dei 4 passaggi viene applicato sul binario concettuale formato da ${vA} e ${vB} lungo cinque direzioni angolari complementari.`,
     tracks: [
       {
         id: "dir-1-transduction",
         directionNumber: 1,
-        directionTitle: `Angolazione 1: La Faglia della Trasduzione Meccanica (${vectorAName} come Soglia Fisica)`,
-        ontologicalAngle: "Scomporre l'interfaccia biologica o materiale come filtro di frequenza rispetto alla continuità del campo.",
+        directionTitle: `Direzione 1: Prospettiva Termodinamica / Entropica`,
+        ontologicalAngle: `Confrontare il bilancio energetico, il rumore termico e i limiti di sensibilità degli strumenti utilizzati per studiare **${vA}** con la coerenza interna e la persistenza dei fenomeni osservati in **${vB}**.`,
         collision: {
           step1StrippingFunction: {
-            fundamentalVerbA: "TRASPORRE (Modulare un gradiente locale)",
-            abstractFunctionA: `Sul piano astratto, ${vectorAName} funge da barriera o selettore di banda per la percezione ordinaria.`,
-            fundamentalVerbB: "PERSISTERE (Trattenere informazione oltre la soglia)",
-            abstractFunctionB: `Sul piano astratto, ${vectorBName} esprime lo stato del segnale quando il selettore locale cessa di operare.`,
-            functionalSynthesis: "La collisione mostra come il limite del dispositivo locale definisca le proprietà apparenti del campo esteso."
+            fundamentalVerbA: "FILTRARE (Isolare un segnale misurabile dal rumore di fondo)",
+            abstractFunctionA: `Sul piano operativo e strumentale, lo studio di **${vA}** lavora come un selettore rigoroso di banda: ogni apparecchio di misura è costruito per separare una variazione fisica precisa dal disordine termico ed elettromagnetico dell'ambiente circostante.`,
+            fundamentalVerbB: "PERSISTERE (Mantenere una traccia coerente oltre la soglia ordinaria)",
+            abstractFunctionB: `Sul versante di **${vB}**, il fenomeno si manifesta come una configurazione di senso e di informazione che continua a emergere anche quando i parametri energetici ordinari sembrerebbero insufficienti a sostenerla.`,
+            functionalSynthesis: `Quando mettiamo a confronto il gesto di **filtrare** proprio di **${vA}** e la capacità di **persistere** documentata in **${vB}**, comprendiamo che non si tratta di due operazioni opposte ma di due fasi consecutive dello stesso processo di osservazione.\n\nLo strumento tecnico del primo campo definisce la soglia visibile del fenomeno, mentre il secondo campo raccoglie esattamente ciò che attraversa quella soglia: insieme mostrano che il limite di un rilevatore non coincide con la fine del fenomeno, ma con il punto in cui cambia il modo in cui l'informazione si conserva e si trasmette.`
           },
           step2BlindAxis: {
-            boundaryA: `Il limite insuperabile di ${vectorAName} è il proprio supporto materiale.`,
-            accessDoorToB: `È proprio il collasso di questo supporto a inaugurare la fenomenologia di ${vectorBName}.`,
-            creviceContactPoint: "La crepa: la soglia di transizione di fase in cui la materia perde stabilità e rilascia la configurazione coerente."
+            boundaryA: `Il limite insuperabile degli strumenti applicati a **${vA}** è la soglia del rumore termico: al di sotto di una certa intensità fisica, il sensore non riesce più a distinguere tra una fluttuazione casuale della materia e un segnale strutturato.`,
+            accessDoorToB: `È proprio dentro questa zona d'ombra strumentale che prende avvio l'indagine su **${vB}**, la quale raccoglie le anomalie, le esperienze e le tracce che continuano a presentarsi là dove gli apparecchi convenzionali segnano soltanto fondo indistinto.`,
+            creviceContactPoint: `Il punto di contatto concreto — la crepa asimmetrica che unisce **${vA}** e **${vB}** — si trova esattamente sulla linea di confine in cui l'energia fisica misurabile sembra disperdersi nel rumore di fondo ma conserva in realtà una precisa organizzazione interna.\n\nIn questa cerniera tra i due domini, ciò che per il primo strumento appare come una perdita di segnale o un semplice disturbo termico si rivela, alla luce del secondo argomento, come il passaggio del fenomeno a un livello più sottile di coerenza, dove l'informazione non scompare ma cambia stato.`
           },
           step3InvertedDirection: {
-            methodAAppliedToB: `Applicare le leggi interne di ${vectorAName} per decifrare lo spazio di ${vectorBName}.`,
-            provocativeViolationQuestion: `E se ${vectorBName} fosse solo l'immagine a specchio generata dal filtro di ${vectorAName} quando viene portato alla saturazione?`,
-            counterIntuitiveInsight: "La separazione tra i due mondi non è ontologica ma funzionale: una questione di calibrazione dell'apparato sensibile."
+            methodAAppliedToB: `Applicare i protocolli di analisi del segnale e di riduzione del rumore sviluppati per **${vA}** direttamente allo studio delle anomalie e delle testimonianze di **${vB}**, senza però tagliare via con filtri automatici le fluttuazioni di soglia.`,
+            provocativeViolationQuestion: `E se ciò che osserviamo in **${vB}** non fosse un evento estraneo alle leggi della fisica, ma l'immagine nitida di ciò che accade quando i meccanismi di **${vA}** operano al di sotto della soglia di rumore dei nostri strumenti abituali?`,
+            counterIntuitiveInsight: `Ribaltando la prospettiva emerge un'intuizione inattesa: la distanza tra **${vA}** e **${vB}** non dipende dal fatto che appartengano a due mondi incompatibili, ma dal modo in cui abbiamo calibrato i nostri strumenti di osservazione.\n\nQuando smettiamo di cancellare come errore statistico le variazioni più sottili registrate nel primo campo, ci accorgiamo che esse disegnano esattamente la trama dei fenomeni descritti nel secondo: l'anomalia non viola la regola fisica, ma ne svela il comportamento quando opera al massimo grado di sensibilità.`
           },
           step4CommonMetaphor: {
             masterMetaphorTitle: "IL PRISMA CHE SCOMPONE IL BIANCO",
-            cosmologicalAnthropologicalGround: "La costante umana di scambiare il colore isolato dal prisma per la luce nella sua interezza.",
-            unifyingVision: "L'esperienza incarnata è un raggio rifratto; la totalità è la luce non deflessa che continua ad attraversare il vuoto."
+            cosmologicalAnthropologicalGround: `L'abitudine umana a scambiare la singola banda di colore isolata dai nostri strumenti per la totalità della luce che attraversa l'esperienza.`,
+            unifyingVision: `Come un prisma ottico, l'indagine su **${vA}** isola le frequenze più nette e misurabili, mentre **${vB}** ci ricorda la presenza dell'intero spettro luminoso da cui quei singoli raggi provengono.`
           }
         }
       },
       {
         id: "dir-2-entropy",
         directionNumber: 2,
-        directionTitle: `Angolazione 2: La Faglia Termodinamico-Entropica (Dissipazione vs Conservazione)`,
-        ontologicalAngle: "Indagare come il consumo di energia biologica condizioni la permanenza della memoria nel sistema.",
+        directionTitle: `Direzione 2: Prospettiva Ecologico-Evolutiva`,
+        ontologicalAngle: `Esaminare il ruolo degli scienziati, dei pionieri e dei testimoni oculari censiti tra **${vA}** e **${vB}**, osservando come la mente umana reagisce, interpreta e si adatta di fronte a ciò che supera le conoscenze consolidate.`,
         collision: {
           step1StrippingFunction: {
-            fundamentalVerbA: "CONSUMARE (Estrarre lavoro dal disordine termico)",
-            abstractFunctionA: "Mantenere uno stato stazionario lontano dall'equilibrio attraverso cicli bioenergetici continui.",
-            fundamentalVerbB: "CRISTALLIZZARE (Sottrarre l'informazione al flusso temporale)",
-            abstractFunctionB: "Uno stato di coerenza asintotica in cui non si consuma carburante organico.",
-            functionalSynthesis: "Collisione tra il dinamismo dissipativo del vivente e l'invarianza del dominio atemporale."
+            fundamentalVerbA: " CATALOGARE (Ricondurre l'osservazione entro modelli condivisi)",
+            abstractFunctionA: `Nella storia di **${vA}**, i ricercatori e le istituzioni hanno lavorato per ordinare i dati sperimentali dentro griglie rigorose, proteggendo la stabilità del metodo scientifico dalle anomalie non immediatamente spiegabili.`,
+            fundamentalVerbB: "TESTIMONIARE (Farsi carico di un'esperienza che precede la teoria)",
+            abstractFunctionB: `Nella storia di **${vB}**, i pionieri, i clinici e i testimoni oculari hanno invece accettato di registrare e raccontare ciò che vedevano accadere dal vivo, anche quando mancava ancora un vocabolario teorico per spiegarlo.`,
+            functionalSynthesis: `L'incontro tra il gesto di **catalogare** (proprio degli specialisti di **${vA}**) e il gesto di **testimoniare** (proprio dei protagonisti di **${vB}**) mette in luce come avanza realmente la conoscenza umana.\n\nDa sola, la catalogazione rischia di chiudersi in un archivio che esclude tutto ciò che non conosce ancora; da sola, la testimonianza rischia di restare un racconto isolato. Quando invece dialogano, il rigore del primo campo offre gli strumenti di verifica a ciò che i testimoni del secondo hanno avuto il coraggio di osservare per primi.`
           },
           step2BlindAxis: {
-            boundaryA: "L'azzeramento del gradiente termico arresta ogni operazione locale.",
-            accessDoorToB: "La persistenza non-locale comincia quando l'entropia locale raggiunge il suo massimo relativo.",
-            creviceContactPoint: "Il rilascio improvviso di entropia come scintilla d'apertura al dominio informazionale globale."
+            boundaryA: `Il limite umano e istituzionale di chi studia **${vA}** emerge quando un dato anomalo viene scartato a priori solo perché non rientra nei manuali dell'epoca, lasciando inspiegata una parte reale dell'esperienza.`,
+            accessDoorToB: `Proprio i casi scartati dai protocolli ufficiali diventano il punto di partenza degli studiosi e dei testimoni di **${vB}**, che custodiscono quelle osservazioni di confine in attesa di una comprensione più matura.`,
+            creviceContactPoint: `La crepa asimmetrica tra le due comunità di ricerca si apre nel momento in cui lo scienziato di laboratorio e il testimone diretto si accorgono di aver descritto, con due linguaggi diversi, lo stesso identico evento.\n\nSu questa linea di contatto cade la barriera tra "osservatore esterno" e "soggetto partecipe": le cronache storiche di **${vB}** cessano di apparire come semplici aneddoti soggettivi e diventano preziosi indizi sul campo che indicano agli strumenti di **${vA}** dove puntare lo sguardo.`
           },
           step3InvertedDirection: {
-            methodAAppliedToB: "Trattare l'eternità come un processo a consumo neghentropico continuo.",
-            provocativeViolationQuestion: `E se la dimensione di ${vectorBName} richiedesse un continuo lavoro termodinamico compiuto da chi abita il versante di ${vectorAName}?`,
-            counterIntuitiveInsight: "Non sono i vivi a dipendere dai morti o l'effetto dalla causa, ma il campo atemporale a nutrirsi della frizione materiale generata dai corpi in transito."
+            methodAAppliedToB: `Leggere i resoconti dei testimoni e dei pionieri di **${vB}** con la stessa attenzione tecnica con cui si analizzano i quaderni di laboratorio di **${vA}**, cercando le costanti ricorrenti anziché le differenze lessicali.`,
+            provocativeViolationQuestion: `E se i testimoni storici di **${vB}** avessero registrato con straordinaria fedeltà percettiva gli stessi fenomeni che la strumentazione di **${vA}** sta iniziando a misurare soltanto oggi?`,
+            counterIntuitiveInsight: `L'intuizione contro-intuitiva che ne scaturisce ribalta il pregiudizio consueto: l'essere umano non è un rilevatore difettoso da sostituire con le macchine, ma è spesso il primo sensore ad accorgersi di una novità della natura molto prima che vengano costruiti gli apparecchi capaci di misurarla.\n\nRileggendo insieme i due archivi, scopriamo che molte intuizioni considerate a lungo marginali in **${vB}** anticipavano con precisione meccanismi che oggi **${vA}** ci permette finalmente di comprendere su basi verificabili.`
           },
           step4CommonMetaphor: {
-            masterMetaphorTitle: "LA CLESSIDRA SENZA FONDO",
-            cosmologicalAnthropologicalGround: "La percezione dell'inesorabile scorrere dei grani e il sogno della loro risalita spontanea.",
-            unifyingVision: "Il tempo è la caduta del grano; la coscienza è il vetro che racchiude sia il grano che cade sia lo spazio vuoto lasciato sopra."
+            masterMetaphorTitle: "LA VEDETTA E IL CARTOGRAFO",
+            cosmologicalAnthropologicalGround: `La cooperazione necessaria, nella storia umana, tra chi scorge per primo una terra sconosciuta all'orizzonte e chi traccia le coordinate per raggiungerla.`,
+            unifyingVision: `**${vB}** è la vedetta sull'albero maestro che segnala una costa nuova nella nebbia; **${vA}** è il cartografo che ne misura i contorni e la rende percorribile per tutti.`
           }
         }
       },
       {
         id: "dir-3-geometry",
         directionNumber: 3,
-        directionTitle: `Angolazione 3: La Faglia Topologica (La Dimensione Confinata vs Lo Spazio di Fase)`,
-        ontologicalAngle: "Scomporre i limiti della tridimensionalità euclidea rispetto a una geometria a n-dimensioni.",
+        directionTitle: `Direzione 3: Prospettiva Semiotica / Di Traduzione`,
+        ontologicalAngle: `Mettere a confronto i libri fondativi, i dossier ufficiali e i codici scritti di **${vA}** e **${vB}**, analizzando come due linguaggi apparentemente lontani cerchino di tradurre in parole la stessa realtà profonda.`,
         collision: {
           step1StrippingFunction: {
-            fundamentalVerbA: "CONFINARE (Rinchiudere la dinamica in un volume euclideo chiuso)",
-            abstractFunctionA: "Definire un dentro e un fuori protetti da una membrana impermeabile.",
-            fundamentalVerbB: "DIFFONDERE (Operare su un fibrato topologico non orientabile)",
-            abstractFunctionB: "La simultaneità di tutti i punti in un dominio privo di coordinate estrinseche.",
-            functionalSynthesis: "Collisione tra la scatola solida e il nastro di Möbius che ne annulla i confini."
+            fundamentalVerbA: "FORMALIZZARE (Fissare il fenomeno in simboli, sigle e protocolli univoci)",
+            abstractFunctionA: `I trattati e i dossier tecnici di **${vA}** traducono il mondo in un linguaggio matematico e procedurale, pensato per eliminare ogni ambiguità e permettere a chiunque di replicare l'osservazione.`,
+            fundamentalVerbB: "EVOCARE (Restituire attraverso la parola la densità dell'esperienza vissuta)",
+            abstractFunctionB: `Le opere e i testi fondativi di **${vB}** utilizzano invece un linguaggio narrativo, simbolico e fenomenologico, perché cercano di descrivere stati e trasformazioni che non possono essere ridotti a una sola formula numerica.`,
+            functionalSynthesis: `Mettere insieme il bisogno di **formalizzare** dei testi di **${vA}** e la capacità di **evocare** delle opere di **${vB}** ci permette di superare l'incomprensione linguistica che ha tenuto divisi i due ambiti per decenni.\n\nCome in una stele bilingue, il linguaggio tecnico del primo argomento spiega la struttura meccanica del fenomeno, mentre il linguaggio narrativo del secondo ne restituisce il significato vissuto: letti uno accanto all'altro, i due vocabolari si completano e dicono finalmente la cosa intera.`
           },
           step2BlindAxis: {
-            boundaryA: "L'impossibilità di trovarsi in due punti dello spazio nello stesso istante.",
-            accessDoorToB: "L'ubiquità del segnale che non necessita di propagazione metrica nel vuoto.",
-            creviceContactPoint: "La singolarità centrale: il punto in cui la curvatura del confinamento si rompe e sfocia nell'iperspazio relazionale."
+            boundaryA: `Il limite dei manuali tecnici di **${vA}** sta nel fatto che, per essere rigorosi, devono lasciare fuori dalla pagina tutto ciò che riguarda il senso, la qualità interiore e la risonanza umana dell'evento.`,
+            accessDoorToB: `I testi di **${vB}** iniziano a scrivere proprio sul margine bianco lasciato dai trattati tecnici, dando voce e nome a quell'esperienza qualitativa che i numeri da soli non riescono a raccontare.`,
+            creviceContactPoint: `Il punto di contatto tra le due biblioteche si manifesta quando ci accorgiamo che le metafore usate nei testi classici di **${vB}** e i modelli formali introdotti nei trattati di **${vA}** disegnano esattamente la stessa architettura.\n\nIn questa crepa semiotica scopriamo che gli autori dei due campi non stavano parlando di oggetti diversi, ma stavano traducendo in due lingue differenti — quella delle equazioni e quella della coscienza — la medesima legge di trasformazione del reale.`
           },
           step3InvertedDirection: {
-            methodAAppliedToB: "Applicare il righello euclideo per misurare le distanze tra le regioni dell'invisibile.",
-            provocativeViolationQuestion: `E se lo spazio tra due corpi fosse più denso e vivo della materia che li compone, rendendo ${vectorAName} un'assenza e ${vectorBName} la vera pienezza?`,
-            counterIntuitiveInsight: "La materia solida è una bolla d'aria immersa nell'oceano compatto dell'invisibile informazionale."
+            methodAAppliedToB: `Utilizzare il glossario rigoroso dei dossier di **${vA}** per rileggere pagina per pagina i testi fondativi di **${vB}**, verificando a quale processo fisico o biologico corrisponda ogni antica espressione simbolica.`,
+            provocativeViolationQuestion: `E se i grandi testi di **${vB}** non fossero racconti allegorici astratti, ma manuali descrittivi precisissimi scritti in una lingua che attendeva solo il vocabolario di **${vA}** per essere decodificata?`,
+            counterIntuitiveInsight: `La scoperta sorprendente che nasce da questa traduzione incrociata è che la divisione tra "letteratura dell'esperienza" e "trattato scientifico" è molto più sottile di quanto pensiamo.\n\nQuando sovrapponiamo le pagine dei due archivi, vediamo che i concetti chiave di **${vA}** forniscono la grammatica strutturale che rende trasparenti i testi di **${vB}**, mentre questi ultimi restituiscono ai modelli scientifici quella profondità di significato umano che avevano smarrito.`
           },
           step4CommonMetaphor: {
-            masterMetaphorTitle: "LA BOLLA SOTTO IL MARE",
-            cosmologicalAnthropologicalGround: "La paura del vuoto trasformata nella comprensione che siamo noi a vivere nella cavità protetta.",
-            unifyingVision: "Abitiamo un'intercapedine gassosa effimera: crediamo che il mare sia fuori, ma la bolla esiste solo perché la pressione circostante la sostiene."
+            masterMetaphorTitle: "LA STELE DI ROSETTA DEI DUE SAPERI",
+            cosmologicalAnthropologicalGround: `Lo sforzo millenario dell'intelligenza umana di decifrare un'unica realtà attraverso scritture differenti ma convergenti.`,
+            unifyingVision: `**${vA}** e **${vB}** sono due iscrizioni incise sulla stessa pietra: solo confrontando i segni dell'una con le parole dell'altra possiamo leggere per intero il messaggio.`
           }
         }
       },
       {
         id: "dir-4-epistemic",
         directionNumber: 4,
-        directionTitle: `Angolazione 4: La Faglia Epistemologica (Il Misurabile vs L'Incommensurabile)`,
-        ontologicalAngle: "La collisione tra i protocolli di validazione quantitativa e la natura inafferrabile dell'evento singolare.",
+        directionTitle: `Direzione 4: Prospettiva Metamorfica / Biologica`,
+        ontologicalAngle: `Indagare cosa accade al corpo umano, al sistema nervoso e ai tessuti viventi quando i processi di **${vA}** e le esperienze di **${vB}** si incontrano nella fisiologia concreta dell'osservatore.`,
         collision: {
           step1StrippingFunction: {
-            fundamentalVerbA: "QUANTIFICARE (Ridurre l'evento a una sequenza scalare ripetibile)",
-            abstractFunctionA: "Rendere l'oggetto manipolabile attraverso la perdita deliberata delle sue qualità uniche.",
-            fundamentalVerbB: "SIGNIFICARE (Trasmettere un senso qualitativo irriducibile a cifra)",
-            abstractFunctionB: "La valenza simbolica che trasforma un rumore di fondo in una rivelazione per il soggetto.",
-            functionalSynthesis: "Collisione tra il numero che pesa e la parola che illumina."
+            fundamentalVerbA: "REGOLARE (Modulare i circuiti molecolari, cellulari e fisiologici)",
+            abstractFunctionA: `Dal punto di vista biologico e somatico, **${vA}** interviene sui meccanismi concreti con cui l'organismo mantiene il proprio equilibrio, scambia segnali chimico-elettrici e risponde agli stimoli dell'ambiente.`,
+            fundamentalVerbB: "TRASMUTARE (Attraversare un cambiamento profondo di stato percettivo e vitale)",
+            abstractFunctionB: `Sul piano dell'esperienza incarnata, **${vB}** coinvolge il corpo come cassa di risonanza capace di modificare i propri ritmi interni — dal respiro alle onde cerebrali — durante gli stati di maggiore apertura e intensità.`,
+            functionalSynthesis: `Unire il processo di **regolare** (studiato nei parametri biologici di **${vA}**) e quello di **trasmutare** (vissuto nelle soglie somatiche di **${vB}**) restituisce un'immagine finalmente integra del corpo umano.\n\nLa biologia non è un semplice meccanismo automatico separato dalla vita interiore, e l'esperienza profonda non avviene mai nel vuoto: ogni trasformazione descritta in **${vB}** si appoggia sui circuiti viventi di **${vA}** e, a sua volta, lascia una traccia misurabile nella fisiologia dell'organismo.`
           },
           step2BlindAxis: {
-            boundaryA: "Lo strumento scientifico si spegne di fronte all'evento non riproducibile a comando.",
-            accessDoorToB: "La dimensione inesplorata si manifesta proprio nell'anomalia unica e irripetibile che viola la gaussiana.",
-            creviceContactPoint: "La deviazione standard estrema: l'istante in cui la statistica fallisce e si apre l'intuizione del significato."
+            boundaryA: `L'analisi puramente biomedica di **${vA}** si ferma quando descrive il singolo recettore o il singolo tracciato fisiologico senza riuscire a spiegare come da quel mosaico di cellule nasca il sentimento unitario di presenza e di coscienza.`,
+            accessDoorToB: `È proprio a partire da questa unità vissuta in prima persona che si sviluppa **${vB}**, mostrando fin dove può spingersi la plasticità dell'organismo umano quando viene coinvolto nella sua interezza.`,
+            creviceContactPoint: `Il punto di contatto biologico tra **${vA}** e **${vB}** risiede nella straordinaria sensibilità del nostro sistema nervoso e cellulare, che funge contemporaneamente da struttura organica e da antenna percettiva.\n\nIn questa soglia somatica, la variazione chimica o bioelettrica misurata dagli strumenti di **${vA}** e il mutamento interiore raccontato in **${vB}** si rivelano come i due lati — esterno e interno — dello stesso atto vitale che attraversa la carne.`
           },
           step3InvertedDirection: {
-            methodAAppliedToB: "Costruire un laboratorio cieco per costringere il mistero a rispondere a comando.",
-            provocativeViolationQuestion: `E se la realtà rifiutasse di farsi misurare non per debolezza dei nostri strumenti, ma perché la misurazione stessa uccide la relazione che la genera?`,
-            counterIntuitiveInsight: "L'oggettività scientifica non rivela il mondo: rivela semplicemente come appare il mondo quando decidiamo di non amarlo e di non toccarlo."
+            methodAAppliedToB: `Monitorare con i biomarcatori e gli strumenti fisiologici di **${vA}** le trasformazioni corporee che accompagnano i fenomeni di **${vB}**, trattando il corpo umano come il vero laboratorio dell'esperimento.`,
+            provocativeViolationQuestion: `E se le esperienze più estreme documentate in **${vB}** non fossero allucinazioni che ingannano i sensi, ma l'attivazione di capacità biologiche reali e finora latenti già inscritte nell'architettura di **${vA}**?`,
+            counterIntuitiveInsight: `Questa inversione porta alla luce una scoperta decisiva: il corpo umano non è un ostacolo opaco che ci separa dalla comprensione dei fenomeni più sottili, ma è lo strumento più raffinato di cui disponiamo per entrarvi in contatto.\n\nQuando osserviamo i dati di **${vA}** alla luce delle esperienze di **${vB}**, comprendiamo che le nostre cellule e le nostre reti neurali possiedono una flessibilità e una capacità di sintonizzazione molto più ampie di quelle che utilizziamo nella routine quotidiana.`
           },
           step4CommonMetaphor: {
-            masterMetaphorTitle: "LA MANO CHE SERRA L'ACQUA",
-            cosmologicalAnthropologicalGround: "La tentazione prometeica di possedere il flusso serrando le dita, scoprendo che l'acqua sfugge tra le nocche.",
-            unifyingVision: "Per trattenere l'essenza non bisogna chiudere il pugno, ma trasformare la mano in una conca accogliente in cui il riflesso può posarsi."
+            masterMetaphorTitle: "LO STRUMENTO CHE ACCORDA SE STESSO",
+            cosmologicalAnthropologicalGround: `La natura singolare dell'essere umano, che nella ricerca della conoscenza è al tempo stesso il musicista, lo spartito e la cassa armonica vibrante.`,
+            unifyingVision: `**${vA}** descrive la tensione delle corde e la struttura del legno; **${vB}** è la risonanza musicale che si sprigiona nel corpo quando quelle corde vengono sfiorate.`
           }
         }
       },
       {
         id: "dir-5-ontological",
         directionNumber: 5,
-        directionTitle: `Angolazione 5: La Faglia Ontologico-Esistenziale (La Maschera della Forma vs L'Abisso del Fondamento)`,
-        ontologicalAngle: "Il confronto ultimo tra la finitudine dell'ente individuale e l'abisso impersonale dell'essere.",
+        directionTitle: `Direzione 5: Prospettiva Architetturale / Sistemica`,
+        ontologicalAngle: `Confrontare i grandi modelli teorici, i teoremi e i paradigmi di **${vA}** e **${vB}** per cogliere l'architettura complessiva del reale che li comprende entrambi.`,
         collision: {
           step1StrippingFunction: {
-            fundamentalVerbA: "INDIVIDUALIZZARE (Tracciare un contorno identitario netto nel continuum)",
-            abstractFunctionA: "Costruire un'identità autonoma che dice 'io' e si difende dalla dispersione nel tutto.",
-            fundamentalVerbB: "UNIVERSALIZZARE (Riconoscere l'identità originaria della parte col tutto)",
-            abstractFunctionB: "La de-centrazione radicale in cui ogni contorno si scopre provvisorio e convenzionale.",
-            functionalSynthesis: "Collisione tra l'istinto di autoconservazione della goccia e la vastità indistruttibile dell'oceano."
+            fundamentalVerbA: "STRUTTURARE (Definire le leggi e i vincoli che governano le parti del sistema)",
+            abstractFunctionA: `I modelli teorici di **${vA}** individuano le regole costanti, le simmetrie e le relazioni causali che permettono di comprendere come funziona e come si regge l'impalcatura osservabile del fenomeno.`,
+            fundamentalVerbB: "INTEGRARE (Riconoscere il legame che unisce ogni parte alla totalità del sistema)",
+            abstractFunctionB: `Le visioni teoriche di **${vB}** puntano invece a cogliere il disegno d'insieme, mostrando come i singoli eventi locali rispondano a un ordine più vasto e interconnesso.`,
+            functionalSynthesis: `La sintesi tra il bisogno di **strutturare** le singole leggi (proprio di **${vA}**) e la capacità di **integrare** il quadro globale (propria di **${vB}**) permette di comprendere l'architettura a più livelli della realtà.\n\nUn modello che guarda solo ai mattoni rischia di non vedere l'edificio; una visione che guarda solo l'insieme rischia di restare astratta. Unendo i paradigmi dei due argomenti, vediamo finalmente come le regole locali del primo livello sostengano e preparino l'emergere del livello successivo.`
           },
           step2BlindAxis: {
-            boundaryA: "La caducità insuperabile del nome e della memoria biografica individuale.",
-            accessDoorToB: "L'accesso alla dimensione eterna attraverso la destrutturazione dell'io autobiografico.",
-            creviceContactPoint: "Il punto zero dell'identità: l'istante supremo di resa in cui la goccia tocca l'acqua e non sa più dove finisce se stessa."
+            boundaryA: `Ogni teorema o modello formale di **${vA}**, per quanto preciso, arriva a un punto di incompletezza in cui non può spiegare da solo l'origine ultima delle proprie costanti e il ruolo dell'osservatore che lo formula.`,
+            accessDoorToB: `I paradigmi di **${vB}** prendono avvio esattamente da questa soglia sistemica, includendo fin dal principio la relazione tra l'osservatore e la totalità del campo indagato.`,
+            creviceContactPoint: `Il punto di contatto architettonico tra i due sistemi teorici si trova là dove le equazioni e i modelli di **${vA}** lasciano intravedere una struttura aperta e non-locale che coincide con le intuizioni centrali di **${vB}**.\n\nIn questa cerniera sistemica cade l'idea che esistano due realtà separate: il modello rigoroso del primo argomento e la visione unitaria del secondo si incastrano come due piani consecutivi dello stesso edificio conoscitivo.`
           },
           step3InvertedDirection: {
-            methodAAppliedToB: "Trattare l'infinito come una proprietà privata da recintare e gestire burocraticamente.",
-            provocativeViolationQuestion: `E se la nostra individualità non fosse un fine dell'evoluzione, ma un errore ottico necessario affinché l'Assoluto possa sperimentare la nostalgia di se stesso?`,
-            counterIntuitiveInsight: "Non siamo noi che cerchiamo di raggiungere l'invisibile: è l'invisibile che ha inventato i nostri corpi per potersi guardare da fuori per una frazione di secondo."
+            methodAAppliedToB: `Impiegare il rigore logico e sistemico dei teoremi di **${vA}** per verificare la tenuta e le conseguenze operative dei modelli unitari proposti in **${vB}**.`,
+            provocativeViolationQuestion: `E se i modelli teorici di **${vA}** e i paradigmi di **${vB}** fossero due sezioni complementari di un'unica teoria generale che finora avevamo letto solo a metà?`,
+            counterIntuitiveInsight: `Dall'incontro tra le due architetture teoriche nasce una comprensione limpida e profonda: ciò che chiamiamo "limite della scienza" e ciò che chiamiamo "mistero dell'esperienza" non sono due muri contrapposti, ma i due archi che sorreggono la stessa volta.\n\nI teoremi di **${vA}** dimostrano che la realtà fisica è molto più aperta e interconnessa di un semplice meccanismo a orologeria, mentre i modelli di **${vB}** trovano in quella stessa apertura la propria base razionale e condivisibile.`
           },
           step4CommonMetaphor: {
-            masterMetaphorTitle: "IL TEATRO DELL'ATTORE SOLITARIO",
-            cosmologicalAnthropologicalGround: "La consapevolezza che dietro tutte le maschere indossate sulla scena batte un unico respiro.",
-            unifyingVision: "Siamo un unico attore che recita tutte le parti: colui che modifica il codice e colui che parla dal silenzio della radio sono la medesima voce che si scambia il copione nel buio del retropalco."
+            masterMetaphorTitle: "I DUE ARCHI DELLA STESSA VOLTA",
+            cosmologicalAnthropologicalGround: `La scoperta che le grandi costruzioni del pensiero umano reggono solo quando due spinte opposte si incontrano in una chiave di volta comune.`,
+            unifyingVision: `**${vA}** e **${vB}** salgono da due pilastri opposti dell'esperienza umana, ma convergono al centro per chiudere in equilibrio l'arco della nostra comprensione del mondo.`
           }
         }
       }

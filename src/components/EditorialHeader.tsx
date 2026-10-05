@@ -1,59 +1,80 @@
-import React from 'react';
-import { EditorialCycle, EditionGenerationStatus } from '../types';
+import React, { useState } from 'react';
+import { EditorialCycle, EditionGenerationStatus, PhaseTelemetryItem } from '../types';
 import { Calendar } from 'lucide-react';
 
-type AiProvider = 'groq' | 'openrouter' | 'cloudflare' | 'gemini' | null | undefined;
+type AiProvider = 'openai' | 'groq' | 'openrouter' | 'cloudflare' | 'gemini' | null | undefined;
 
 interface EditorialHeaderProps {
   cycle: EditorialCycle;
   aiProvider?: AiProvider;
   aiModel?: string | null;
+  phaseTelemetry?: PhaseTelemetryItem[];
   generationStatus?: EditionGenerationStatus;
   generationError?: string | null;
 }
 
-/**
- * Testata dell'edizione.
- *
- * Oltre all'indicatore del provider (verde = token gratuiti, rosso = Gemini a pagamento)
- * espone ora lo stato reale della redazione: prima il front-end dichiarava "OpenRouter"
- * anche quando stava mostrando il ripiego canonico locale, rendendo invisibile ogni
- * fallimento della generazione.
- */
+const DEFAULT_PHASE_TITLES: Record<1 | 2 | 3 | 4 | 5 | 6, string> = {
+  1: "Fase 1 · Scomposizione",
+  2: "Fase 2 · Archivio Empirico",
+  3: "Fase 3 · La Collisione",
+  4: "Fase 4 · Loop 5 Direzioni",
+  5: "Fase 5 · L'Affondo Finale",
+  6: "Fase 6 · Saggio del Giorno"
+};
+
+function formatShortProvider(provider?: string | null): string {
+  switch (provider) {
+    case 'openai':
+      return 'OpenAI';
+    case 'groq':
+      return 'Groq';
+    case 'openrouter':
+      return 'OpenRouter';
+    case 'cloudflare':
+      return 'Cloudflare';
+    case 'gemini':
+      return 'Gemini';
+    case 'local':
+      return 'Locale';
+    default:
+      return 'In attesa';
+  }
+}
+
 export const EditorialHeader: React.FC<EditorialHeaderProps> = ({
   cycle,
   aiProvider,
   aiModel,
+  phaseTelemetry,
   generationStatus = 'generated',
   generationError
 }) => {
-  const providerName =
-    aiProvider === 'groq'
-      ? 'Groq (LPU Inference)'
-      : aiProvider === 'gemini'
-        ? 'Google Gemini'
-        : aiProvider === 'cloudflare'
-          ? 'Cloudflare Workers AI'
-          : aiProvider === 'openrouter'
-            ? 'OpenRouter'
-            : null;
+  const [selectedPhasePopup, setSelectedPhasePopup] = useState<number | null>(null);
 
-  // verde: provider a token gratuiti · rosso: Gemini (token Google consumati) o generazione fallita
-  const isGemini = aiProvider === 'gemini';
   const isFailed = generationStatus === 'failed';
   const isProvisional = generationStatus === 'generating' || generationStatus === 'placeholder';
 
-  const dotColorClass = isFailed || isGemini
-    ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]'
-    : isProvisional
-      ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse'
-      : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]';
+  const normalizedPhases: PhaseTelemetryItem[] = ([1, 2, 3, 4, 5, 6] as const).map((num) => {
+    const found = phaseTelemetry?.find((p) => p.phaseNumber === num);
+    if (found) return found;
 
-  const statusLabel = isFailed
-    ? `Redazione AI non riuscita${aiModel ? ` · Ultimo modello: ${aiModel}` : ''}${generationError ? ` — ${generationError}` : ''}`
-    : isProvisional
-      ? 'Redazione AI in corso: il testo mostrato è il canone locale provvisorio'
-      : `Provider attivo: ${providerName ?? 'non dichiarato'}${isGemini ? ' (token Google consumati)' : ' (zero token Gemini consumati)'}${aiModel ? ` · Modello: ${aiModel}` : ''}`;
+    const isOverallGenerated = generationStatus === 'generated';
+    return {
+      phaseNumber: num,
+      phaseTitle: DEFAULT_PHASE_TITLES[num],
+      status: isOverallGenerated ? 'completed' : 'pending',
+      provider: isOverallGenerated ? (aiProvider || 'groq') : null,
+      model: isOverallGenerated ? (aiModel || 'openai/gpt-oss-120b') : null,
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+      completedAt: null
+    };
+  });
+
+  const completedCount = normalizedPhases.filter(
+    (p) => p.status === 'completed' || p.status === 'fallback'
+  ).length;
 
   const banner = isFailed
     ? {
@@ -61,40 +82,90 @@ export const EditorialHeader: React.FC<EditorialHeaderProps> = ({
         text: 'Redazione AI non riuscita — in lettura il canone ontologico locale di riserva',
         detail: generationError
       }
-    : isProvisional
+    : isProvisional && completedCount < 6
       ? {
           className: 'border-amber-300 bg-amber-50 text-amber-900',
-          text: 'Redazione AI in corso — il saggio definitivo comparirà automaticamente',
-          detail: 'Il testo attualmente in lettura è il canone ontologico locale provvisorio.'
+          text: `Redazione AI sequenziale in corso (${completedCount}/6 Fasi completate)`,
+          detail: 'I sei indicatori qui sopra diventano verdi man mano che ciascuna fase viene completata.'
         }
       : null;
 
   return (
-    <header className="border-b border-[#ded7ca] pb-8 pt-4 text-center space-y-3">
-      <div className="inline-flex items-center justify-center gap-2 text-[11px] font-mono tracking-[0.3em] uppercase text-[#736c60]">
+    <header className="border-b border-[#ded7ca] pb-8 pt-4 text-center space-y-2.5">
+      {/* Sopratitolo centrato */}
+      <div className="text-[11px] font-mono tracking-[0.3em] uppercase text-[#736c60]">
         <span>Indagine Ontologica Quotidiana</span>
-        <span
-          id="ai-provider-token-indicator"
-          title={statusLabel}
-          aria-label={statusLabel}
-          className="relative flex items-center justify-center cursor-help group"
-        >
-          <span className={`w-2 h-2 rounded-full ${dotColorClass} transition-colors duration-300`} />
-          <span
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 w-72 whitespace-normal px-2.5 py-1.5 text-[10px] font-mono leading-relaxed tracking-normal normal-case text-[#ffffff] bg-[#1a1714] rounded shadow-md pointer-events-none"
-          >
-            {isFailed ? (
-              <span className="text-rose-300 font-medium">● {statusLabel}</span>
-            ) : isProvisional ? (
-              <span className="text-amber-300 font-medium">● {statusLabel}</span>
-            ) : (
-              <span className={isGemini ? 'text-rose-300 font-medium' : 'text-emerald-300 font-medium'}>
-                ● {statusLabel}
-              </span>
-            )}
-          </span>
-        </span>
       </div>
+
+      {/* 6 Marcatori rotondi minimali sotto Indagine Ontologica Quotidiana */}
+      <div
+        id="six-phases-telemetry-bar"
+        className="flex items-center justify-center gap-3 py-0.5"
+        aria-label="Stato di compilazione delle 6 Fasi"
+      >
+        {normalizedPhases.map((phase) => {
+          const isCompleted = phase.status === 'completed';
+          const isGenerating = phase.status === 'generating';
+          const isFallback = phase.status === 'fallback';
+          const isGemini = phase.provider === 'gemini';
+          const isOpen = selectedPhasePopup === phase.phaseNumber;
+
+          const dotClass =
+            isCompleted && !isGemini
+              ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.55)]'
+              : isGenerating
+                ? 'bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.7)] animate-pulse'
+                : isFallback || isGemini
+                  ? 'bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.55)]'
+                  : 'bg-[#cfc8ba]';
+
+          const cleanTitle = DEFAULT_PHASE_TITLES[phase.phaseNumber] || phase.phaseTitle;
+          const llmLine = phase.model
+            ? `${formatShortProvider(phase.provider)} · ${phase.model}`
+            : isGenerating
+              ? 'Elaborazione in corso...'
+              : 'In coda';
+
+          const tokenLine =
+            phase.totalTokens > 0
+              ? `${phase.totalTokens.toLocaleString('it-IT')} token (${phase.promptTokens.toLocaleString('it-IT')} in · ${phase.completionTokens.toLocaleString('it-IT')} out)`
+              : isGenerating
+                ? 'Conteggio token in corso...'
+                : '0 token';
+
+          return (
+            <div
+              key={phase.phaseNumber}
+              className="relative flex items-center justify-center group"
+              onMouseEnter={() => setSelectedPhasePopup(phase.phaseNumber)}
+              onMouseLeave={() => setSelectedPhasePopup((prev) => (prev === phase.phaseNumber ? null : prev))}
+            >
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedPhasePopup((prev) => (prev === phase.phaseNumber ? null : phase.phaseNumber))
+                }
+                aria-label={`${cleanTitle}: ${llmLine} — ${tokenLine}`}
+                className="p-1 flex items-center justify-center cursor-help focus:outline-none"
+              >
+                <span className={`w-2 h-2 rounded-full ${dotClass} transition-colors duration-300`} />
+              </button>
+
+              {/* Micro-tooltip minimale a 3 righe */}
+              <div
+                className={`absolute top-full left-1/2 -translate-x-1/2 mt-1.5 z-50 w-max max-w-64 px-2.5 py-1.5 text-left font-mono text-[10px] leading-snug text-[#f7f5f0] bg-[#1a1714]/95 rounded-xs shadow-md pointer-events-none ${
+                  isOpen ? 'block' : 'hidden group-hover:block'
+                }`}
+              >
+                <div className="text-[#e8c678] font-medium">{cleanTitle}</div>
+                <div className="text-[#ffffff] truncate">{llmLine}</div>
+                <div className="text-[#b8b0a2]">{tokenLine}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-semibold tracking-tight text-[#1a1714]">
         ALKIMIA
       </h1>

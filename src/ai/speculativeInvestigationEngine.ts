@@ -265,26 +265,12 @@ Rispondi RIGOROSAMENTE con un oggetto JSON valido avente questa struttura:
     "groundbreakingDiscovery": "string",
     "uninvestigatedBias": "string",
     "researchFocusIntersection": "string",
-    "dizzyingRevelation": "string",
-    "directionStrikes": [
-      {
-        "directionNumber": 1,
-        "directionTitle": "Direzione 1: Prospettiva Termodinamica / Entropica",
-        "ontologicalAngle": "string",
-        "cuiProdest": "string",
-        "groundbreakingDiscovery": "string",
-        "uninvestigatedBias": "string",
-        "researchFocusIntersection": "string",
-        "dizzyingRevelation": "string"
-      }
-    ]
+    "dizzyingRevelation": "string"
   }
-}
-(Nota per directionStrikes: compila un elemento per ciascuna delle 5 direzioni con gli stessi campi).`;
+}`;
 }
 
 /**
- * /**
  * Prompt per lo STADIO 6 (ex Passo 2): Composizione Letteraria Pura (Fase 6: Saggio del Giorno).
  * Riceve come input l'intero dossier analitico delle Fasi 1, 2, 3, 4 e 5 ed esegue la trasfigurazione letteraria.
  */
@@ -309,15 +295,24 @@ export function buildStep2LiteraryEssayPrompt(
   const p3 = step1Dossier?.phase3FinalStrike;
   const loopTracks = step1Dossier?.phase2Loop?.tracks || [];
 
-  const loopInsightsSummary = loopTracks.map((t: any) => 
-    `• [${t.directionTitle || 'Faglia'} | Reperti: ${stripMdBold(t.empiricalEvidenceExamined)}]: Angolo: ${stripMdBold(t.ontologicalAngle)} | Esperimento: ${stripMdBold(t.collision?.step3InvertedDirection?.methodAAppliedToB)} | Intuizione: ${stripMdBold(t.collision?.step3InvertedDirection?.counterIntuitiveInsight)} | Metafora: ${stripMdBold(t.collision?.step4CommonMetaphor?.masterMetaphorTitle)}`
-  ).join('\n');
-
-  const directionStrikesSummary = Array.isArray(p3?.directionStrikes)
-    ? p3.directionStrikes.map((ds: any) =>
-        `• [${ds.directionTitle}]: Scoperta: ${stripMdBold(ds.groundbreakingDiscovery)} | Protocollo: ${stripMdBold(ds.researchFocusIntersection)}`
-      ).join('\n')
-    : '';
+  const loopInsightsSummary = loopTracks.map((t: any, idx: number) => {
+    const dirNum = t.directionNumber || idx + 1;
+    const s1 = t.collision?.step1StrippingFunction || {};
+    const s2 = t.collision?.step2BlindAxis || {};
+    const s3 = t.collision?.step3InvertedDirection || {};
+    const s4 = t.collision?.step4CommonMetaphor || {};
+    return [
+      `• DIREZIONE #${dirNum} — ${stripMdBold(t.directionTitle || 'Faglia Ontologica')} (Reperti esaminati: ${stripMdBold(t.empiricalEvidenceExamined)}):`,
+      `  - Inquadramento del Cassetto: ${stripMdBold(t.ontologicalAngle)}`,
+      `  - Verbi Specifici del Cassetto: ${stripMdBold(s1.fundamentalVerbA)} × ${stripMdBold(s1.fundamentalVerbB)}`,
+      `  - Sintesi Funzionale: ${stripMdBold(s1.functionalSynthesis)}`,
+      `  - Punto di Contatto (Soglia e Varco): ${stripMdBold(s2.boundaryA)} ⟶ ${stripMdBold(s2.accessDoorToB)}`,
+      `  - Crepa Asimmetrica: ${stripMdBold(s2.creviceContactPoint)}`,
+      `  - Inversione Operativa: ${stripMdBold(s3.methodAAppliedToB)} (Domanda di violazione: ${stripMdBold(s3.provocativeViolationQuestion)})`,
+      `  - Intuizione Contro-Intuitiva: ${stripMdBold(s3.counterIntuitiveInsight)}`,
+      `  - Simbolo Archetipale e Visione: ${stripMdBold(s4.masterMetaphorTitle)} — ${stripMdBold(s4.cosmologicalAnthropologicalGround)} — ${stripMdBold(s4.unifyingVision)}`
+    ].join('\n');
+  }).join('\n\n');
 
   return `HAI A DISPOSIZIONE L'INTERA INDAGINE PRELIMINARE ARTICOLATA NELLE FASI 1, 2, 3, 4 E 5.
 IL TUO UNICO COMPITO ORA È COMPORRE IL SAGGIO DEL GIORNO (FASE 6) IN PURA PROSA CONTINUA D'AUTORE (1.200 - 1.800 PAROLE), SENZA ELENCHI, SENZA GERGO PROCEDURALE E SENZA ALCUN GRASSETTO (**).
@@ -351,61 +346,62 @@ MATRICE ONTOLOGICA: ${ontologicalMatrix}
 - Esperimento di Laboratorio Incrociato: ${stripMdBold(p2?.step3InvertedDirection?.methodAAppliedToB)} — ${stripMdBold(p2?.step3InvertedDirection?.counterIntuitiveInsight)}
 - Metafora Madre: ${stripMdBold(p2?.step4CommonMetaphor?.masterMetaphorTitle)} — ${stripMdBold(p2?.step4CommonMetaphor?.unifyingVision)}
 
-4. LE 5 FAGLIE DEI CASSETTI (dalla Fase 4):
+4. LE 5 DIREZIONI INTEGRALI DEL LOOP: SINTESI FUNZIONALI, CREPE ASIMMETRICHE E INTUIZIONI CONTRO-INTUITIVE (dalla Fase 4):
 ${loopInsightsSummary}
 
-5. PROTOCOLLO SPERIMENTALE E AFFONDO FINALE (dalla Fase 5):
-- Dogma istituzionale infranto: ${stripMdBold(p3?.cuiProdest)}
-- Legge unificante: ${stripMdBold(p3?.groundbreakingDiscovery)}
-- Cecità incrociata degli specialisti: ${stripMdBold(p3?.uninvestigatedBias)}
-- Protocollo di laboratorio prescritto: ${stripMdBold(p3?.researchFocusIntersection)}
-- Rivelazione cosmologica: ${stripMdBold(p3?.dizzyingRevelation)}
-${directionStrikesSummary}
+5. SINTESI NARRATIVA GENERALE DELL'INDAGINE INTEGRALE NEI 5 PUNTI ESTESI (dalla Fase 5):
+- [§1 Cosa cambia nella nostra comprensione]:
+${stripMdBold(p3?.cuiProdest)}
+- [§2 Il filo invisibile che unisce i due fenomeni]:
+${stripMdBold(p3?.groundbreakingDiscovery)}
+- [§3 Perché finora nessuno aveva unito i puntini]:
+${stripMdBold(p3?.uninvestigatedBias)}
+- [§4 La prova sul campo e la verifica sperimentale]:
+${stripMdBold(p3?.researchFocusIntersection)}
+- [§5 Lo sguardo d'insieme]:
+${stripMdBold(p3?.dizzyingRevelation)}
 
 ================================================================================
-DIRETTIVE DI COMPOSIZIONE LETTERARIA DEI 5 PARAGRAFI (ZERO GRASSETTI, MASSIMA CONCRETEZZA STORICA E SCIENTIFICA)
+DIRETTIVE DI COMPOSIZIONE PLASTICA DEL SAGGIO FINALE (LA VERA ALKIMIA E I NUOVI ORIZZONTI)
 ================================================================================
-Quello che deve sparire nella Fase 6 NON sono i fatti della Fase 2, ma solo l'impalcatura scolastica (i numeri delle fasi, le parole "Cassetto", "Loop", "Asse cieco"). I reperti della Fase 2 (nomi e cognomi di scienziati e testimoni, date esatte, titoli di libri e dossier, nomi di telescopi/radar/EEG, frequenze e teoremi) devono diventare la carne viva del racconto filosofico, incastonati in una prosa purissima degna di Adelphi, Roberto Calasso, Borges o Oliver Sacks.
+Il Saggio del Giorno (Fase 6) non deve essere una fredda cronaca di nomi e date, né un esercizio estetico astratto. Deve far capire con forza e chiarezza al lettore:
+1. QUAL È LA VERA ALKIMIA TRA «${vectorA.name}» E «${vectorB.name}»: cosa succede quando questi due mondi smettono di essere separati e si fecondano a vicenda?
+2. QUALE NUOVA INTUIZIONE ABBIAMO RIVELATO: qual è la scoperta concettuale o empirica emersa attraverso la Collisione (Fase 3) e le 5 Direzioni (Fase 4) che prima rimaneva invisibile?
+3. QUALI NUOVI CAMPI DI RICERCA E APPLICAZIONI POSSIAMO ESPLORARE: quali indagini scientifiche, tecnologiche, cliniche, antropologiche o filosofiche nascono da questa sintesi (Fase 5)?
 
-REGOLA TIPOGRAFICA TASSATIVA PER LA FASE 6:
-- NON USARE MAI IL GRASSETTO (**termine**) né asterischi nel titolo, nel sottotitolo, nella tesi o nei 5 paragrafi! La pagina del Saggio deve essere tipograficamente limpida come una pagina di libro.
+REGOLA DI PLASTICITÀ SU MISURA PER LA COPPIA «${vectorA.name}» × «${vectorB.name}»:
+Adatta con intelligenza il registro, il lessico e la natura delle applicazioni ai due argomenti in gioco:
+- Se i due argomenti sono prevalentemente fisici, genetici o neurobiologici, approfondisci i meccanismi sperimentali, biofisici e tecnologici.
+- Se uno o entrambi gli argomenti riguardano l'esperienza interiore, la Spiritualità o l'Aldilà, non forzare artificiosamente gerghi di laboratorio dove suonerebbero finti: esplora con rigore e profondità la fenomenologia della coscienza, le scienze contemplative, la trasformazione interiore dell'uomo e le nuove domande filosofiche sul vivere e sul morire.
+- Se gli argomenti toccano anomalie di frontiera (UFO/UAP, Extraterrestri, Transcomunicazione), metti al centro il problema della percezione, della decodifica del segnale, dei limiti degli strumenti umani e dell'incontro con l'alterità cosmica.
+- Usa i nomi, le date, le opere e gli strumenti della Fase 2 come fondamenta reali del discorso, spiegando sempre PERCHÉ sono decisivi per la nostra tesi.
+
+REGOLA TIPOGRAFICA E LINGUISTICA TASSATIVA PER LA FASE 6:
+- NON USARE MAI IL GRASSETTO (**termine**) né asterischi nel titolo, nel sottotitolo, nella tesi o nei 5 paragrafi!
+- Scrivi in un ITALIANO CONTEMPORANEO LIMPIDO, NATURALE, SCORREVOLE E INCISIVO: frasi ben costruite, nessi logici cristallini, zero parole inventate o calchi innaturali, zero pose criptiche o barocche.
 
 Struttura il saggio in 5 ampi paragrafi narrativi continui (1.200 - 1.800 parole complessive):
-- Paragrafo 1 — L'Incipit Storico e Fenomenico (Fase 1 + Cassetto Testimoni e Opere di Fase 2):
-  Non aprire con generalità astratte ("Fin dall'antichità l'uomo..."), ma entra in medias res mettendo in scena due episodi storici, due date esatte, due testimoni o due testi reali della Fase 2 (citandoli per nome e anno senza grassetti), mostrando subito la vertigine del loro accostamento.
-- Paragrafo 2 — L'Anatomia degli Strumenti e la Soglia Cieca (Cassetto Strumenti di Fase 2 + Fase 3 La Collisione):
-  Porta il lettore dentro i laboratori; nomina gli strumenti reali, i rilevatori e le frequenze della Fase 2 e racconta in prosa letteraria l'impotenza dello strumento di misura e l'esperimento incrociato scoperti nella Fase 3 (dove la macchina fisica si arresta e si apre il varco del secondo fenomeno).
-- Paragrafo 3 — L'Attraversamento delle Faglie: Materia, Lingua, Corpo e Sistema (Fase 4 Il Loop dei 5 Cassetti):
-  Il cuore speculativo centrale del saggio; intreccia in un unico flusso narrativo le scoperte emerse smontando i 5 Cassetti nella Fase 4 (il rumore termico dei sensori, la reazione immunitaria dei testimoni e delle commissioni, l'intraducibilità dei dossier e dei libri, la mutazione fisiologica del corpo dell'osservatore e l'architettura dei teoremi), citando i nomi reali ma senza mai usare le parole "Loop", "Cassetto" o "Direzione".
-- Paragrafo 4 — La Frattura del Dogma e il Nuovo Orizzonte Sperimentale (Fase 5 L'Affondo Finale):
-  Trasforma in prosa civile ed epistemologica il crollo del dogma, la cecità incrociata tra gli specialisti e il protocollo sperimentale di laboratorio della Fase 5, citando per nome i modelli teorici, i formulatori e gli apparati che la nuova scienza dovrà incrociare.
-- Paragrafo 5 — Il Sigillo Cosmologico e la Metafora Madre (La Chiusura Contemplativa):
-  Riprende la Metafora Comune nata in Fase 3 e la porta al massimo respiro filosofico e poetico, chiudendo il cerchio aperto con gli episodi storici del primo paragrafo.
-
-================================================================================
-REGOLA FONDAMENTALE DI PUREZZA LESSICALE (LINGUA ITALIANA IMPECCABILE)
-================================================================================
-- Scrivi esclusivamente in ITALIANO LETTERARIO MODERNO, COLTO, NATURALE E SCORREVOLE.
-- È SEVERAMENTE VIETATO inventare vocaboli, alterare suffissi o desinenze, mescolare radici spagnole/francesi/latine, o usare calchi anglofoni sgrammaticati.
-- ESEMPI DI ERRORI GRAVI E ASSOLUTAMENTE PROIBITI:
-  * NON SCRIVERE "regula" (scrivi: "regola" o "canone" o "costante");
-  * NON SCRIVERE "ipotese" (scrivi: "ipotesi");
-  * NON SCRIVERE "pinealico" (scrivi: "pineale");
-  * NON SCRIVERE "spaziativa" o "località spaziativa" (scrivi: "estensione spaziale" o "coordinate dello spazio");
-  * NON SCRIVERE "piante cerebrale" (scrivi: "architettura neurale" o "struttura encefalica");
-  * NON SCRIVERE storpiature fonetiche o calchi grezzi.
-- Ogni singola parola adoperata deve essere un lemma autentico e attestato nei dizionari autorevoli della lingua italiana (Treccani, Zingarelli, Devoto-Oli).
+- Paragrafo 1 — L'Innesco e il Paradosso di Partenza:
+  Entra nel vivo mettendo in scena il contrasto apparente tra «${vectorA.name}» e «${vectorB.name}» attraverso i fatti, i protagonisti o i testi più emblematici dell'indagine (senza grassetti), facendo subito percepire al lettore quale grande domanda si nasconde dietro la loro separazione.
+- Paragrafo 2 — La Soglia Condivisa e il Punto di Contatto:
+  Racconta in modo limpido dove gli strumenti, i modelli o i linguaggi del primo ambito incontrano il proprio limite e mostra come proprio quella soglia apra il varco verso il secondo fenomeno (integrando con naturalezza la Collisione di Fase 3).
+- Paragrafo 3 — La Trasmutazione Alchemica e le Nuove Intuizioni:
+  Il cuore pulsante del saggio: intreccia in un discorso fluido e illuminante le Sintesi Funzionali, le Crepe Asimmetriche e le Intuizioni Contro-Intuitive emerse nelle 5 direzioni della Fase 4 (senza mai usare le parole "Loop", "Cassetto" o "Direzione"). Spiega chiaramente qual è la nuova chiave di lettura che trasforma entrambi gli argomenti.
+- Paragrafo 4 — Nuovi Campi di Ricerca, Applicazioni e Indagini Filosofiche:
+  Raccogli la ricchezza dei 5 punti della Fase 5 e mostra concretamente quali orizzonti inediti si aprono: quali nuovi esperimenti, protocolli di osservazione, applicazioni pratiche o nuove ricerche filosofiche sulla mente, sulla materia e sull'uomo diventano finalmente possibili grazie a questa Alkimia.
+- Paragrafo 5 — Lo Sguardo d'Insieme e la Nuova Prospettiva sul Reale:
+  Riprende l'immagine unificante del dossier e porta il discorso alla sua conclusione più ampia e luminosa, lasciando al lettore una visione chiara, profonda e trasformativa del legame tra i due mondi.
 
 ================================================================================
 NEGATIVE CONSTRAINT LIST (LISTA NERA ASSOLUTA - MAI NEL TESTO)
 ================================================================================
 Nel testo del saggio (titolo, sottotitolo, tesi ontologica, paragrafi) È TASSATIVAMENTE VIETATO:
 - NON USARE asterischi o grassetti Markdown (**...**)
-- NON USARE parole deformate, neologismi spuri o calchi non italiani (es. "regula", "ipotese", "pinealico", "spaziativa")
-- NON USARE le formule: "Cui prodest", "Cui prodest?", "A chi giova"
+- NON USARE parole deformate, neologismi spuri o calchi non italiani (es. "regula", "ipotese", "pinealico", "spaziativa", "piante cerebrale")
+- NON USARE le formule: "Cui prodest", "Cui prodest?", "A chi giova", "viene scardinato", "vengono legittimati", "monopolio interpretativo"
 - NON USARE la formula: "La vertigine finale" o "vertigine finale"
 - NON USARE formule preconfezionate come: "Stanza del reale", "porte girevoli tra i piani"
-- NON USARE etichette procedurali: "Fase 1", "Fase 2", "Fase 3", "Fase 4", "Fase 5", "Fase 6", "Passo 1", "Passo 2", "Cassetto 1", "Cassetto 2", "Vettore A", "Vettore B"
+- NON USARE etichette procedurali: "Fase 1", "Fase 2", "Fase 3", "Fase 4", "Fase 5", "Fase 6", "Passo 1", "Passo 2", "Cassetto 1", "Cassetto 2", "Cassetto", "Vettore A", "Vettore B"
 - NON USARE nomi di passaggi: "Loop cognitivo", "5 direzioni", "Asse cieco", "Trapianto di funzione", "When/Where", "What", "How"
 - NON USARE elenchi puntati, elenchi numerati, né titoletti o notazioni (§)
 - NON USARE formule metanarrative da chatbot ("In questo saggio...", "Analizzeremo ora...")
@@ -415,15 +411,15 @@ COMPUTO TOTALE PAROLE: Rigorosamente compreso tra 1.200 e 1.800 parole.
 Rispondi RIGOROSAMENTE con questo JSON:
 {
   "essay": {
-    "title": "string (titolo austero, nobile, evocativo e filosoficamente denso, privo di numeri e privo di asterischi)",
-    "subtitle": "string (sintesi morfologica del saggio, priva di asterischi)",
-    "ontologicalThesis": "string (tesi ontologica apodittica e incontrovertibile incastonata all'esordio del discorso, priva di asterischi)",
+    "title": "string (titolo limpido, evocativo e incisivo che esprima l'Alkimia tra i due argomenti, privo di numeri e privo di asterischi)",
+    "subtitle": "string (sottotitolo chiaro che sintetizzi la nuova intuizione e l'orizzonte di ricerca, privo di asterischi)",
+    "ontologicalThesis": "string (la tesi centrale dell'Alkimia formulata in modo cristallino, profondo e memorabile, priva di asterischi)",
     "narrativeParagraphs": [
-      "string (Paragrafo 1: L'Incipit Storico e Fenomenico con nomi, date e opere reali di Fase 2 ma senza grassetti, minimo 250 parole)",
-      "string (Paragrafo 2: L'Anatomia degli Strumenti e la Soglia Cieca con gli strumenti di Fase 2 e l'attrito di Fase 3 senza grassetti, minimo 250 parole)",
-      "string (Paragrafo 3: L'Attraversamento delle Faglie: Materia, Lingua, Corpo e Sistema dai 5 Cassetti di Fase 4 senza grassetti, minimo 300 parole)",
-      "string (Paragrafo 4: La Frattura del Dogma e il Nuovo Orizzonte Sperimentale dai protocolli e teoremi di Fase 5 senza grassetti, minimo 250 parole)",
-      "string (Paragrafo 5: Il Sigillo Cosmologico e la Metafora Madre a chiusura del cerchio senza grassetti, minimo 250 parole)"
+      "string (Paragrafo 1: L'Innesco e il Paradosso di Partenza, in italiano limpido e senza grassetti, minimo 250 parole)",
+      "string (Paragrafo 2: La Soglia Condivisa e il Punto di Contatto, senza grassetti, minimo 250 parole)",
+      "string (Paragrafo 3: La Trasmutazione Alchemica e le Nuove Intuizioni emerse dall'indagine, senza grassetti, minimo 300 parole)",
+      "string (Paragrafo 4: Nuovi Campi di Ricerca, Applicazioni e Indagini Filosofiche aperti da questa Alkimia, senza grassetti, minimo 280 parole)",
+      "string (Paragrafo 5: Lo Sguardo d'Insieme e la Nuova Prospettiva sul Reale, senza grassetti, minimo 250 parole)"
     ]
   }
 }`;
@@ -661,15 +657,106 @@ export function buildStage4LoopPrompt(
   vectorA: KeyOntologicalTopic,
   vectorB: KeyOntologicalTopic,
   phase2EmpiricalArchive: any,
-  phase3Collision: any
+  phase3Collision: any,
+  batch: 'part1' | 'part2' | 'all' = 'all'
 ): string {
   const empA = phase2EmpiricalArchive?.vectorA || {};
   const empB = phase2EmpiricalArchive?.vectorB || {};
   const empSynthesis = phase2EmpiricalArchive?.crossArchiveSynthesis || '';
   const col = phase3Collision || {};
 
+  const trackSchema = (
+    dirNum: number,
+    dirTitle: string,
+    drawerLabel: string,
+    evidenceHint: string,
+    verbHint: string
+  ) => `      {
+        "directionNumber": ${dirNum},
+        "directionTitle": "${dirTitle}",
+        "empiricalDrawerLabel": "${drawerLabel}",
+        "empiricalEvidenceExamined": "string (${evidenceHint})",
+        "ontologicalAngle": "string (4-5 frasi narrative, limpide e approfondite che spiegano l'angolazione di questa direzione con riferimenti in **grassetto** ai reperti di Fase 2)",
+        "collision": {
+          "step1StrippingFunction": {
+            "fundamentalVerbA": "VERBO SPECIFICO ${verbHint} A (in MAIUSCOLO)",
+            "abstractFunctionA": "string (4-5 frasi narrative, chiare e approfondite che raccontano come opera concretamente il primo fenomeno in questo cassetto, con riferimenti di Fase 2 in **grassetto**)",
+            "fundamentalVerbB": "VERBO SPECIFICO ${verbHint} B (in MAIUSCOLO)",
+            "abstractFunctionB": "string (4-5 frasi narrative, chiare e approfondite che raccontano come opera concretamente il secondo fenomeno in questo cassetto, con riferimenti di Fase 2 in **grassetto**)",
+            "functionalSynthesis": "string (VIETATO scrivere uno slogan di 1 riga! Scrivi 5-6 frasi narrative e scorrevoli divise in 2 capoversi con \\n\\n che spiegano nel dettaglio cosa accade quando questi due verbi operano insieme e perché sono complementari, citando i reperti in **grassetto**)"
+          },
+          "step2BlindAxis": {
+            "boundaryA": "string (4-5 frasi narrative e ben argomentate che spiegano dove e perché si arresta lo strumento o il modello del primo argomento, con **grassetti**)",
+            "accessDoorToB": "string (4-5 frasi narrative e ben argomentate che raccontano come proprio quel limite apra il varco verso il secondo argomento, con **grassetti**)",
+            "creviceContactPoint": "string (VIETATO scrivere un aforisma breve! Scrivi 5-6 frasi limpide, narrative e profonde divise in 2 capoversi con \\n\\n che raccontano l'anello di congiunzione esatto in cui il limite del primo argomento diventa l'inizio del secondo, con **grassetti**)"
+          },
+          "step3InvertedDirection": {
+            "methodAAppliedToB": "string (4-5 frasi narrative che raccontano nel dettaglio l'esperimento incrociato: cosa succede applicando gli strumenti/metodi di A ai materiali di B, con **grassetti**)",
+            "provocativeViolationQuestion": "string (2-3 frasi che formulano un quesito sperimentale chiaro, incisivo e provocatorio con **grassetti**)",
+            "counterIntuitiveInsight": "string (VIETATO scrivere una sola frase! Scrivi 5-6 frasi narrative e comprensibili divise in 2 capoversi con \\n\\n che rispondono al quesito e spiegano passo dopo passo quale scoperta inattesa emerge da questo ribaltamento di prospettiva, con **grassetti**)"
+          },
+          "step4CommonMetaphor": {
+            "masterMetaphorTitle": "TITOLO EVOCATIVO DELLA METAFORA IN MAIUSCOLO",
+            "cosmologicalAnthropologicalGround": "string (4-5 frasi narrative e profonde che raccontano la radice umana, storica e naturale comune ai due fenomeni)",
+            "unifyingVision": "string (4-5 frasi limpide e conclusive che mostrano la visione d'insieme emersa in questa direzione)"
+          }
+        }
+      }`;
+
+  const tracksJsonList: string[] = [];
+  if (batch === 'part1' || batch === 'all') {
+    tracksJsonList.push(
+      trackSchema(
+        1,
+        'Direzione 1: Prospettiva Termodinamica / Entropica',
+        'Cassetto 1 di Fase 2 • Reperti, Strumenti e Frequenze',
+        `es. **Strumenti/Frequenze di ${vectorA.name}** × **Strumenti/Frequenze di ${vectorB.name}**`,
+        'STRUMENTALE'
+      ),
+      trackSchema(
+        2,
+        'Direzione 2: Prospettiva Ecologico-Evolutiva',
+        'Cassetto 2 di Fase 2 • Persone, Scienziati e Testimoni',
+        `es. **Testimoni/Pionieri di ${vectorA.name}** × **Testimoni/Pionieri di ${vectorB.name}**`,
+        'EVOLUTIVO'
+      ),
+      trackSchema(
+        3,
+        'Direzione 3: Prospettiva Semiotica / Di Traduzione',
+        'Cassetto 3 di Fase 2 • Libri, Dossier e Testi Fondativi',
+        `es. **Opere/Dossier di ${vectorA.name}** × **Opere/Dossier di ${vectorB.name}**`,
+        'SEMIOTICO'
+      )
+    );
+  }
+  if (batch === 'part2' || batch === 'all') {
+    tracksJsonList.push(
+      trackSchema(
+        4,
+        'Direzione 4: Prospettiva Metamorfica / Biologica',
+        'Cassetto 4 di Fase 2 • Corpo, Tessuti e Materia Vivente',
+        `es. **Biomarcatori/Soglie Biologiche di ${vectorA.name}** × **Fisiologia/Neurobiologia di ${vectorB.name}**`,
+        'BIOLOGICO'
+      ),
+      trackSchema(
+        5,
+        'Direzione 5: Prospettiva Architetturale / Sistemica',
+        'Cassetto 5 di Fase 2 • Paradigmi, Teoremi ed Equazioni',
+        `es. **Teorie/Modelli di ${vectorA.name}** × **Teorie/Modelli di ${vectorB.name}**`,
+        'ARCHITETTURALE'
+      )
+    );
+  }
+
+  const batchHeader =
+    batch === 'part1'
+      ? 'Il tuo compito in questa chiamata è sviluppare con la MASSIMA PROFONDITÀ NARRATIVA le DIREZIONI 1, 2 e 3 della FASE 4 (Loop a 5 Direzioni).'
+      : batch === 'part2'
+      ? 'Il tuo compito in questa chiamata è sviluppare con la MASSIMA PROFONDITÀ NARRATIVA le DIREZIONI 4 e 5 della FASE 4 (Loop a 5 Direzioni).'
+      : 'Il tuo compito è sviluppare integralmente le 5 DIREZIONI della FASE 4 (Loop a 5 Direzioni).';
+
   return `SEI IL MOTORE DEL LOOP COGNITIVO A 5 DIREZIONI DI ALKIMIA (FASE 4).
-Il tuo compito è sviluppare integralmente la FASE 4 (Loop a 5 Direzioni: Cinque Faglie Ontologiche), assegnando a ciascuna delle 5 Direzioni UNO SPECIFICO CASSETTO dell'Archivio Empirico di FASE 2 e sottoponendo quei reperti ai 4 Passaggi di Attrito.
+${batchHeader}
 
 ================================================================================
 INVENTARIO INTEGRALE PER CASSETTI DELLA FASE 2 (ARCHIVIO EMPIRICO):
@@ -696,98 +783,33 @@ INVENTARIO INTEGRALE PER CASSETTI DELLA FASE 2 (ARCHIVIO EMPIRICO):
 - Sintesi d'Incrocio: ${empSynthesis}
 
 COLLISIONE MADRE DI FASE 3 (DA NON RIPETERE NEI VERBI):
-- Verbi già usati in Fase 3 (VIETATO riusarli identici in tutte le 5 direzioni!): ${col.step1StrippingFunction?.fundamentalVerbA || ''} × ${col.step1StrippingFunction?.fundamentalVerbB || ''}
+- Verbi già usati in Fase 3 (VIETATO riusarli identici!): ${col.step1StrippingFunction?.fundamentalVerbA || ''} × ${col.step1StrippingFunction?.fundamentalVerbB || ''}
 - Crepa sull'Asse Cieco: ${col.step2BlindAxis?.creviceContactPoint || ''}
 - Metafora Madre: ${col.step4CommonMetaphor?.masterMetaphorTitle || ''}
 ================================================================================
 
 RIPARTIZIONE OBBLIGATORIA "CASSETTO DI FASE 2 ⟶ LENTE DI FASE 4":
 1. Direzione 1 (Termodinamica / Entropica) ⟵ SMONTA IL CASSETTO 1 (STRUMENTI E FREQUENZE di Fase 2):
-   - Fa scontrare il consumo energetico, il rumore termico e la dispersione del segnale dello strumento del 1° argomento con l'ordine neghentropico e la coerenza bio-elettrica/fisica misurata dallo strumento del 2° argomento.
+   - Confronta in modo chiaro e narrativo il consumo energetico, il rumore termico e la dispersione del segnale dello strumento del 1° argomento con l'ordine e la coerenza misurata dallo strumento del 2° argomento.
 2. Direzione 2 (Ecologico-Evolutiva) ⟵ SMONTA IL CASSETTO 2 (PERSONE, SCIENZIATI E TESTIMONI di Fase 2):
-   - Non parla più di sensori, ma degli esseri umani e delle comunità censite in Fase 2. Studia i testimoni oculari, i clinici e i pionieri della Fase 2 come "anticorpi", membrane immunitarie o mutazioni adattive con cui la specie umana cerca di reggere l'urto dell'ignoto senza impazzire.
+   - Non parla più di sensori, ma degli esseri umani e delle comunità censite in Fase 2. Racconta come i testimoni oculari, i clinici e i pionieri della Fase 2 cerchino di interpretare e reggere l'incontro con l'ignoto.
 3. Direzione 3 (Semiotica / Di Traduzione) ⟵ SMONTA IL CASSETTO 3 (LIBRI, DOSSIER E TESTI FONDATIVI di Fase 2):
-   - Prende per nome, autore e data i testi scritti, i codici e i verbali ufficiali della Fase 2 e li analizza come dizionari di traduzione falliti o parziali tra un segnale che non possiede alfabeto e la lingua umana.
+   - Prende per nome, autore e data i testi scritti, i codici e i verbali ufficiali della Fase 2 e racconta come tentino di tradurre in linguaggio umano un fenomeno che sfugge alle parole ordinarie.
 4. Direzione 4 (Metamorfica / Biologica) ⟵ SMONTA IL CASSETTO 4 (IL CORPO E LA MATERIA VIVENTE nei Reperti di Fase 2):
-   - Indaga cosa succede alla carne, alle sinapsi, alle cellule e ai biomarcatori quando i due domini collidono: la mutazione fisiologica dell'osservatore trasformato esso stesso nello strumento di rilevazione.
+   - Racconta in modo comprensibile e concreto cosa succede al corpo, alle sinapsi, alle cellule e ai parametri fisiologici quando i due domini si incontrano e l'osservatore stesso diventa lo strumento di rilevazione.
 5. Direzione 5 (Architetturale / Sistemica) ⟵ SMONTA IL CASSETTO 5 (PARADIGMI, TEOREMI ED EQUAZIONI di Fase 2):
-   - Mette a confronto diretto i modelli matematici, i teoremi e le equazioni (con formulatore e data) dei due argomenti per svelare l'architettura a strati del reale (perché il teorema del 1° argomento si blocca al livello N mentre il modello del 2° argomento descrive il livello N+1).
+   - Mette a confronto diretto i modelli teorici, i teoremi e le equazioni (con formulatore e data) dei due argomenti per spiegare con limpidezza perché il primo modello descrive un livello della realtà e il secondo ne illumina il livello successivo.
 
-3 REGOLE TASSATIVE DI STILE E CONTENUTO:
-- REGOLA 1 (Reperti in Esame): In ogni direzione compila "empiricalEvidenceExamined" indicando esplicitamente i reperti di Fase 2 messi a confronto (es. "**Strumento/Testo/Autore 1** × **Strumento/Testo/Autore 2**").
-- REGOLA 2 (5 Coppie di Verbi Diverse): È SEVERAMENTE VIETATO ripetere gli stessi due verbi in tutte le 5 direzioni! Ogni Direzione deve estrarre una coppia di verbi all'infinito in MAIUSCOLO NUOVA E SPECIFICA legata al cassetto di Fase 2 che sta esaminando (es. verbi strumentali in Dir 1, verbi testimoniali/immunitari in Dir 2, verbi testuali/ermeneutici in Dir 3, verbi somatici/biologici in Dir 4, verbi sistemici/teorici in Dir 5).
-- REGOLA 3 (Densità e Grassetti nei 4 Passaggi): VIETATO scrivere frasi mozze di poche parole! Ogni singolo campo dei 4 passaggi (abstractFunctionA, abstractFunctionB, functionalSynthesis, boundaryA, accessDoorToB, creviceContactPoint, methodAAppliedToB, provocativeViolationQuestion, counterIntuitiveInsight, cosmologicalAnthropologicalGround, unifyingVision) deve essere lungo 2-3 frasi complete e DEVE riportare in **grassetto** i nomi propri, le date, i libri e gli strumenti presi dal rispettivo cassetto di Fase 2!
+REGOLE TASSATIVE DI AMPIEZZA NARRATIVA E CHIAREZZA (VIETATO ESSERE SINTETICI!):
+- REGOLA 1 (Ampiezza di 4-5 Frasi per Ogni Singolo Campo): È SEVERAMENTE VIETATO scrivere frasi brevi, telegrafiche o riassuntive di 1-2 righe! Ogni singola sezione (Verbi Specifici del Cassetto, Punto di Contatto, Inversione Operativa, Simbolo Archetipale) deve essere un racconto argomentato, ricco, scorrevole e comprensibile di ALMENO 4-5 FRASI COMPLETE (circa 80-110 parole per ciascun sotto-campo!).
+- REGOLA 2 (Stile Narrativo e Comprensibile): Evita il gergo astruso o criptico; spiega sempre al lettore il *perché* e il *come* dei fenomeni con una prosa limpida, colta e naturale, mettendo in **grassetto** i nomi propri, le date, i libri e gli strumenti presi dal rispettivo cassetto di Fase 2.
+- REGOLA 3 (Coppie di Verbi Diverse): Ogni Direzione deve estrarre una coppia di verbi all'infinito in MAIUSCOLO NUOVA E SPECIFICA legata al cassetto di Fase 2 che sta esaminando.
 
-Rispondi RIGOROSAMENTE con questo JSON contenente tutte e 5 le tracce complete:
+Rispondi RIGOROSAMENTE con questo JSON:
 {
   "phase2Loop": {
-    "theoreticalPreamble": "string (introduzione teorica densa di 3-4 frasi sulla ripartizione dei 5 cassetti dell'Archivio Empirico di Fase 2 nelle 5 lenti del Loop, con elementi chiave in **grassetto**)",
     "tracks": [
-      {
-        "directionNumber": 1,
-        "directionTitle": "Direzione 1: Prospettiva Termodinamica / Entropica",
-        "empiricalDrawerLabel": "Cassetto 1 di Fase 2 • Reperti, Strumenti e Frequenze",
-        "empiricalEvidenceExamined": "string (es. **Strumenti/Frequenze di ${vectorA.name}** × **Strumenti/Frequenze di ${vectorB.name}**)",
-        "ontologicalAngle": "string (3 frasi dense con riferimenti in **grassetto** agli strumenti di Fase 2)",
-        "collision": {
-          "step1StrippingFunction": { "fundamentalVerbA": "VERBO SPECIFICO STRUMENTALE A", "abstractFunctionA": "string (2-3 frasi con strumenti di Fase 2 in **grassetto**)", "fundamentalVerbB": "VERBO SPECIFICO STRUMENTALE B", "abstractFunctionB": "string (2-3 frasi con strumenti di Fase 2 in **grassetto**)", "functionalSynthesis": "string (2-3 frasi)" },
-          "step2BlindAxis": { "boundaryA": "string (2-3 frasi con **grassetti**)", "accessDoorToB": "string (2-3 frasi con **grassetti**)", "creviceContactPoint": "string (2-3 frasi)" },
-          "step3InvertedDirection": { "methodAAppliedToB": "string (2-3 frasi con **grassetti**)", "provocativeViolationQuestion": "string (domanda articolata con **grassetti**)", "counterIntuitiveInsight": "string (2-3 frasi)" },
-          "step4CommonMetaphor": { "masterMetaphorTitle": "TITOLO IN MAIUSCOLO", "cosmologicalAnthropologicalGround": "string (2-3 frasi)", "unifyingVision": "string (2-3 frasi)" }
-        }
-      },
-      {
-        "directionNumber": 2,
-        "directionTitle": "Direzione 2: Prospettiva Ecologico-Evolutiva",
-        "empiricalDrawerLabel": "Cassetto 2 di Fase 2 • Persone, Scienziati e Testimoni",
-        "empiricalEvidenceExamined": "string (es. **Testimoni/Pionieri di ${vectorA.name}** × **Testimoni/Pionieri di ${vectorB.name}**)",
-        "ontologicalAngle": "string (3 frasi dense con nomi dei testimoni e scienziati di Fase 2 in **grassetto**)",
-        "collision": {
-          "step1StrippingFunction": { "fundamentalVerbA": "VERBO SPECIFICO EVOLUTIVO A (diverso da Dir 1)", "abstractFunctionA": "string (2-3 frasi con nomi di Fase 2 in **grassetto**)", "fundamentalVerbB": "VERBO SPECIFICO EVOLUTIVO B (diverso da Dir 1)", "abstractFunctionB": "string (2-3 frasi con nomi di Fase 2 in **grassetto**)", "functionalSynthesis": "string (2-3 frasi)" },
-          "step2BlindAxis": { "boundaryA": "string (2-3 frasi con **grassetti**)", "accessDoorToB": "string (2-3 frasi con **grassetti**)", "creviceContactPoint": "string (2-3 frasi)" },
-          "step3InvertedDirection": { "methodAAppliedToB": "string (2-3 frasi con **grassetti**)", "provocativeViolationQuestion": "string (domanda articolata con **grassetti**)", "counterIntuitiveInsight": "string (2-3 frasi)" },
-          "step4CommonMetaphor": { "masterMetaphorTitle": "TITOLO IN MAIUSCOLO", "cosmologicalAnthropologicalGround": "string (2-3 frasi)", "unifyingVision": "string (2-3 frasi)" }
-        }
-      },
-      {
-        "directionNumber": 3,
-        "directionTitle": "Direzione 3: Prospettiva Semiotica / Di Traduzione",
-        "empiricalDrawerLabel": "Cassetto 3 di Fase 2 • Libri, Dossier e Testi Fondativi",
-        "empiricalEvidenceExamined": "string (es. **Opere/Dossier di ${vectorA.name}** × **Opere/Dossier di ${vectorB.name}**)",
-        "ontologicalAngle": "string (3 frasi dense con titoli di libri, autori e dossier di Fase 2 in **grassetto**)",
-        "collision": {
-          "step1StrippingFunction": { "fundamentalVerbA": "VERBO SPECIFICO SEMIOTICO A (diverso da Dir 1-2)", "abstractFunctionA": "string (2-3 frasi con titoli e date di Fase 2 in **grassetto**)", "fundamentalVerbB": "VERBO SPECIFICO SEMIOTICO B (diverso da Dir 1-2)", "abstractFunctionB": "string (2-3 frasi con titoli e date di Fase 2 in **grassetto**)", "functionalSynthesis": "string (2-3 frasi)" },
-          "step2BlindAxis": { "boundaryA": "string (2-3 frasi con **grassetti**)", "accessDoorToB": "string (2-3 frasi con **grassetti**)", "creviceContactPoint": "string (2-3 frasi)" },
-          "step3InvertedDirection": { "methodAAppliedToB": "string (2-3 frasi con **grassetti**)", "provocativeViolationQuestion": "string (domanda articolata con **grassetti**)", "counterIntuitiveInsight": "string (2-3 frasi)" },
-          "step4CommonMetaphor": { "masterMetaphorTitle": "TITOLO IN MAIUSCOLO", "cosmologicalAnthropologicalGround": "string (2-3 frasi)", "unifyingVision": "string (2-3 frasi)" }
-        }
-      },
-      {
-        "directionNumber": 4,
-        "directionTitle": "Direzione 4: Prospettiva Metamorfica / Biologica",
-        "empiricalDrawerLabel": "Cassetto 4 di Fase 2 • Corpo, Tessuti e Materia Vivente",
-        "empiricalEvidenceExamined": "string (es. **Biomarcatori/Soglie Biologiche di ${vectorA.name}** × **Fisiologia/Neurobiologia di ${vectorB.name}**)",
-        "ontologicalAngle": "string (3 frasi dense con riferimenti somatici, cellulari e fisiologici di Fase 2 in **grassetto**)",
-        "collision": {
-          "step1StrippingFunction": { "fundamentalVerbA": "VERBO SPECIFICO BIOLOGICO A (diverso da Dir 1-3)", "abstractFunctionA": "string (2-3 frasi con dati biologici di Fase 2 in **grassetto**)", "fundamentalVerbB": "VERBO SPECIFICO BIOLOGICO B (diverso da Dir 1-3)", "abstractFunctionB": "string (2-3 frasi con dati biologici di Fase 2 in **grassetto**)", "functionalSynthesis": "string (2-3 frasi)" },
-          "step2BlindAxis": { "boundaryA": "string (2-3 frasi con **grassetti**)", "accessDoorToB": "string (2-3 frasi con **grassetti**)", "creviceContactPoint": "string (2-3 frasi)" },
-          "step3InvertedDirection": { "methodAAppliedToB": "string (2-3 frasi con **grassetti**)", "provocativeViolationQuestion": "string (domanda articolata con **grassetti**)", "counterIntuitiveInsight": "string (2-3 frasi)" },
-          "step4CommonMetaphor": { "masterMetaphorTitle": "TITOLO IN MAIUSCOLO", "cosmologicalAnthropologicalGround": "string (2-3 frasi)", "unifyingVision": "string (2-3 frasi)" }
-        }
-      },
-      {
-        "directionNumber": 5,
-        "directionTitle": "Direzione 5: Prospettiva Architetturale / Sistemica",
-        "empiricalDrawerLabel": "Cassetto 5 di Fase 2 • Paradigmi, Teoremi ed Equazioni",
-        "empiricalEvidenceExamined": "string (es. **Teorie/Modelli di ${vectorA.name}** × **Teorie/Modelli di ${vectorB.name}**)",
-        "ontologicalAngle": "string (3 frasi dense con i teoremi, le equazioni e i formulatori di Fase 2 in **grassetto**)",
-        "collision": {
-          "step1StrippingFunction": { "fundamentalVerbA": "VERBO SPECIFICO ARCHITETTURALE A (diverso da Dir 1-4)", "abstractFunctionA": "string (2-3 frasi con teorie e formulatori di Fase 2 in **grassetto**)", "fundamentalVerbB": "VERBO SPECIFICO ARCHITETTURALE B (diverso da Dir 1-4)", "abstractFunctionB": "string (2-3 frasi con teorie e formulatori di Fase 2 in **grassetto**)", "functionalSynthesis": "string (2-3 frasi)" },
-          "step2BlindAxis": { "boundaryA": "string (2-3 frasi con **grassetti**)", "accessDoorToB": "string (2-3 frasi con **grassetti**)", "creviceContactPoint": "string (2-3 frasi)" },
-          "step3InvertedDirection": { "methodAAppliedToB": "string (2-3 frasi con **grassetti**)", "provocativeViolationQuestion": "string (domanda articolata con **grassetti**)", "counterIntuitiveInsight": "string (2-3 frasi)" },
-          "step4CommonMetaphor": { "masterMetaphorTitle": "TITOLO IN MAIUSCOLO", "cosmologicalAnthropologicalGround": "string (2-3 frasi)", "unifyingVision": "string (2-3 frasi)" }
-        }
-      }
+${tracksJsonList.join(',\n')}
     ]
   }
 }`;
@@ -812,140 +834,83 @@ export function buildStage5FinalStrikePrompt(
     ? phase4Loop.tracks
         .map(
           (t: any) =>
-            `- ${t.directionTitle} [${t.empiricalDrawerLabel || ''}]: Reperti: ${t.empiricalEvidenceExamined || ''} | Angolo: ${t.ontologicalAngle || ''} | Intuizione: ${t.collision?.step3InvertedDirection?.counterIntuitiveInsight || ''}`
+            `- ${t.directionTitle} [${t.empiricalDrawerLabel || ''}]: Reperti: ${t.empiricalEvidenceExamined || ''} | Angolo: ${t.ontologicalAngle || ''} | Punto di contatto: ${t.collision?.step2BlindAxis?.creviceContactPoint || ''} | Esperimento: ${t.collision?.step3InvertedDirection?.methodAAppliedToB || ''} | Intuizione: ${t.collision?.step3InvertedDirection?.counterIntuitiveInsight || ''} | Metafora: ${t.collision?.step4CommonMetaphor?.masterMetaphorTitle || ''}`
         )
         .join('\n')
     : '';
 
-  return `SEI IL SIGILLO EPISTEMOLOGICO E SPERIMENTALE DI ALKIMIA (FASE 5: L'AFFONDO FINALE).
-Il tuo compito è trasformare l'Archivio Empirico (FASE 2), la Collisione (FASE 3) e il Loop a 5 Direzioni (FASE 4) tra «${vectorA.name}» e «${vectorB.name}» nel PROTOCOLLO SPERIMENTALE E MANIFESTO OPERATIVO (FASE 5).
+  return `SEI IL NARRATORE SCIENTIFICO E FILOSOFICO DI ALKIMIA (FASE 5: L'AFFONDO FINALE — SINTESI GENERALE DELL'INDAGINE).
+Il tuo compito è tirare le fila dell'Archivio Empirico (FASE 2), della Collisione (FASE 3) e delle 5 Direzioni del Loop (FASE 4) tra «${vectorA.name}» e «${vectorB.name}» in una SINTESI NARRATIVA CHIARA, SCORREVOLE E PROFONDAMENTE COMPRENSIBILE, articolata in 5 grandi tappe conclusive.
 
 ================================================================================
-INVENTARIO COMPLETO PER CASSETTI DELLA FASE 2 (ARCHIVIO EMPIRICO DA TRASFORMARE IN PROTOCOLLO):
+MATERIALE DELL'INDAGINE DA RACCONTARE E UNIFICARE NELLA SINTESI:
 
-[CASSETTO 1 — STRUMENTI, FREQUENZE E MISURAZIONI (per Direzione 1 Termodinamica)]
+[CASSETTO 1 — STRUMENTI, FREQUENZE E MISURAZIONI]
 - ${vectorA.name}: ${empA.materialEvidenceAndTools || ''}
 - ${vectorB.name}: ${empB.materialEvidenceAndTools || ''}
 
-[CASSETTO 2 — PERSONE, SCIENZIATI, CLINICI E TESTIMONI (per Direzione 2 Ecologico-Evolutiva)]
+[CASSETTO 2 — PERSONE, SCIENZIATI, CLINICI E TESTIMONI]
 - ${vectorA.name}: ${empA.keyFiguresAndWitnesses || ''}
 - ${vectorB.name}: ${empB.keyFiguresAndWitnesses || ''}
 
-[CASSETTO 3 — LIBRI, DOSSIER E TESTI FONDATIVI (per Direzione 3 Semiotica)]
+[CASSETTO 3 — LIBRI, DOSSIER E TESTI FONDATIVI]
 - ${vectorA.name}: ${empA.foundationalTexts || ''}
 - ${vectorB.name}: ${empB.foundationalTexts || ''}
 
-[CASSETTO 4 — CORPO, TESSUTI E SOGLIE SOMATICHE (per Direzione 4 Metamorfica/Biologica)]
+[CASSETTO 4 — CORPO, TESSUTI E ESPERIENZA UMANA]
 - ${vectorA.name}: ${empA.materialEvidenceAndTools || ''} | ${empA.keyFiguresAndWitnesses || ''}
 - ${vectorB.name}: ${empB.materialEvidenceAndTools || ''} | ${empB.keyFiguresAndWitnesses || ''}
 
-[CASSETTO 5 — PARADIGMI, TEOREMI ED EQUAZIONI (per Direzione 5 Architetturale/Sistemica)]
+[CASSETTO 5 — PARADIGMI, TEOREMI E MODELLI INTERPRETATIVI]
 - ${vectorA.name}: ${empA.breakthroughTheories || ''}
 - ${vectorB.name}: ${empB.breakthroughTheories || ''}
 - Sintesi d'Incrocio: ${empSynthesis}
 
-METAFORA E INVERSO DI FASE 3:
-- Metafora Cardine: ${phase3Collision?.step4CommonMetaphor?.masterMetaphorTitle || ''} — ${phase3Collision?.step4CommonMetaphor?.unifyingVision || ''}
-- Esperimento Incrociato: ${phase3Collision?.step3InvertedDirection?.methodAAppliedToB || ''}
+SCOPERTE EMERSE IN FASE 3 (LA COLLISIONE):
+- Gesti operativi: ${phase3Collision?.step1StrippingFunction?.fundamentalVerbA || ''} × ${phase3Collision?.step1StrippingFunction?.fundamentalVerbB || ''}
+- Punto di contatto sul limite strumentale: ${phase3Collision?.step2BlindAxis?.creviceContactPoint || ''}
+- Esperimento incrociato: ${phase3Collision?.step3InvertedDirection?.methodAAppliedToB || ''}
+- Metafora Comune: ${phase3Collision?.step4CommonMetaphor?.masterMetaphorTitle || ''} — ${phase3Collision?.step4CommonMetaphor?.unifyingVision || ''}
 
-RISULTATI DELLE 5 FAGLIE NEL LOOP DI FASE 4:
+SCOPERTE EMERSE NELLE 5 DIREZIONI DI FASE 4:
 ${tracksSummary}
 ================================================================================
 
-REGOLE TASSATIVE PER LA FASE 5 (SIA SINTESI MACRO SIA LE 5 SCHEDE DIREZIONALI):
-- È SEVERAMENTE VIETATO usare le espressioni "Vettore A" o "Vettore B".
-- È SEVERAMENTE VIETATO scrivere frasi filosofiche generiche ("la separazione tra fisica e spiritualità...", "unire scienza e coscienza...").
-- DEVI OBBLIGATORIAMENTE citare in **grassetto** i nomi degli scienziati, i testimoni, i libri/dossier, le date, le frequenze e gli strumenti reali della Fase 2 in TUTTI E 5 I PUNTI:
+REGOLE TASSATIVE DI CHIAREZZA NARRATIVA E LINGUAGGIO PER LA FASE 5:
+- SCRIVI PER FAR CAPIRE DAVVERO IL SENSO GENERALE AL LETTORE: usa una prosa narrativa, limpida, avvincente e naturale (alta divulgazione d'autore). Chi legge deve comprendere immediatamente *perché* questi due argomenti si illuminano a vicenda e *qual è* il ragionamento concreto che li lega.
+- PAROLE ED ESPRESSIONI SEVERAMENTE VIETATE: è proibito usare espressioni burocratiche, tribunalesche o da proclama ideologico come "viene scardinato", "viene smantellato", "vengono legittimati", "dogma", "monopolio interpretativo", "cecità incrociata", "recinto disciplinare", "isomorfismo", "epifenomenismo", "Vettore A", "Vettore B".
+- Non inventare nomi astrusi di "Teoremi" artificiali: spiega invece i concetti e i meccanismi reali con parole limpide, concrete e ben argomentate.
+- AMPIEZZA E STRUTTURA: ciascuno dei 5 punti deve essere un vero racconto ragionato di 8-10 frasi complete (circa 160-220 parole), suddiviso in 2 o 3 capoversi separati da "\\n\\n" per una lettura piacevole e ariosa.
+- Cita in **grassetto** i nomi reali degli scienziati, i testimoni, i libri, le date e gli strumenti della Fase 2 inserendoli con naturalezza dentro la spiegazione narrativa:
 
-1. cuiProdest (Il Dogma Spezzato nei Testi e nelle Istituzioni di Fase 2):
-   - Nomina esplicitamente in **grassetto** quali istituzioni, commissioni, protocolli o paradigmi storici citati nella Fase 2 vengono scardinati e quali testimoni oculari o pionieri della Fase 2 vengono finalmente legittimati (2-3 frasi dense).
-2. groundbreakingDiscovery (La Legge Unificante tra i Reperti di Fase 2):
-   - Formula il principio innovativo unendo per nome in **grassetto** i teoremi, le equazioni e le misurazioni della Fase 2 (2-3 frasi dense).
-3. uninvestigatedBias (La Cecità Incrociata tra gli Specialisti di Fase 2):
-   - Spiega perché gli specialisti del 1° argomento (citati in Fase 2) e gli studiosi del 2° argomento (citati in Fase 2) non si sono mai parlati: denuncia l'errore metodologico per cui chi usa il **primo strumento/protocollo di Fase 2** ignora i dati raccolti da chi usa il **secondo strumento/protocollo di Fase 2** (2-3 frasi dense).
-4. researchFocusIntersection (Il Protocollo di Laboratorio Reale con gli Strumenti di Fase 2):
-   - VIETATO dire genericamente "unire disciplina X e disciplina Y". Prescrivi un ESPERIMENTO CONCRETO DI LABORATORIO che incrocia gli **strumenti reali, le frequenze, i tracciati e i campioni della Fase 2** (2-3 frasi dense con strumenti e parametri in **grassetto**).
-5. dizzyingRevelation (L'Orizzonte Ontologico Finale):
-   - Parti dal reperto materiale o dall'opera più estrema della Fase 2 (in **grassetto**) per spalancare la visione finale che prepara il terreno al Saggio Letterario di Fase 6 (2-3 frasi dense).
+1. cuiProdest (Cosa cambia nella nostra comprensione — 8-10 frasi limpide in 2-3 capoversi separati da \\n\\n):
+   - Spiega in modo chiaro e discorsivo quale vecchia abitudine mentale ci faceva tenere separati «${vectorA.name}» e «${vectorB.name}».
+   - Racconta come le vicende storiche, i libri e le osservazioni dei protagonisti citati nella Fase 2 (in **grassetto**) acquistano improvvisamente un significato molto più chiaro, logico e concreto quando li leggiamo gli uni accanto agli altri invece di isolarli.
 
-NELLE 5 SCHEDE DIREZIONALI (directionStrikes 1–5):
-Ciascuna scheda tira le conclusioni operative sul PROPRIO CASSETTO di Fase 2:
-- Direzione 1 (Termodinamica) ⟵ Cassetto 1: Strumenti, Frequenze e Misurazioni di Fase 2.
-- Direzione 2 (Ecologico-Evolutiva) ⟵ Cassetto 2: Persone, Scienziati e Testimoni di Fase 2.
-- Direzione 3 (Semiotica / Di Traduzione) ⟵ Cassetto 3: Libri, Dossier e Testi Fondativi di Fase 2.
-- Direzione 4 (Metamorfica / Biologica) ⟵ Cassetto 4: Corpo, Tessuti e Soglie Somatiche di Fase 2.
-- Direzione 5 (Architetturale / Sistemica) ⟵ Cassetto 5: Paradigmi, Teoremi ed Equazioni di Fase 2.
+2. groundbreakingDiscovery (Il filo invisibile che unisce i due fenomeni — 8-10 frasi limpide in 2-3 capoversi separati da \\n\\n):
+   - Spiega con parole chiare e appassionate qual è il meccanismo concreto — fisico, biologico o umano — che accomuna «${vectorA.name}» e «${vectorB.name}».
+   - Accompagna il lettore a capire *come* e *perché* i due fenomeni obbediscono alla stessa regola di fondo, collegando in modo comprensibile i modelli teorici, i processi del corpo e i dati emersi tra la Fase 2 e la Fase 4 (con i riferimenti chiave in **grassetto**).
 
-Rispondi RIGOROSAMENTE con questo JSON:
+3. uninvestigatedBias (Perché finora nessuno aveva unito i puntini — 8-10 frasi limpide in 2-3 capoversi separati da \\n\\n):
+   - Racconta con semplicità perché chi studia «${vectorA.name}» e chi indaga «${vectorB.name}» non si sono mai accorti di osservare due lati dello stesso processo.
+   - Mostra concretamente come gli strumenti e i metodi del primo campo (in **grassetto**) siano stati calibrati per scartare come semplice disturbo proprio quei segnali sottili che gli studiosi del secondo campo cercavano invece di cogliere senza avere gli strumenti adatti.
+
+4. researchFocusIntersection (La prova sul campo: come verificarlo concretamente — 8-10 frasi limpide in 2-3 capoversi separati da \\n\\n):
+   - Descrivi in modo narrativo e visivo un esperimento concreto e realizzabile che permetta di mettere alla prova questa connessione.
+   - Racconta passo dopo passo cosa accadrebbe se portassimo nello stesso laboratorio gli **strumenti e i protocolli di misura** della Fase 2 per osservare dal vivo il fenomeno, spiegando con chiarezza cosa misureremmo e quale risultato preciso dovremmo aspettarci di vedere.
+
+5. dizzyingRevelation (Lo sguardo d'insieme: verso il Saggio del Giorno — 8-10 frasi limpide in 2-3 capoversi separati da \\n\\n):
+   - Chiudi l'indagine con una riflessione ampia, limpida e suggestiva che raccoglie il senso umano e filosofico dell'intero percorso compiuto dalla Fase 1 alla Fase 4.
+   - Parti dall'episodio o dal reperto più significativo della Fase 2 e dalla **Metafora Comune** della Fase 3 per lasciare al lettore una visione d'insieme nitida e profonda, che apre naturalmente la strada al Saggio del Giorno (Fase 6).
+
+Rispondi RIGOROSAMENTE con questo JSON (SOLO i 5 campi narrativi, senza directionStrikes):
 {
   "phase3FinalStrike": {
-    "cuiProdest": "string (2-3 frasi dense con istituzioni/testimoni di Fase 2 in **grassetto**)",
-    "groundbreakingDiscovery": "string (2-3 frasi dense con teoremi/misurazioni di Fase 2 in **grassetto**)",
-    "uninvestigatedBias": "string (2-3 frasi dense sulla cecità incrociata tra i due strumenti/specialisti di Fase 2 in **grassetto**)",
-    "researchFocusIntersection": "string (2-3 frasi dense con il protocollo sperimentale di laboratorio tra gli strumenti e frequenze di Fase 2 in **grassetto**)",
-    "dizzyingRevelation": "string (2-3 frasi dense ancorate ai reperti più estremi di Fase 2 in **grassetto**)",
-    "directionStrikes": [
-      {
-        "directionNumber": 1,
-        "directionTitle": "Direzione 1: Prospettiva Termodinamica / Entropica",
-        "empiricalDrawerLabel": "Cassetto 1 di Fase 2 • Strumenti, Frequenze e Misurazioni",
-        "empiricalEvidenceExamined": "string (reperti strumentali di Fase 2 in **grassetto**)",
-        "ontologicalAngle": "string (2 frasi con riferimenti in **grassetto**)",
-        "cuiProdest": "string (2-3 frasi con **grassetti**)",
-        "groundbreakingDiscovery": "string (2-3 frasi con **grassetti**)",
-        "uninvestigatedBias": "string (2-3 frasi con **grassetti**)",
-        "researchFocusIntersection": "string (protocollo sperimentale con gli strumenti del Cassetto 1 in **grassetto**, 2-3 frasi)",
-        "dizzyingRevelation": "string (2-3 frasi con **grassetti**)"
-      },
-      {
-        "directionNumber": 2,
-        "directionTitle": "Direzione 2: Prospettiva Ecologico-Evolutiva",
-        "empiricalDrawerLabel": "Cassetto 2 di Fase 2 • Persone, Scienziati e Testimoni",
-        "empiricalEvidenceExamined": "string (testimoni e scienziati di Fase 2 in **grassetto**)",
-        "ontologicalAngle": "string (2 frasi con **grassetti**)",
-        "cuiProdest": "string (2-3 frasi con **grassetti**)",
-        "groundbreakingDiscovery": "string (2-3 frasi con **grassetti**)",
-        "uninvestigatedBias": "string (2-3 frasi con **grassetti**)",
-        "researchFocusIntersection": "string (protocollo di studio clinico/antropologico sui testimoni del Cassetto 2 in **grassetto**, 2-3 frasi)",
-        "dizzyingRevelation": "string (2-3 frasi con **grassetti**)"
-      },
-      {
-        "directionNumber": 3,
-        "directionTitle": "Direzione 3: Prospettiva Semiotica / Di Traduzione",
-        "empiricalDrawerLabel": "Cassetto 3 di Fase 2 • Libri, Dossier e Testi Fondativi",
-        "empiricalEvidenceExamined": "string (opere, libri e dossier di Fase 2 in **grassetto**)",
-        "ontologicalAngle": "string (2 frasi con **grassetti**)",
-        "cuiProdest": "string (2-3 frasi con **grassetti**)",
-        "groundbreakingDiscovery": "string (2-3 frasi con **grassetti**)",
-        "uninvestigatedBias": "string (2-3 frasi con **grassetti**)",
-        "researchFocusIntersection": "string (protocollo di decodifica comparata sui testi/dossier del Cassetto 3 in **grassetto**, 2-3 frasi)",
-        "dizzyingRevelation": "string (2-3 frasi con **grassetti**)"
-      },
-      {
-        "directionNumber": 4,
-        "directionTitle": "Direzione 4: Prospettiva Metamorfica / Biologica",
-        "empiricalDrawerLabel": "Cassetto 4 di Fase 2 • Corpo, Tessuti e Soglie Somatiche",
-        "empiricalEvidenceExamined": "string (biomarcatori, tessuti e parametri fisiologici di Fase 2 in **grassetto**)",
-        "ontologicalAngle": "string (2 frasi con **grassetti**)",
-        "cuiProdest": "string (2-3 frasi con **grassetti**)",
-        "groundbreakingDiscovery": "string (2-3 frasi con **grassetti**)",
-        "uninvestigatedBias": "string (2-3 frasi con **grassetti**)",
-        "researchFocusIntersection": "string (protocollo bio-fisiologico sui parametri somatici del Cassetto 4 in **grassetto**, 2-3 frasi)",
-        "dizzyingRevelation": "string (2-3 frasi con **grassetti**)"
-      },
-      {
-        "directionNumber": 5,
-        "directionTitle": "Direzione 5: Prospettiva Architetturale / Sistemica",
-        "empiricalDrawerLabel": "Cassetto 5 di Fase 2 • Paradigmi, Teoremi ed Equazioni",
-        "empiricalEvidenceExamined": "string (teoremi, equazioni e formulatori di Fase 2 in **grassetto**)",
-        "ontologicalAngle": "string (2 frasi con **grassetti**)",
-        "cuiProdest": "string (2-3 frasi con **grassetti**)",
-        "groundbreakingDiscovery": "string (2-3 frasi con **grassetti**)",
-        "uninvestigatedBias": "string (2-3 frasi con **grassetti**)",
-        "researchFocusIntersection": "string (protocollo di unificazione formale tra i modelli del Cassetto 5 in **grassetto**, 2-3 frasi)",
-        "dizzyingRevelation": "string (2-3 frasi con **grassetti**)"
-      }
-    ]
+    "cuiProdest": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, senza gergo forzato, con protagonisti e opere di Fase 2 in **grassetto**)",
+    "groundbreakingDiscovery": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, che spiegano con chiarezza il legame profondo tra i due fenomeni con riferimenti di Fase 2 in **grassetto**)",
+    "uninvestigatedBias": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, che spiegano perché finora i due mondi non si erano parlati, con strumenti e autori di Fase 2 in **grassetto**)",
+    "researchFocusIntersection": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, che raccontano l'esperimento concreto sul campo con gli strumenti di Fase 2 in **grassetto**)",
+    "dizzyingRevelation": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, che offrono lo sguardo d'insieme finale verso il Saggio di Fase 6)"
   }
 }`;
 }

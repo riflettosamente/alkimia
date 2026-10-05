@@ -11,19 +11,36 @@ interface Phase2LoopFiveDirectionsViewProps {
 
 const FormattedText: React.FC<{ text?: string }> = ({ text }) => {
   if (!text) return null;
-  const parts = text.split(/(\*\*.*?\*\*)/g);
+  const paragraphs = text
+    .split(/\n\s*\n/)
+    .map(p => p.trim())
+    .filter(Boolean);
+
+  const renderInline = (content: string) => {
+    const parts = content.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return (
+          <strong key={i} className="font-semibold text-[#1a1714] bg-[#f2ebd9] px-1 py-0.5 rounded-xs">
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
+      return part;
+    });
+  };
+
+  if (paragraphs.length <= 1) {
+    return <span>{renderInline(text)}</span>;
+  }
+
   return (
-    <span>
-      {parts.map((part, i) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          return (
-            <strong key={i} className="font-semibold text-[#1a1714] bg-[#f2ebd9] px-1 py-0.5 rounded-xs">
-              {part.slice(2, -2)}
-            </strong>
-          );
-        }
-        return part;
-      })}
+    <span className="block space-y-2.5">
+      {paragraphs.map((para, idx) => (
+        <span key={idx} className="block leading-relaxed">
+          {renderInline(para)}
+        </span>
+      ))}
     </span>
   );
 };
@@ -64,10 +81,6 @@ export const Phase2LoopFiveDirectionsView: React.FC<Phase2LoopFiveDirectionsView
           <p className="text-sm sm:text-base text-[#3d3830] font-serif leading-relaxed italic border-l-2 border-[#b0872e] pl-4 py-1 bg-[#faf8f5]">
             «Applica la collisione attraverso lo stesso binario d'indagine con cinque angolazioni differenti, costringendo i protocolli tecnici, gli strumenti di rilevazione e i reperti storici censiti nella Fase 2 (Archivio Empirico) a girare a vuoto in cerca di attriti sempre nuovi, svelando cinque diverse faglie ontologiche.»
           </p>
-        </div>
-
-        <div className="pt-2 text-xs sm:text-sm text-[#575043] font-serif leading-relaxed">
-          <FormattedText text={activeLoop?.theoreticalPreamble} />
         </div>
 
         {/* I due argomenti del binario concettuale */}

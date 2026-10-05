@@ -1,38 +1,47 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Phase3FinalStrike, SystemConceptualPair } from '../types';
 import { buildPhase3FinalStrike } from '../data/canonicalFinalStrikes';
-import { ShieldAlert, Lightbulb, SearchX, Target, Eye, Sparkles, Compass, GitCommit, ChevronRight, Layers, Database } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { ShieldAlert, Lightbulb, SearchX, Target, Eye, Sparkles, Layers } from 'lucide-react';
+import { motion } from 'motion/react';
 
 interface Phase3FinalStrikeViewProps {
   systemPair: SystemConceptualPair;
   finalStrike?: Phase3FinalStrike;
 }
 
-const DEFAULT_STRIKE_DRAWER_LABELS: Record<number, string> = {
-  1: 'Cassetto 1 di Fase 2 • Strumenti, Frequenze e Misurazioni',
-  2: 'Cassetto 2 di Fase 2 • Persone, Scienziati e Testimoni',
-  3: 'Cassetto 3 di Fase 2 • Libri, Dossier e Testi Fondativi',
-  4: 'Cassetto 4 di Fase 2 • Corpo, Tessuti e Soglie Somatiche',
-  5: 'Cassetto 5 di Fase 2 • Paradigmi, Teoremi ed Equazioni'
-};
-
 const FormattedText: React.FC<{ text?: string }> = ({ text }) => {
   if (!text) return null;
-  const parts = text.split(/(\*\*.*?\*\*)/g);
+  const paragraphs = text
+    .split(/\n\s*\n/)
+    .map(p => p.trim())
+    .filter(Boolean);
+
+  const renderInline = (content: string) => {
+    const parts = content.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return (
+          <strong key={i} className="font-semibold text-[#1a1714] bg-[#f2ebd9] px-1 py-0.5 rounded-xs">
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
+      return part;
+    });
+  };
+
+  if (paragraphs.length <= 1) {
+    return <span>{renderInline(text)}</span>;
+  }
+
   return (
-    <span>
-      {parts.map((part, i) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          return (
-            <strong key={i} className="font-semibold text-[#1a1714] bg-[#f2ebd9] px-1 py-0.5 rounded-xs">
-              {part.slice(2, -2)}
-            </strong>
-          );
-        }
-        return part;
-      })}
-    </span>
+    <div className="space-y-3.5">
+      {paragraphs.map((para, idx) => (
+        <p key={idx} className="leading-relaxed">
+          {renderInline(para)}
+        </p>
+      ))}
+    </div>
   );
 };
 
@@ -40,16 +49,56 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
   systemPair,
   finalStrike
 }) => {
-  const activeStrike = finalStrike || buildPhase3FinalStrike(
+  const baseStrike = finalStrike || buildPhase3FinalStrike(
     systemPair.vectorA,
     systemPair.vectorB
   );
 
-  const directionStrikes = activeStrike.directionStrikes || [];
-  const [selectedDirectionIndex, setSelectedDirectionIndex] = useState<number>(0);
-  const [viewScope, setViewScope] = useState<'general' | 'directions'>('directions');
+  // Pulisce eventuali espressioni forzate o da proclama rimaste in dossier generati con versioni precedenti del prompt,
+  // rendendo subito più naturale e scorrevole anche la lettura delle edizioni già salvate su disco.
+  const humanizeNarrativeTone = (raw: string): string => {
+    if (!raw) return '';
+    return raw
+      .replace(/Viene scardinato il dogma/gi, 'Si supera la vecchia idea')
+      .replace(/viene scardinato/gi, 'viene superato')
+      .replace(/vengono scardinati/gi, 'vengono superati')
+      .replace(/viene smantellato il dogma/gi, 'cade la vecchia convinzione')
+      .replace(/viene smantellato/gi, 'cade')
+      .replace(/vengono finalmente legittimati/gi, 'trovano finalmente una spiegazione coerente')
+      .replace(/vengono legittimati/gi, 'trovano conferma')
+      .replace(/ne escono legittimati/gi, 'acquistano un senso concreto')
+      .replace(/monopolio interpretativo/gi, 'confine tradizionale');
+  };
 
-  const currentDirectionStrike = directionStrikes[selectedDirectionIndex] || directionStrikes[0];
+  // Se un dossier salvato in precedenza aveva il testo macro sintetico (< 420 caratteri)
+  // e i dettagli distribuiti in directionStrikes, li fonde automaticamente nella Sintesi Macro Generale
+  // così anche i dossier già generati risultano ricchi, completi e approfonditi.
+  const enrichMacroField = (
+    macroText: string | undefined,
+    fieldKey: 'cuiProdest' | 'groundbreakingDiscovery' | 'uninvestigatedBias' | 'researchFocusIntersection' | 'dizzyingRevelation'
+  ): string => {
+    const base = humanizeNarrativeTone((macroText || '').trim());
+    const dirs = Array.isArray(baseStrike.directionStrikes) ? baseStrike.directionStrikes : [];
+    if (base.length >= 420 || dirs.length === 0) {
+      return base;
+    }
+    const dirContributions = dirs
+      .map(d => humanizeNarrativeTone((d[fieldKey] || '').trim()))
+      .filter(t => t.length > 0 && !base.includes(t.slice(0, 40)));
+    if (dirContributions.length === 0) return base;
+
+    const firstWave = dirContributions.slice(0, 2).join(' ');
+    const secondWave = dirContributions.slice(2, 5).join(' ');
+    return [base, firstWave, secondWave].filter(Boolean).join('\n\n');
+  };
+
+  const activeStrike: Phase3FinalStrike = {
+    cuiProdest: enrichMacroField(baseStrike.cuiProdest, 'cuiProdest'),
+    groundbreakingDiscovery: enrichMacroField(baseStrike.groundbreakingDiscovery, 'groundbreakingDiscovery'),
+    uninvestigatedBias: enrichMacroField(baseStrike.uninvestigatedBias, 'uninvestigatedBias'),
+    researchFocusIntersection: enrichMacroField(baseStrike.researchFocusIntersection, 'researchFocusIntersection'),
+    dizzyingRevelation: enrichMacroField(baseStrike.dizzyingRevelation, 'dizzyingRevelation'),
+  };
 
   return (
     <motion.div
@@ -63,15 +112,15 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
       <div className="border border-[#ded7ca] bg-[#ffffff] p-6 sm:p-8 rounded-sm space-y-4 shadow-xs">
         <div className="flex items-center gap-2 text-xs font-mono tracking-wider uppercase text-[#9e7627]">
           <Sparkles className="w-4 h-4" />
-          <span>FASE 5: L'Affondo Finale (Il Sigillo della Ricerca)</span>
+          <span>FASE 5: L'Affondo Finale • Sintesi Generale dell'Indagine</span>
         </div>
 
         <div className="space-y-2">
           <h2 className="text-xl sm:text-2xl font-serif font-semibold text-[#1a1714]">
-            Manifesto Operativo dell'Indagine Speculativa
+            Il Senso Complessivo dell'Incontro tra i Due Fenomeni
           </h2>
           <p className="text-sm sm:text-base text-[#3d3830] font-serif leading-relaxed italic border-l-2 border-[#b0872e] pl-4 py-1 bg-[#faf8f5]">
-            «Trasformazione dell'intuizione speculativa in un manifesto operativo attraverso i cinque interrogativi strategici, declinati sull'asse complessivo e nelle 5 Direzioni del Loop di Fase 4.»
+            «Tiriamo le fila del percorso compiuto: cosa cambia nel nostro modo di guardare i due argomenti, qual è il filo concreto che li unisce e come possiamo metterlo alla prova.»
           </p>
         </div>
 
@@ -82,7 +131,7 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
           </div>
           <div className="text-[#9e7627] flex items-center gap-1.5 font-semibold uppercase">
             <Layers className="w-3.5 h-3.5" />
-            <span>5 Interrogativi × 5 Faglie Ontologiche</span>
+            <span>Sintesi Generale • 5 Tappe Conclusive</span>
           </div>
           <div className="bg-[#faf8f5] px-3 py-1.5 border border-[#ede7dc] rounded-sm">
             <span className="text-[#5c6e8c] font-semibold">Secondo Argomento:</span> {systemPair.vectorB}
@@ -90,298 +139,139 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
         </div>
       </div>
 
-      {/* Switch di Scopo: Le 5 Direzioni del Loop vs Sintesi Generale */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#f5f1ea] p-2 rounded-sm border border-[#ded7ca]">
-        <div className="flex items-center gap-2 px-2">
-          <span className="text-xs font-mono uppercase tracking-widest text-[#787164]">
-            Prospettiva dell'Affondo:
-          </span>
+      {/* Le 5 Tappe Narrative della Sintesi Generale */}
+      <div className="space-y-8">
+        {/* 1. Cosa cambia nella nostra comprensione */}
+        <div id="final-strike-q1" className="border border-[#ded7ca] bg-[#ffffff] rounded-sm overflow-hidden shadow-xs">
+          <div className="bg-[#f5f1ea] px-5 py-4 border-b border-[#ded7ca]">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xs font-mono font-bold text-[#9e7627]">§ 1</span>
+              <h4 className="text-base font-serif text-[#1a1714] font-semibold">
+                Cosa cambia nella nostra comprensione (A chi giova questa indagine?)
+              </h4>
+            </div>
+            <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
+              Quale vecchia abitudine mentale viene superata e come le osservazioni storiche della Fase 2 acquistano un senso chiaro se lette insieme.
+            </p>
+          </div>
+
+          <div className="p-6 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#9e7627] font-semibold">
+              <ShieldAlert className="w-4 h-4" />
+              <span>Il Superamento dei Confini Abituali</span>
+            </div>
+            <div className="text-sm sm:text-base font-serif text-[#2c2823] leading-relaxed">
+              <FormattedText text={activeStrike.cuiProdest} />
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5 w-full sm:w-auto">
-          <button
-            id="view-scope-directions"
-            onClick={() => setViewScope('directions')}
-            className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-mono rounded-sm transition-all cursor-pointer ${
-              viewScope === 'directions'
-                ? 'bg-[#ffffff] text-[#1a1714] font-semibold border border-[#c49b45]/60 shadow-xs'
-                : 'text-[#6e685c] hover:text-[#1a1714]'
-            }`}
-          >
-            Le 5 Direzioni del Loop
-          </button>
-          <button
-            id="view-scope-general"
-            onClick={() => setViewScope('general')}
-            className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs font-mono rounded-sm transition-all cursor-pointer ${
-              viewScope === 'general'
-                ? 'bg-[#ffffff] text-[#1a1714] font-semibold border border-[#c49b45]/60 shadow-xs'
-                : 'text-[#6e685c] hover:text-[#1a1714]'
-            }`}
-          >
-            Sintesi Macro Generale
-          </button>
+        {/* 2. Il filo invisibile che unisce i due fenomeni */}
+        <div id="final-strike-q2" className="border border-[#ded7ca] bg-[#ffffff] rounded-sm overflow-hidden shadow-xs">
+          <div className="bg-[#f5f1ea] px-5 py-4 border-b border-[#ded7ca]">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xs font-mono font-bold text-[#9e7627]">§ 2</span>
+              <h4 className="text-base font-serif text-[#1a1714] font-semibold">
+                Il filo invisibile che unisce i due fenomeni (La Scoperta)
+              </h4>
+            </div>
+            <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
+              Il meccanismo concreto — fisico, biologico o umano — che spiega perché i due argomenti rispondono alla stessa regola di fondo.
+            </p>
+          </div>
+
+          <div className="p-6 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#9e7627] font-semibold">
+              <Lightbulb className="w-4 h-4" />
+              <span>Il Legame Profondo tra i Due Argomenti</span>
+            </div>
+            <div className="p-5 bg-[#faf5ec] border border-[#e4d6be] rounded-sm shadow-2xs">
+              <div className="text-sm sm:text-base font-serif text-[#1f1c19] leading-relaxed font-medium">
+                <FormattedText text={activeStrike.groundbreakingDiscovery} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Perché finora nessuno aveva unito i puntini */}
+        <div id="final-strike-q3" className="border border-[#ded7ca] bg-[#ffffff] rounded-sm overflow-hidden shadow-xs">
+          <div className="bg-[#f5f1ea] px-5 py-4 border-b border-[#ded7ca]">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xs font-mono font-bold text-[#9e7627]">§ 3</span>
+              <h4 className="text-base font-serif text-[#1a1714] font-semibold">
+                Perché finora nessuno aveva unito i puntini (L'Angolo Cieco)
+              </h4>
+            </div>
+            <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
+              Perché chi studia il primo argomento e chi indaga il secondo non si erano ancora accorti di osservare due facce dello stesso processo.
+            </p>
+          </div>
+
+          <div className="p-6 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#8a4e32] font-semibold">
+              <SearchX className="w-4 h-4" />
+              <span>La Distanza tra i Due Mondi di Ricerca</span>
+            </div>
+            <div className="text-sm sm:text-base font-serif text-[#2c2823] leading-relaxed">
+              <FormattedText text={activeStrike.uninvestigatedBias} />
+            </div>
+          </div>
+        </div>
+
+        {/* 4. La prova sul campo */}
+        <div id="final-strike-q4" className="border border-[#ded7ca] bg-[#ffffff] rounded-sm overflow-hidden shadow-xs">
+          <div className="bg-[#f5f1ea] px-5 py-4 border-b border-[#ded7ca]">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xs font-mono font-bold text-[#9e7627]">§ 4</span>
+              <h4 className="text-base font-serif text-[#1a1714] font-semibold">
+                La prova sul campo (Come verificarlo concretamente)
+              </h4>
+            </div>
+            <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
+              Un esperimento concreto e comprensibile che mette insieme gli strumenti e le osservazioni della Fase 2 per verificare questo legame.
+            </p>
+          </div>
+
+          <div className="p-6 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#475b7a] font-semibold">
+              <Target className="w-4 h-4" />
+              <span>La Verifica Sperimentale Concreta</span>
+            </div>
+            <div className="p-5 bg-[#faf8f5] border border-[#ede7dc] rounded-sm">
+              <div className="text-sm sm:text-base font-serif text-[#2c2823] leading-relaxed">
+                <FormattedText text={activeStrike.researchFocusIntersection} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 5. Lo sguardo d'insieme */}
+        <div id="final-strike-q5" className="border border-[#ded7ca] bg-[#ffffff] rounded-sm overflow-hidden shadow-xs">
+          <div className="bg-[#f5f1ea] px-5 py-4 border-b border-[#ded7ca]">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xs font-mono font-bold text-[#9e7627]">§ 5</span>
+              <h4 className="text-base font-serif text-[#1a1714] font-semibold">
+                Lo sguardo d'insieme (Verso il Saggio del Giorno)
+              </h4>
+            </div>
+            <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
+              Il significato umano e filosofico dell'intero percorso compiuto, che apre la strada alla narrazione d'autore della Fase 6.
+            </p>
+          </div>
+
+          <div className="p-6 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#9e7627] font-semibold">
+              <Eye className="w-4 h-4" />
+              <span>L'Orizzonte Conclusivo dell'Indagine</span>
+            </div>
+            <div className="p-6 bg-[#fbf9f4] border-l-2 border-[#b0872e] rounded-r-sm space-y-2">
+              <div className="text-base sm:text-lg font-serif italic text-[#1a1714] leading-relaxed">
+                <FormattedText text={activeStrike.dizzyingRevelation} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Selettore a Tab per le 5 Direzioni quando viewScope === 'directions' */}
-      {viewScope === 'directions' && directionStrikes.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-mono uppercase tracking-wider text-[#787164] flex items-center gap-1.5">
-              <Compass className="w-3.5 h-3.5 text-[#9e7627]" />
-              <span>Seleziona la Direzione del Loop (Fase 4):</span>
-            </span>
-            <span className="text-xs font-mono text-[#9e7627] font-semibold">
-              Direzione {selectedDirectionIndex + 1} di {directionStrikes.length}
-            </span>
-          </div>
-
-          <div 
-            role="tablist"
-            aria-label="Le 5 direzioni dell'affondo finale"
-            className="grid grid-cols-1 sm:grid-cols-5 gap-2 p-1.5 bg-[#ede9e0] border border-[#d8d0c2] rounded-sm"
-          >
-            {directionStrikes.map((dir, idx) => {
-              const isSelected = selectedDirectionIndex === idx;
-              return (
-                <button
-                  key={dir.directionNumber}
-                  id={`final-strike-dir-btn-${dir.directionNumber}`}
-                  role="tab"
-                  aria-selected={isSelected}
-                  onClick={() => setSelectedDirectionIndex(idx)}
-                  className={`text-left p-3 rounded-sm transition-all cursor-pointer border flex flex-col justify-between ${
-                    isSelected
-                      ? 'bg-[#ffffff] border-[#c49b45]/70 shadow-xs text-[#1a1714]'
-                      : 'bg-[#faf8f5]/60 hover:bg-[#ffffff] border-transparent text-[#665f53]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className={`text-[11px] font-mono font-bold ${isSelected ? 'text-[#9e7627]' : 'text-[#8a8274]'}`}>
-                      DIR #{dir.directionNumber}
-                    </span>
-                    {isSelected && <GitCommit className="w-3.5 h-3.5 text-[#9e7627]" />}
-                  </div>
-                  <div className="text-xs font-serif font-semibold mt-1 line-clamp-2 leading-tight">
-                    {dir.directionTitle.split(':')[1]?.trim() || dir.directionTitle}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Intestazione della Direzione Selezionata + Cassetto di Fase 2 */}
-          {currentDirectionStrike && (
-            <div className="p-4 bg-[#faf8f5] border border-[#ded7ca] rounded-sm space-y-2.5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-xs font-mono text-[#9e7627] font-semibold uppercase">
-                  <Compass className="w-4 h-4" />
-                  <span>{currentDirectionStrike.directionTitle}</span>
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#f2ebd9] border border-[#d8c7a3] rounded-xs text-[11px] font-mono font-semibold text-[#6e5219]">
-                  <Database className="w-3 h-3" />
-                  <span>
-                    {currentDirectionStrike.empiricalDrawerLabel ||
-                      DEFAULT_STRIKE_DRAWER_LABELS[currentDirectionStrike.directionNumber] ||
-                      DEFAULT_STRIKE_DRAWER_LABELS[selectedDirectionIndex + 1]}
-                  </span>
-                </div>
-              </div>
-
-              {currentDirectionStrike.empiricalEvidenceExamined && (
-                <div className="p-3 bg-[#ffffff] border border-[#e3dacb] rounded-xs text-xs sm:text-sm font-serif text-[#2c2823]">
-                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#9e7627] font-bold block mb-1">
-                    Reperti di Fase 2 in Protocollo in questa Direzione:
-                  </span>
-                  <FormattedText text={currentDirectionStrike.empiricalEvidenceExamined} />
-                </div>
-              )}
-
-              <p className="text-xs sm:text-sm font-serif text-[#3d3830] italic pl-6 border-l-2 border-[#9e7627]">
-                <FormattedText text={currentDirectionStrike.ontologicalAngle} />
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* I 5 Interrogativi Strategici (Dinamici per Direzione o Macro) */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={viewScope === 'directions' ? `dir-${selectedDirectionIndex}` : 'general'}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.35 }}
-          className="space-y-8"
-        >
-          {(() => {
-            const strikeData = viewScope === 'directions' && currentDirectionStrike 
-              ? currentDirectionStrike 
-              : activeStrike;
-
-            return (
-              <>
-                {/* 1. Cui prodest? (A chi giova?) */}
-                <div id="final-strike-q1" className="border border-[#ded7ca] bg-[#ffffff] rounded-sm overflow-hidden shadow-xs">
-                  <div className="bg-[#f5f1ea] px-5 py-4 border-b border-[#ded7ca]">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-xs font-mono font-bold text-[#9e7627]">§ 1</span>
-                      <h4 className="text-base font-serif text-[#1a1714] font-semibold">
-                        Cui prodest? (Il Dogma Spezzato nei Testi e nelle Istituzioni di Fase 2)
-                      </h4>
-                    </div>
-                    <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
-                      Quali istituzioni, commissioni o paradigmi storici censiti in Fase 2 vengono scardinati e quali testimoni o pionieri ne escono legittimati?
-                    </p>
-                  </div>
-
-                  <div className="p-6 space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#9e7627] font-semibold">
-                      <ShieldAlert className="w-4 h-4" />
-                      <span>Smantellamento del Blocco Dogmatico</span>
-                    </div>
-                    <p className="text-sm sm:text-base font-serif text-[#2c2823] leading-relaxed">
-                      <FormattedText text={strikeData.cuiProdest} />
-                    </p>
-                  </div>
-                </div>
-
-                {/* 2. Quale scoperta innovativa potremmo portare alla luce? */}
-                <div id="final-strike-q2" className="border border-[#ded7ca] bg-[#ffffff] rounded-sm overflow-hidden shadow-xs">
-                  <div className="bg-[#f5f1ea] px-5 py-4 border-b border-[#ded7ca]">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-xs font-mono font-bold text-[#9e7627]">§ 2</span>
-                      <h4 className="text-base font-serif text-[#1a1714] font-semibold">
-                        Scoperta Cardine (La Legge Unificante tra i Reperti di Fase 2)
-                      </h4>
-                    </div>
-                    <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
-                      La formulazione della nuova legge, principio o teoria unificante che lega per nome i teoremi e le misurazioni della Fase 2.
-                    </p>
-                  </div>
-
-                  <div className="p-6 space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#9e7627] font-semibold">
-                      <Lightbulb className="w-4 h-4" />
-                      <span>Formulazione del Nuovo Principio Unificante</span>
-                    </div>
-                    <div className="p-5 bg-[#faf5ec] border border-[#e4d6be] rounded-sm shadow-2xs">
-                      <p className="text-sm sm:text-base font-serif text-[#1f1c19] leading-relaxed font-medium">
-                        <FormattedText text={strikeData.groundbreakingDiscovery} />
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 3. Cos'è che non abbiamo ancora investigato? */}
-                <div id="final-strike-q3" className="border border-[#ded7ca] bg-[#ffffff] rounded-sm overflow-hidden shadow-xs">
-                  <div className="bg-[#f5f1ea] px-5 py-4 border-b border-[#ded7ca]">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-xs font-mono font-bold text-[#9e7627]">§ 3</span>
-                      <h4 className="text-base font-serif text-[#1a1714] font-semibold">
-                        Il Bias Inesplorato (La Cecità Incrociata tra gli Specialisti di Fase 2)
-                      </h4>
-                    </div>
-                    <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
-                      Perché chi utilizza il primo strumento/protocollo di Fase 2 ha finora ignorato i dati raccolti da chi utilizza il secondo strumento/protocollo di Fase 2?
-                    </p>
-                  </div>
-
-                  <div className="p-6 space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#8a4e32] font-semibold">
-                      <SearchX className="w-4 h-4" />
-                      <span>Il Recinto Disciplinare e la Cecità Strumentale</span>
-                    </div>
-                    <p className="text-sm sm:text-base font-serif text-[#2c2823] leading-relaxed">
-                      <FormattedText text={strikeData.uninvestigatedBias} />
-                    </p>
-                  </div>
-                </div>
-
-                {/* 4. Dove dovremmo focalizzare la nostra ricerca? */}
-                <div id="final-strike-q4" className="border border-[#ded7ca] bg-[#ffffff] rounded-sm overflow-hidden shadow-xs">
-                  <div className="bg-[#f5f1ea] px-5 py-4 border-b border-[#ded7ca]">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-xs font-mono font-bold text-[#9e7627]">§ 4</span>
-                      <h4 className="text-base font-serif text-[#1a1714] font-semibold">
-                        Intersezione di Ricerca (Il Protocollo di Laboratorio Reale con gli Strumenti di Fase 2)
-                      </h4>
-                    </div>
-                    <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
-                      L'esperimento concreto di laboratorio che incrocia gli strumenti reali, le frequenze, i tracciati e i campioni censiti nella Fase 2.
-                    </p>
-                  </div>
-
-                  <div className="p-6 space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#475b7a] font-semibold">
-                      <Target className="w-4 h-4" />
-                      <span>Protocollo Sperimentale sugli Apparati di Fase 2</span>
-                    </div>
-                    <div className="p-5 bg-[#faf8f5] border border-[#ede7dc] rounded-sm">
-                      <p className="text-sm sm:text-base font-serif text-[#2c2823] leading-relaxed">
-                        <FormattedText text={strikeData.researchFocusIntersection} />
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 5. Cosa potremmo scoprire? (La Vertigine Finale) */}
-                <div id="final-strike-q5" className="border border-[#ded7ca] bg-[#ffffff] rounded-sm overflow-hidden shadow-xs">
-                  <div className="bg-[#f5f1ea] px-5 py-4 border-b border-[#ded7ca]">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-xs font-mono font-bold text-[#9e7627]">§ 5</span>
-                      <h4 className="text-base font-serif text-[#1a1714] font-semibold">
-                        Rivelazione Vertiginosa (L'Orizzonte Ontologico Finale)
-                      </h4>
-                    </div>
-                    <p className="text-xs sm:text-sm text-[#665f53] font-serif italic mt-1 pl-5">
-                      La svelazione finale a partire dal reperto più estremo della Fase 2: come è strutturata la "stanza" del reale e cosa prepara il Saggio di Fase 6.
-                    </p>
-                  </div>
-
-                  <div className="p-6 space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#9e7627] font-semibold">
-                      <Eye className="w-4 h-4" />
-                      <span>La Svelazione della Stanza e delle Porte Girevoli</span>
-                    </div>
-                    <div className="p-6 bg-[#fbf9f4] border-l-2 border-[#b0872e] rounded-r-sm space-y-2">
-                      <p className="text-base sm:text-lg font-serif italic text-[#1a1714] leading-relaxed">
-                        «<FormattedText text={strikeData.dizzyingRevelation} />»
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </>
-            );
-          })()}
-
-          {/* Navigatore Rapido Direzioni (visibile se in modalità direzioni) */}
-          {viewScope === 'directions' && directionStrikes.length > 0 && (
-            <div className="flex items-center justify-between pt-4 border-t border-[#ede7dc]">
-              <button
-                disabled={selectedDirectionIndex === 0}
-                onClick={() => setSelectedDirectionIndex(prev => Math.max(0, prev - 1))}
-                className="text-xs font-mono uppercase px-3.5 py-2 border border-[#ded7ca] rounded-sm bg-[#ffffff] hover:bg-[#faf8f5] disabled:opacity-40 disabled:cursor-not-allowed text-[#474035]"
-              >
-                ← Direzione Precedente
-              </button>
-              <span className="text-xs font-mono text-[#787164]">
-                Direzione {selectedDirectionIndex + 1} di {directionStrikes.length}
-              </span>
-              <button
-                disabled={selectedDirectionIndex === directionStrikes.length - 1}
-                onClick={() => setSelectedDirectionIndex(prev => Math.min(directionStrikes.length - 1, prev + 1))}
-                className="text-xs font-mono uppercase px-3.5 py-2 border border-[#ded7ca] rounded-sm bg-[#ffffff] hover:bg-[#faf8f5] disabled:opacity-40 disabled:cursor-not-allowed text-[#474035] flex items-center gap-1"
-              >
-                <span>Direzione Successiva</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-        </motion.div>
-      </AnimatePresence>
     </motion.div>
   );
 };

@@ -206,6 +206,20 @@ export interface Phase3FinalStrike {
  */
 export type EditionGenerationStatus = 'generated' | 'generating' | 'failed' | 'placeholder';
 
+export type PhaseStatus = 'pending' | 'generating' | 'completed' | 'fallback';
+
+export interface PhaseTelemetryItem {
+  phaseNumber: 1 | 2 | 3 | 4 | 5 | 6;
+  phaseTitle: string;
+  status: PhaseStatus;
+  provider: 'openai' | 'groq' | 'openrouter' | 'cloudflare' | 'gemini' | 'local' | null;
+  model: string | null;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  completedAt?: string | null;
+}
+
 export interface EditorialEdition {
   id: string;
   cycle: EditorialCycle;
@@ -216,6 +230,7 @@ export interface EditorialEdition {
   phase2Collision?: Phase2CollisionDecomposition;
   phase2Loop?: Phase2LoopFiveDirections;
   phase3FinalStrike?: Phase3FinalStrike;
+  phaseTelemetry?: PhaseTelemetryItem[];
   pins: WhiteboardPin[];
   tensions: DialecticalTension[];
   isLatest: boolean;
@@ -223,7 +238,7 @@ export interface EditorialEdition {
    * `null` quando il provider non è noto con certezza: prima di questa correzione
    * il front-end dichiarava "openrouter" anche sul contenuto di ripiego, mentendo all'utente.
    */
-  aiProvider?: 'groq' | 'openrouter' | 'cloudflare' | 'gemini' | null;
+  aiProvider?: 'openai' | 'groq' | 'openrouter' | 'cloudflare' | 'gemini' | null;
   aiModel?: string | null;
   generationStatus?: EditionGenerationStatus;
   /** Motivo leggibile del fallimento, presente solo con `generationStatus === 'failed'`. */

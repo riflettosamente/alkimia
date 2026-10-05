@@ -20,9 +20,9 @@ import {
 export { getSolarDateKey, formatItalianDate, formatTimeUntilNextCycle };
 export const getTimeUntilNextSolarCycle = getTimeUntilNextSolarMidnight;
 
-// v15: valida anche la presenza effettiva dei paragrafi del saggio (Fase 6) prima di salvare in cache locale.
-const CACHE_KEY_CURRENT = 'alkimia_daily_edition_cache_v15';
-const CACHE_KEY_ARCHIVE = 'alkimia_chronological_archive_v15';
+// v16: include phaseTelemetry per i 6 indicatori di stato e consumo token per singola Fase.
+const CACHE_KEY_CURRENT = 'alkimia_daily_edition_cache_v16';
+const CACHE_KEY_ARCHIVE = 'alkimia_chronological_archive_v16';
 
 export interface DailyCachedPayload {
   solarDateKey: string;
@@ -49,7 +49,9 @@ export function getLocalDailyCache(): DailyCachedPayload | null {
       'alkimia_daily_edition_cache_v13',
       'alkimia_chronological_archive_v13',
       'alkimia_daily_edition_cache_v14',
-      'alkimia_chronological_archive_v14'
+      'alkimia_chronological_archive_v14',
+      'alkimia_daily_edition_cache_v15',
+      'alkimia_chronological_archive_v15'
     ].forEach(k => {
       if (localStorage.getItem(k)) localStorage.removeItem(k);
     });
@@ -128,8 +130,8 @@ export interface DailyEditionPayload {
   isProvisional: boolean;
 }
 
-/** Intervallo di polling finché il saggio del giorno risulta provvisorio. */
-export const PROVISIONAL_POLL_INTERVAL_MS = 15000;
+/** Intervallo di polling finché il saggio del giorno risulta provvisorio (4s per mostrare in tempo reale l'accensione dei 6 pallini). */
+export const PROVISIONAL_POLL_INTERVAL_MS = 4000;
 
 /**
  * Un'edizione va persistita nel localStorage solo se il saggio è davvero prodotto dall'AI.
@@ -146,6 +148,8 @@ function isPersistable(editions: EditorialEdition[]): boolean {
     Array.isArray(lead.essay?.narrativeParagraphs) &&
     lead.essay.narrativeParagraphs.length > 0;
   if (!hasEssayParagraphs) return false;
+  const hasTelemetry = Array.isArray(lead.phaseTelemetry) && lead.phaseTelemetry.length === 6;
+  if (!hasTelemetry) return false;
   const status = lead.generationStatus;
   // Le edizioni d'archivio precedenti alla correzione non riportano lo stato: si accettano
   // solo se dichiarano un provider reale.
@@ -218,6 +222,7 @@ export async function loadDailyEditionPayload(): Promise<DailyEditionPayload> {
           },
           aiProvider: serverData.edition.aiProvider ?? generation?.aiProvider ?? null,
           aiModel: serverData.edition.aiModel ?? generation?.aiModel ?? null,
+          phaseTelemetry: serverData.edition.phaseTelemetry ?? generation?.phaseTelemetry ?? undefined,
           generationStatus,
           generationError: serverData.edition.generationError ?? generation?.error ?? null,
           generationAttempts:
