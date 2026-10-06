@@ -106,16 +106,15 @@ export const EditorialHeader: React.FC<EditorialHeaderProps> = ({
         {normalizedPhases.map((phase) => {
           const isCompleted = phase.status === 'completed';
           const isGenerating = phase.status === 'generating';
-          const isFallback = phase.status === 'fallback';
-          const isGemini = phase.provider === 'gemini';
+          const isFallback = phase.status === 'fallback' || phase.provider === 'local';
           const isOpen = selectedPhasePopup === phase.phaseNumber;
 
           const dotClass =
-            isCompleted && !isGemini
+            isCompleted && !isFallback
               ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.55)]'
               : isGenerating
                 ? 'bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.7)] animate-pulse'
-                : isFallback || isGemini
+                : isFallback
                   ? 'bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.55)]'
                   : 'bg-[#cfc8ba]';
 

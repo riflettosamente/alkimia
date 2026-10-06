@@ -20,9 +20,9 @@ import {
 export { getSolarDateKey, formatItalianDate, formatTimeUntilNextCycle };
 export const getTimeUntilNextSolarCycle = getTimeUntilNextSolarMidnight;
 
-// v16: include phaseTelemetry per i 6 indicatori di stato e consumo token per singola Fase.
-const CACHE_KEY_CURRENT = 'alkimia_daily_edition_cache_v16';
-const CACHE_KEY_ARCHIVE = 'alkimia_chronological_archive_v16';
+// v18: catena sequenziale rigorosa con cancelli obbligati tra Fasi 1->2->3->4->5->6.
+const CACHE_KEY_CURRENT = 'alkimia_daily_edition_cache_v18';
+const CACHE_KEY_ARCHIVE = 'alkimia_chronological_archive_v18';
 
 export interface DailyCachedPayload {
   solarDateKey: string;
@@ -51,7 +51,11 @@ export function getLocalDailyCache(): DailyCachedPayload | null {
       'alkimia_daily_edition_cache_v14',
       'alkimia_chronological_archive_v14',
       'alkimia_daily_edition_cache_v15',
-      'alkimia_chronological_archive_v15'
+      'alkimia_chronological_archive_v15',
+      'alkimia_daily_edition_cache_v16',
+      'alkimia_chronological_archive_v16',
+      'alkimia_daily_edition_cache_v17',
+      'alkimia_chronological_archive_v17'
     ].forEach(k => {
       if (localStorage.getItem(k)) localStorage.removeItem(k);
     });

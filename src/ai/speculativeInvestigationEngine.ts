@@ -824,7 +824,8 @@ export function buildStage5FinalStrikePrompt(
   vectorB: KeyOntologicalTopic,
   phase2EmpiricalArchive: any,
   phase3Collision: any,
-  phase4Loop: any
+  phase4Loop: any,
+  batch: 'part1' | 'part2' | 'all' = 'all'
 ): string {
   const empA = phase2EmpiricalArchive?.vectorA || {};
   const empB = phase2EmpiricalArchive?.vectorB || {};
@@ -839,8 +840,49 @@ export function buildStage5FinalStrikePrompt(
         .join('\n')
     : '';
 
+  const part1Instructions = `1. cuiProdest (Cosa cambia nella nostra comprensione — 8-10 frasi limpide in 2-3 capoversi separati da \\n\\n):
+   - Spiega in modo chiaro e discorsivo quale vecchia abitudine mentale ci faceva tenere separati «${vectorA.name}» e «${vectorB.name}».
+   - Racconta come le vicende storiche, i libri e le osservazioni dei protagonisti citati nella Fase 2 (in **grassetto**) acquistano improvvisamente un significato molto più chiaro, logico e concreto quando li leggiamo gli uni accanto agli altri invece di isolarli.
+
+2. groundbreakingDiscovery (Il filo invisibile che unisce i due fenomeni — 8-10 frasi limpide in 2-3 capoversi separati da \\n\\n):
+   - Spiega con parole chiare e appassionate qual è il meccanismo concreto — fisico, biologico o umano — che accomuna «${vectorA.name}» e «${vectorB.name}».
+   - Accompagna il lettore a capire *come* e *perché* i due fenomeni obbediscono alla stessa regola di fondo, collegando in modo comprensibile i modelli teorici, i processi del corpo e i dati emersi tra la Fase 2 e la Fase 4 (con i riferimenti chiave in **grassetto**).
+
+3. uninvestigatedBias (Perché finora nessuno aveva unito i puntini — 8-10 frasi limpide in 2-3 capoversi separati da \\n\\n):
+   - Racconta con semplicità perché chi studia «${vectorA.name}» e chi indaga «${vectorB.name}» non si sono mai accorti di osservare due lati dello stesso processo.
+   - Mostra concretamente come gli strumenti e i metodi del primo campo (in **grassetto**) siano stati calibrati per scartare come semplice disturbo proprio quei segnali sottili che gli studiosi del secondo campo cercavano invece di cogliere senza avere gli strumenti adatti.`;
+
+  const part2Instructions = `4. researchFocusIntersection (La prova sul campo: come verificarlo concretamente — 8-10 frasi limpide in 2-3 capoversi separati da \\n\\n):
+   - Descrivi in modo narrativo e visivo un esperimento concreto e realizzabile (o un protocollo di osservazione/indagine adatto alla natura dei due argomenti) che permetta di mettere alla prova questa connessione.
+   - Racconta passo dopo passo cosa accadrebbe se incrociassimo gli **strumenti, i testi e i protocolli di misura** della Fase 2 per osservare dal vivo il fenomeno, spiegando con chiarezza cosa misureremmo e quale risultato preciso dovremmo aspettarci di vedere.
+
+5. dizzyingRevelation (Lo sguardo d'insieme: verso il Saggio del Giorno — 8-10 frasi limpide in 2-3 capoversi separati da \\n\\n):
+   - Chiudi l'indagine con una riflessione ampia, limpida e suggestiva che raccoglie il senso umano e filosofico dell'intero percorso compiuto dalla Fase 1 alla Fase 4.
+   - Parti dall'episodio o dal reperto più significativo della Fase 2 e dalla **Metafora Comune** della Fase 3 per lasciare al lettore una visione d'insieme nitida e profonda, che apre naturalmente la strada al Saggio del Giorno (Fase 6).`;
+
+  const selectedInstructions =
+    batch === 'part1'
+      ? part1Instructions
+      : batch === 'part2'
+      ? part2Instructions
+      : `${part1Instructions}\n\n${part2Instructions}`;
+
+  const jsonFields =
+    batch === 'part1'
+      ? `    "cuiProdest": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, senza gergo forzato, con protagonisti e opere di Fase 2 in **grassetto**)",
+    "groundbreakingDiscovery": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, che spiegano con chiarezza il legame profondo tra i due fenomeni con riferimenti di Fase 2 in **grassetto**)",
+    "uninvestigatedBias": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, che spiegano perché finora i due mondi non si erano parlati, con strumenti e autori di Fase 2 in **grassetto**)"`
+      : batch === 'part2'
+      ? `    "researchFocusIntersection": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, che raccontano l'esperimento concreto sul campo con gli strumenti di Fase 2 in **grassetto**)",
+    "dizzyingRevelation": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, che offrono lo sguardo d'insieme finale verso il Saggio di Fase 6)"`
+      : `    "cuiProdest": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, senza gergo forzato, con protagonisti e opere di Fase 2 in **grassetto**)",
+    "groundbreakingDiscovery": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, che spiegano con chiarezza il legame profondo tra i due fenomeni con riferimenti di Fase 2 in **grassetto**)",
+    "uninvestigatedBias": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, che spiegano perché finora i due mondi non si erano parlati, con strumenti e autori di Fase 2 in **grassetto**)",
+    "researchFocusIntersection": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, che raccontano l'esperimento concreto sul campo con gli strumenti di Fase 2 in **grassetto**)",
+    "dizzyingRevelation": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, che offrono lo sguardo d'insieme finale verso il Saggio di Fase 6)"`;
+
   return `SEI IL NARRATORE SCIENTIFICO E FILOSOFICO DI ALKIMIA (FASE 5: L'AFFONDO FINALE — SINTESI GENERALE DELL'INDAGINE).
-Il tuo compito è tirare le fila dell'Archivio Empirico (FASE 2), della Collisione (FASE 3) e delle 5 Direzioni del Loop (FASE 4) tra «${vectorA.name}» e «${vectorB.name}» in una SINTESI NARRATIVA CHIARA, SCORREVOLE E PROFONDAMENTE COMPRENSIBILE, articolata in 5 grandi tappe conclusive.
+Il tuo compito è tirare le fila dell'Archivio Empirico (FASE 2), della Collisione (FASE 3) e delle 5 Direzioni del Loop (FASE 4) tra «${vectorA.name}» e «${vectorB.name}» in una SINTESI NARRATIVA CHIARA, SCORREVOLE E PROFONDAMENTE COMPRENSIBILE.
 
 ================================================================================
 MATERIALE DELL'INDAGINE DA RACCONTARE E UNIFICARE NELLA SINTESI:
@@ -880,37 +922,15 @@ REGOLE TASSATIVE DI CHIAREZZA NARRATIVA E LINGUAGGIO PER LA FASE 5:
 - SCRIVI PER FAR CAPIRE DAVVERO IL SENSO GENERALE AL LETTORE: usa una prosa narrativa, limpida, avvincente e naturale (alta divulgazione d'autore). Chi legge deve comprendere immediatamente *perché* questi due argomenti si illuminano a vicenda e *qual è* il ragionamento concreto che li lega.
 - PAROLE ED ESPRESSIONI SEVERAMENTE VIETATE: è proibito usare espressioni burocratiche, tribunalesche o da proclama ideologico come "viene scardinato", "viene smantellato", "vengono legittimati", "dogma", "monopolio interpretativo", "cecità incrociata", "recinto disciplinare", "isomorfismo", "epifenomenismo", "Vettore A", "Vettore B".
 - Non inventare nomi astrusi di "Teoremi" artificiali: spiega invece i concetti e i meccanismi reali con parole limpide, concrete e ben argomentate.
-- AMPIEZZA E STRUTTURA: ciascuno dei 5 punti deve essere un vero racconto ragionato di 8-10 frasi complete (circa 160-220 parole), suddiviso in 2 o 3 capoversi separati da "\\n\\n" per una lettura piacevole e ariosa.
+- AMPIEZZA E STRUTTURA: ciascun punto richiesto deve essere un vero racconto ragionato di 8-10 frasi complete (circa 160-220 parole), suddiviso in 2 o 3 capoversi separati da "\\n\\n" per una lettura piacevole e ariosa.
 - Cita in **grassetto** i nomi reali degli scienziati, i testimoni, i libri, le date e gli strumenti della Fase 2 inserendoli con naturalezza dentro la spiegazione narrativa:
 
-1. cuiProdest (Cosa cambia nella nostra comprensione — 8-10 frasi limpide in 2-3 capoversi separati da \\n\\n):
-   - Spiega in modo chiaro e discorsivo quale vecchia abitudine mentale ci faceva tenere separati «${vectorA.name}» e «${vectorB.name}».
-   - Racconta come le vicende storiche, i libri e le osservazioni dei protagonisti citati nella Fase 2 (in **grassetto**) acquistano improvvisamente un significato molto più chiaro, logico e concreto quando li leggiamo gli uni accanto agli altri invece di isolarli.
+${selectedInstructions}
 
-2. groundbreakingDiscovery (Il filo invisibile che unisce i due fenomeni — 8-10 frasi limpide in 2-3 capoversi separati da \\n\\n):
-   - Spiega con parole chiare e appassionate qual è il meccanismo concreto — fisico, biologico o umano — che accomuna «${vectorA.name}» e «${vectorB.name}».
-   - Accompagna il lettore a capire *come* e *perché* i due fenomeni obbediscono alla stessa regola di fondo, collegando in modo comprensibile i modelli teorici, i processi del corpo e i dati emersi tra la Fase 2 e la Fase 4 (con i riferimenti chiave in **grassetto**).
-
-3. uninvestigatedBias (Perché finora nessuno aveva unito i puntini — 8-10 frasi limpide in 2-3 capoversi separati da \\n\\n):
-   - Racconta con semplicità perché chi studia «${vectorA.name}» e chi indaga «${vectorB.name}» non si sono mai accorti di osservare due lati dello stesso processo.
-   - Mostra concretamente come gli strumenti e i metodi del primo campo (in **grassetto**) siano stati calibrati per scartare come semplice disturbo proprio quei segnali sottili che gli studiosi del secondo campo cercavano invece di cogliere senza avere gli strumenti adatti.
-
-4. researchFocusIntersection (La prova sul campo: come verificarlo concretamente — 8-10 frasi limpide in 2-3 capoversi separati da \\n\\n):
-   - Descrivi in modo narrativo e visivo un esperimento concreto e realizzabile che permetta di mettere alla prova questa connessione.
-   - Racconta passo dopo passo cosa accadrebbe se portassimo nello stesso laboratorio gli **strumenti e i protocolli di misura** della Fase 2 per osservare dal vivo il fenomeno, spiegando con chiarezza cosa misureremmo e quale risultato preciso dovremmo aspettarci di vedere.
-
-5. dizzyingRevelation (Lo sguardo d'insieme: verso il Saggio del Giorno — 8-10 frasi limpide in 2-3 capoversi separati da \\n\\n):
-   - Chiudi l'indagine con una riflessione ampia, limpida e suggestiva che raccoglie il senso umano e filosofico dell'intero percorso compiuto dalla Fase 1 alla Fase 4.
-   - Parti dall'episodio o dal reperto più significativo della Fase 2 e dalla **Metafora Comune** della Fase 3 per lasciare al lettore una visione d'insieme nitida e profonda, che apre naturalmente la strada al Saggio del Giorno (Fase 6).
-
-Rispondi RIGOROSAMENTE con questo JSON (SOLO i 5 campi narrativi, senza directionStrikes):
+Rispondi RIGOROSAMENTE con questo JSON:
 {
   "phase3FinalStrike": {
-    "cuiProdest": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, senza gergo forzato, con protagonisti e opere di Fase 2 in **grassetto**)",
-    "groundbreakingDiscovery": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, che spiegano con chiarezza il legame profondo tra i due fenomeni con riferimenti di Fase 2 in **grassetto**)",
-    "uninvestigatedBias": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, che spiegano perché finora i due mondi non si erano parlati, con strumenti e autori di Fase 2 in **grassetto**)",
-    "researchFocusIntersection": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, che raccontano l'esperimento concreto sul campo con gli strumenti di Fase 2 in **grassetto**)",
-    "dizzyingRevelation": "string (8-10 frasi narrative e limpide in 2-3 capoversi separati da \\n\\n, che offrono lo sguardo d'insieme finale verso il Saggio di Fase 6)"
+${jsonFields}
   }
 }`;
 }
