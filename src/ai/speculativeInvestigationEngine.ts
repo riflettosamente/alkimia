@@ -280,17 +280,22 @@ export function buildStep2LiteraryEssayPrompt(
   vectorB: KeyOntologicalTopic
 ): string {
   // Funzione interna per rimuovere i marcatori **...** dagli appunti passati alla Fase 6,
-  // così il modello riceve i nomi propri, le date e gli strumenti puliti e non copia gli asterischi nel saggio.
-  const stripMdBold = (s?: string) => (s ? s.replace(/\*\*(.*?)\*\*/g, '$1') : '');
+  // compattando i campi per rispettare la finestra TPM dei provider LPU (Groq TPM 8000).
+  const stripMdBold = (s?: string, maxChars: number = 180) => {
+    if (!s) return '';
+    const clean = s.replace(/\*\*(.*?)\*\*/g, '$1').trim();
+    if (clean.length <= maxChars) return clean;
+    return clean.slice(0, maxChars) + '...';
+  };
 
-  const syntheticVector = stripMdBold(step1Dossier?.systemPair?.syntheticVector) || `Collisione tra ${vectorA.name} e ${vectorB.name}`;
-  const ontologicalMatrix = stripMdBold(step1Dossier?.systemPair?.ontologicalMatrix) || "Matrice d'Attrito Ontologico";
+  const syntheticVector = stripMdBold(step1Dossier?.systemPair?.syntheticVector, 200) || `Collisione tra ${vectorA.name} e ${vectorB.name}`;
+  const ontologicalMatrix = stripMdBold(step1Dossier?.systemPair?.ontologicalMatrix, 200) || "Matrice d'Attrito Ontologico";
   
   const vA = step1Dossier?.phase1Decomposition?.vectorA;
   const vB = step1Dossier?.phase1Decomposition?.vectorB;
   const empA = step1Dossier?.phase1EmpiricalArchive?.vectorA;
   const empB = step1Dossier?.phase1EmpiricalArchive?.vectorB;
-  const empSynthesis = stripMdBold(step1Dossier?.phase1EmpiricalArchive?.crossArchiveSynthesis);
+  const empSynthesis = stripMdBold(step1Dossier?.phase1EmpiricalArchive?.crossArchiveSynthesis, 260);
   const p2 = step1Dossier?.phase2Collision;
   const p3 = step1Dossier?.phase3FinalStrike;
   const loopTracks = step1Dossier?.phase2Loop?.tracks || [];
@@ -302,15 +307,15 @@ export function buildStep2LiteraryEssayPrompt(
     const s3 = t.collision?.step3InvertedDirection || {};
     const s4 = t.collision?.step4CommonMetaphor || {};
     return [
-      `• DIREZIONE #${dirNum} — ${stripMdBold(t.directionTitle || 'Faglia Ontologica')} (Reperti esaminati: ${stripMdBold(t.empiricalEvidenceExamined)}):`,
-      `  - Inquadramento del Cassetto: ${stripMdBold(t.ontologicalAngle)}`,
-      `  - Verbi Specifici del Cassetto: ${stripMdBold(s1.fundamentalVerbA)} × ${stripMdBold(s1.fundamentalVerbB)}`,
-      `  - Sintesi Funzionale: ${stripMdBold(s1.functionalSynthesis)}`,
-      `  - Punto di Contatto (Soglia e Varco): ${stripMdBold(s2.boundaryA)} ⟶ ${stripMdBold(s2.accessDoorToB)}`,
-      `  - Crepa Asimmetrica: ${stripMdBold(s2.creviceContactPoint)}`,
-      `  - Inversione Operativa: ${stripMdBold(s3.methodAAppliedToB)} (Domanda di violazione: ${stripMdBold(s3.provocativeViolationQuestion)})`,
-      `  - Intuizione Contro-Intuitiva: ${stripMdBold(s3.counterIntuitiveInsight)}`,
-      `  - Simbolo Archetipale e Visione: ${stripMdBold(s4.masterMetaphorTitle)} — ${stripMdBold(s4.cosmologicalAnthropologicalGround)} — ${stripMdBold(s4.unifyingVision)}`
+      `• DIREZIONE #${dirNum} — ${stripMdBold(t.directionTitle || 'Faglia Ontologica', 100)} (Reperti: ${stripMdBold(t.empiricalEvidenceExamined, 150)}):`,
+      `  - Inquadramento: ${stripMdBold(t.ontologicalAngle, 160)}`,
+      `  - Verbi Specifici: ${stripMdBold(s1.fundamentalVerbA, 60)} × ${stripMdBold(s1.fundamentalVerbB, 60)}`,
+      `  - Sintesi Funzionale: ${stripMdBold(s1.functionalSynthesis, 180)}`,
+      `  - Punto di Contatto: ${stripMdBold(s2.boundaryA, 120)} ⟶ ${stripMdBold(s2.accessDoorToB, 120)}`,
+      `  - Crepa Asimmetrica: ${stripMdBold(s2.creviceContactPoint, 150)}`,
+      `  - Inversione Operativa: ${stripMdBold(s3.methodAAppliedToB, 150)}`,
+      `  - Intuizione Contro-Intuitiva: ${stripMdBold(s3.counterIntuitiveInsight, 180)}`,
+      `  - Simbolo Archetipale: ${stripMdBold(s4.masterMetaphorTitle, 100)} — ${stripMdBold(s4.unifyingVision, 180)}`
     ].join('\n');
   }).join('\n\n');
 

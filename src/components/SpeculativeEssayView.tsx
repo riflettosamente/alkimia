@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SpeculativeEssay } from '../types';
 import { motion } from 'motion/react';
+import { Copy, Check } from 'lucide-react';
 
 interface SpeculativeEssayViewProps {
   essay: SpeculativeEssay;
@@ -11,6 +12,8 @@ export const SpeculativeEssayView: React.FC<SpeculativeEssayViewProps> = ({
   essay,
   isLatest = false,
 }) => {
+  const [copied, setCopied] = useState(false);
+
   const cleanLiteraryText = (text?: unknown): string => {
     if (typeof text === 'string') {
       return text.replace(/\*\*(.*?)\*\*/g, '$1').trim();
@@ -69,6 +72,42 @@ export const SpeculativeEssayView: React.FC<SpeculativeEssayViewProps> = ({
 
   const paragraphs = extractedParagraphs;
 
+  const handleCopyEssay = async () => {
+    const title = cleanLiteraryText(essay.title);
+    const subtitle = cleanLiteraryText(essay.subtitle);
+    const thesis = cleanLiteraryText(essay.ontologicalThesis);
+
+    const parts: string[] = [];
+    if (title) parts.push(title);
+    if (subtitle) parts.push(subtitle);
+    if (thesis) parts.push(`«${thesis}»`);
+    if (paragraphs.length > 0) {
+      parts.push(...paragraphs);
+    }
+
+    const fullText = parts.join('\n\n');
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(fullText);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = fullText;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Impossibile copiare il saggio negli appunti:', err);
+    }
+  };
+
   return (
     <motion.article 
       initial={{ opacity: 0, y: 14, filter: 'blur(2px)' }}
@@ -84,6 +123,28 @@ export const SpeculativeEssayView: React.FC<SpeculativeEssayViewProps> = ({
       {/* Nastro discreto superiore */}
       <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#f4efe6] border border-[#d8d0c2] text-[10px] font-mono uppercase tracking-widest px-4 py-0.5 shadow-xs rotate-[-0.5deg] text-[#6b6456]">
         {isLatest ? "FASE 6 • Saggio del Giorno • Lettura Contemplativa" : "FASE 6 • Fascicolo d'Indagine Archiviato"}
+      </div>
+
+      {/* Pulsante Copia Saggio in stile minimal editoriale */}
+      <div className="flex justify-end mb-5">
+        <button
+          type="button"
+          onClick={handleCopyEssay}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono tracking-wider text-[#6e685c] hover:text-[#24211e] bg-[#faf8f5] hover:bg-[#f3ede2] border border-[#ded7ca] hover:border-[#c5bcac] rounded-xs shadow-2xs transition-colors cursor-pointer select-none"
+          title="Copia il saggio completo negli appunti (Titolo, Sottotitolo, Tesi e Corpo)"
+        >
+          {copied ? (
+            <>
+              <Check className="w-3.5 h-3.5 text-[#2e7d32]" />
+              <span className="text-[#2e7d32] font-medium">Copiato</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3.5 h-3.5 text-[#8c8270]" />
+              <span>Copia Saggio</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Titolo e Sottotitolo del Saggio */}

@@ -125,8 +125,7 @@ async function getGroqActiveModels(apiKey: string): Promise<string[]> {
             !id.includes("orpheus") &&
             !id.includes("allam") &&
             !id.includes("playai") &&
-            !id.includes("tts") &&
-            !id.includes("qwen3.8-27b")
+            !id.includes("tts")
           );
         // Con la pausa di 60 secondi tra ogni chiamata il TPM si azzera sempre:
         // privilegiamo in assoluto openai/gpt-oss-120b e llama-3.3-70b-versatile
@@ -137,6 +136,7 @@ async function getGroqActiveModels(apiKey: string): Promise<string[]> {
             if (id.includes("llama-4-maverick")) return 90;
             if (id.includes("llama-4-scout")) return 85;
             if (id.includes("70b")) return 80;
+            if (id.includes("qwen3.8-27b")) return 75;
             if (id.includes("32b") || id.includes("20b")) return 70;
             return 10;
           };
@@ -232,7 +232,7 @@ async function generateWithGroq(
               { role: "user", content: userPrompt }
             ],
             temperature: 0.65,
-            max_tokens: 3000,
+            max_tokens: 2600,
             ...(isJson ? { response_format: { type: "json_object" } } : {})
           })
         });
@@ -240,9 +240,9 @@ async function generateWithGroq(
         if (!response.ok) {
           const errorBody = (await response.text()).slice(0, 400);
           if (response.status === 429 || response.status === 413 || /rate_limit|tokens per minute/i.test(errorBody)) {
-            if (attempt === 1 && response.status === 429) {
-              console.log(`[Groq] Finestra TPM raggiunta su ${model}: attendo 60 secondi per azzerare il contatore TPM e riprovo sullo stesso modello...`);
-              await new Promise((r) => setTimeout(r, 60000));
+            if (attempt === 1) {
+              console.log(`[Groq] Finestra TPM raggiunta su ${model} (${response.status}): attendo 61 secondi per azzerare il contatore TPM e riprovo sullo stesso modello Groq...`);
+              await new Promise((r) => setTimeout(r, 61000));
               continue;
             }
             console.warn(`[Groq] Limite TPM/Rate su ${model} (${response.status}): passaggio al modello successivo...`);
@@ -578,10 +578,8 @@ async function runAiProviderChain(
     }
   | { ok: false; error: string; attempts: string[] }
 > {
-  const hasOpenAI = Boolean(
-    process.env.OPENAI_API_KEY?.trim() ||
-    (process.env.OPENAI_MODEL?.trim() && process.env.OPENAI_MODEL.trim().startsWith("sk-"))
-  );
+  // OpenAI disabilitato su richiesta (crediti API esauriti / assenza di piano free)
+  const hasOpenAI = false;
   const hasGroq = Boolean(
     process.env.GROQ_API_KEY?.trim() ||
     (process.env.GROQ_MODEL?.trim() && process.env.GROQ_MODEL.trim().startsWith("gsk_"))
@@ -604,27 +602,28 @@ async function runAiProviderChain(
     gemini: { provider: 'gemini' as const, configured: hasGemini, run: () => generateWithGemini(systemPrompt, userPrompt) }
   };
 
-  // Orchestrazione Multi-LLM per le 6 Fasi (con OpenAI dedicato come primo motore della Fase 6):
-  // - Fase 1 (Scomposizione Strutturale): Groq -> Cloudflare -> OpenRouter -> OpenAI -> Gemini
-  // - Fase 2 (Archivio Empirico): Groq -> OpenRouter -> Cloudflare -> OpenAI
-  // - Fase 3 (La Collisione): OpenRouter -> Cloudflare -> Groq -> OpenAI -> Gemini
-  // - Fase 4 (Loop a 5 Direzioni): Groq -> OpenRouter -> Cloudflare -> OpenAI -> Gemini
-  // - Fase 5 (L'Affondo Finale): Cloudflare -> OpenRouter -> Groq -> OpenAI -> Gemini
-  // - Fase 6 (Saggio del Giorno): OpenAI -> Groq -> OpenRouter -> Cloudflare -> Gemini (Autore principale: OpenAI)
-  let defaultChain = [providers.groq, providers.cloudflare, providers.openrouter, providers.openai, providers.gemini];
+  // Orchestrazione Multi-LLM per le 6 Fasi:
+  // - Fase 1 (Scomposizione Strutturale): Groq -> Cloudflare -> OpenRouter -> Gemini
+  // - Fase 2 (Archivio Empirico): Groq -> OpenRouter -> Cloudflare
+  // - Fase 3 (La Collisione): OpenRouter -> Cloudflare -> Groq -> Gemini
+  // - Fase 4 (Loop a 5 Direzioni): Groq -> OpenRouter -> Cloudflare -> Gemini
+  // - Fase 5 (L'Affondo Finale): Cloudflare -> OpenRouter -> Groq -> Gemini
+  // - Fase 6 (Saggio del Giorno): Groq esclusivo con regola 61s TPM (oppure OpenRouter/Cloudflare solo come estrema emergenza)
+  let defaultChain = [providers.groq, providers.cloudflare, providers.openrouter, providers.gemini];
 
   if (step === 'phase1') {
-    defaultChain = [providers.groq, providers.cloudflare, providers.openrouter, providers.openai, providers.gemini];
+    defaultChain = [providers.groq, providers.cloudflare, providers.openrouter, providers.gemini];
   } else if (step === 'phase2' || step === 'phase1_5') {
-    defaultChain = [providers.groq, providers.openrouter, providers.cloudflare, providers.openai, providers.gemini];
+    defaultChain = [providers.groq, providers.openrouter, providers.cloudflare, providers.gemini];
   } else if (step === 'phase3') {
-    defaultChain = [providers.openrouter, providers.cloudflare, providers.groq, providers.openai, providers.gemini];
+    defaultChain = [providers.openrouter, providers.cloudflare, providers.groq, providers.gemini];
   } else if (step === 'phase4') {
-    defaultChain = [providers.groq, providers.openrouter, providers.cloudflare, providers.openai, providers.gemini];
+    defaultChain = [providers.groq, providers.openrouter, providers.cloudflare, providers.gemini];
   } else if (step === 'phase5') {
-    defaultChain = [providers.cloudflare, providers.openrouter, providers.groq, providers.openai, providers.gemini];
+    defaultChain = [providers.cloudflare, providers.openrouter, providers.groq, providers.gemini];
   } else if (step === 'phase6' || step === 'literary') {
-    defaultChain = [providers.openai, providers.groq, providers.openrouter, providers.cloudflare, providers.gemini];
+    // Fase 6: Groq è il redattore primario obbligatorio per il saggio. Se 429 attende 61s
+    defaultChain = [providers.groq];
   }
 
   // Esclusione rigida di Gemini su richiesta esplicita
@@ -1402,7 +1401,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
           }
         } else {
           console.warn(
-            `[ALKIMIA] [${stepLabel}] Ciclo ${cycle}/${maxCycles}: nessun LLM disponibile (${res.error}). Blocco l'avanzamento, attendo 60s per azzerare il TPM e riprovo ${stepLabel}...`
+            `[ALKIMIA] [${stepLabel}] Ciclo ${cycle}/${maxCycles}: nessun LLM disponibile (${(res as any).error || 'errore provider'}). Blocco l'avanzamento, attendo 60s per azzerare il TPM e riprovo ${stepLabel}...`
           );
         }
 
@@ -2052,6 +2051,110 @@ app.post("/api/daily-edition/regenerate", async (req, res) => {
 
     res.json({ success: true, solarDateKey, started: true });
   } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 6d. Rigenerazione esplicita della sola Fase 6 (Saggio del Giorno) fondata sul dossier esistente delle Fasi 1-5.
+app.post("/api/daily-edition/regenerate-phase6", async (req, res) => {
+  try {
+    const bodyDate = typeof req.body?.solarDate === 'string' ? req.body.solarDate : undefined;
+    const solarDateKey =
+      bodyDate && /^\d{4}-\d{2}-\d{2}$/.test(bodyDate)
+        ? bodyDate
+        : new Date().toISOString().split('T')[0];
+
+    const savedDossier = readDossier(solarDateKey);
+    if (!savedDossier) {
+      return res.status(404).json({ success: false, error: `Nessun dossier trovato per la data ${solarDateKey}.` });
+    }
+
+    const pair = selectDailyVectorPair(solarDateKey);
+    const selectedA = pair.vectorA;
+    const selectedB = pair.vectorB;
+
+    const parsedStep1 = savedDossier.phase1To4 || {
+      systemPair: savedDossier.fullEdition?.systemPair || {
+        vectorA: selectedA.name,
+        vectorB: selectedB.name,
+        syntheticVector: `Collisione speculativa tra ${selectedA.name} e ${selectedB.name}`,
+        ontologicalMatrix: "Soglia di attrito ontologico",
+        derivationTimestamp: formatItalianDateServer(solarDateKey)
+      },
+      phase1Decomposition: savedDossier.phase1_decomposition || savedDossier.fullEdition?.phase1Decomposition,
+      phase1EmpiricalArchive: savedDossier.phase2_empiricalArchive || savedDossier.phase1_5_empiricalArchive || savedDossier.fullEdition?.phase1EmpiricalArchive,
+      phase2Collision: savedDossier.phase3_collision || savedDossier.fullEdition?.phase2Collision,
+      phase2Loop: savedDossier.phase4_loop || savedDossier.fullEdition?.phase2Loop,
+      phase3FinalStrike: savedDossier.phase5_finalStrike || savedDossier.fullEdition?.phase3FinalStrike
+    };
+
+    const literarySystemPrompt = buildLiteraryEssaySystemPrompt();
+    const step2Prompt = buildStep2LiteraryEssayPrompt(parsedStep1, selectedA, selectedB);
+
+    console.log(`[ALKIMIA] Rigenerazione mirata Fase 6 per ${solarDateKey} con Groq in corso...`);
+    const result = await runAiProviderChain(literarySystemPrompt, step2Prompt, { step: 'phase6' });
+
+    if (!result.ok) {
+      return res.status(500).json({ success: false, error: (result as any).error || "Errore durante la generazione della Fase 6 con Groq" });
+    }
+
+    const parsed = cleanAndParseJson(result.text);
+    const finalEssay = extractNormalizedEssay(parsed, solarDateKey);
+    if (!finalEssay) {
+      return res.status(500).json({ success: false, error: "Impossibile formattare il saggio generato da Groq." });
+    }
+
+    const entry = dailyEditionsCache[solarDateKey] || (await getOrCreateDailyEdition(solarDateKey));
+
+    entry.aiProvider = result.provider;
+    entry.aiModel = result.model;
+    entry.phaseTelemetry = (entry.phaseTelemetry || createInitialPhaseTelemetry()).map(item => {
+      if (item.phaseNumber === 6) {
+        return {
+          ...item,
+          status: 'completed',
+          provider: result.provider,
+          model: result.model,
+          promptTokens: result.usage.promptTokens,
+          completionTokens: result.usage.completionTokens,
+          totalTokens: result.usage.totalTokens,
+          completedAt: new Date().toISOString()
+        };
+      }
+      return item;
+    });
+
+    if (entry.edition) {
+      entry.edition.essay = finalEssay;
+      entry.edition.aiProvider = result.provider;
+      entry.edition.aiModel = result.model;
+      entry.edition.phaseTelemetry = entry.phaseTelemetry;
+      entry.edition.generationStatus = 'generated';
+      entry.edition.generationError = null;
+    }
+
+    entry.status = 'generated';
+    entry.error = null;
+    entry.finishedAt = Date.now();
+
+    saveDossierStep(solarDateKey, 'essay', finalEssay);
+    saveDossierStep(solarDateKey, 'phaseTelemetry', entry.phaseTelemetry);
+    if (entry.edition) {
+      saveDossierStep(solarDateKey, 'fullEdition', entry.edition);
+    }
+
+    console.log(`[ALKIMIA] FASE 6 per ${solarDateKey} redatta e salvata con successo da ${result.provider} (${result.model})!`);
+
+    res.json({
+      success: true,
+      solarDateKey,
+      provider: result.provider,
+      model: result.model,
+      usage: result.usage,
+      essay: finalEssay
+    });
+  } catch (err: any) {
+    console.error("[ALKIMIA] Errore rigenerazione Fase 6:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
