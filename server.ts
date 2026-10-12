@@ -33,6 +33,10 @@ import { buildPhase3FinalStrike } from "./src/data/canonicalFinalStrikes";
 import { recordVectorExtraction } from "./src/server/vectorTracker";
 import { saveDossierStep, readDossier } from "./src/server/dossierTracker";
 import { fetchTopicWebContext } from "./src/server/webSearchService";
+import {
+  publishDailyEssayToBlogger,
+  getBloggerConfigStatus
+} from "./src/server/bloggerPublisher";
 
 dotenv.config();
 
@@ -136,8 +140,8 @@ async function getGroqActiveModels(apiKey: string): Promise<string[]> {
             if (id.includes("llama-4-maverick")) return 90;
             if (id.includes("llama-4-scout")) return 85;
             if (id.includes("70b")) return 80;
-            if (id.includes("qwen3.8-27b")) return 75;
-            if (id.includes("32b") || id.includes("20b")) return 70;
+            if (id.includes("32b") || id.includes("20b")) return 78;
+            if (id.includes("qwen3.8-27b")) return 72;
             return 10;
           };
           return score(b) - score(a);
@@ -218,6 +222,8 @@ async function generateWithGroq(
     // per azzerare il contatore TPM al minuto e riproviamo sullo STESSO modello di punta prima di scendere di livello!
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
+        const isGptOss = model.includes("gpt-oss");
+        const effectiveMaxTokens = model.includes("qwen") ? 950 : 4096;
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
           signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
@@ -232,14 +238,21 @@ async function generateWithGroq(
               { role: "user", content: userPrompt }
             ],
             temperature: 0.65,
-            max_tokens: 2600,
+            max_tokens: effectiveMaxTokens,
+            ...(isGptOss ? { reasoning_effort: "low" } : {}),
             ...(isJson ? { response_format: { type: "json_object" } } : {})
           })
         });
 
         if (!response.ok) {
           const errorBody = (await response.text()).slice(0, 400);
-          if (response.status === 429 || response.status === 413 || /rate_limit|tokens per minute/i.test(errorBody)) {
+          const isDailyQuota = /tokens per day|\bTPD\b|output tokens per minute|\bOTPM\b/i.test(errorBody);
+          if (response.status === 413 || isDailyQuota) {
+            console.warn(`[Groq] Limite strutturale/giornaliero su ${model} (${response.status}): passaggio immediato al modello successivo...`);
+            errors.push(`${model}: quota/size limit (${response.status})`);
+            break;
+          }
+          if (response.status === 429 || /rate_limit|tokens per minute/i.test(errorBody)) {
             if (attempt === 1) {
               console.log(`[Groq] Finestra TPM raggiunta su ${model} (${response.status}): attendo 61 secondi per azzerare il contatore TPM e riprovo sullo stesso modello Groq...`);
               await new Promise((r) => setTimeout(r, 61000));
@@ -702,16 +715,44 @@ function cleanAndParseJson(rawText: string): any {
 }
 
 function stripMarkdownBoldServer(text: unknown): string {
+  let raw = "";
   if (typeof text === "string") {
-    return text.replace(/\*\*(.*?)\*\*/g, "$1").trim();
-  }
-  if (text && typeof text === "object") {
+    raw = text;
+  } else if (text && typeof text === "object") {
     const candidate = (text as any).text || (text as any).paragraph || (text as any).content || (text as any).statement || "";
     if (typeof candidate === "string") {
-      return candidate.replace(/\*\*(.*?)\*\*/g, "$1").trim();
+      raw = candidate;
     }
   }
-  return "";
+  if (!raw) return "";
+
+  return raw
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/^(?:Paragrafo\s*\d+|Movimento\s*\d+|§\s*\d+)\s*[:—\-–]\s*/gi, "")
+    .replace(/^\s*[-•*]\s+/gm, "")
+    .replace(/\b(?:La\s+)?trasformazione\s+alchemica\b/gi, "La convergenza profonda")
+    .replace(/\b(?:La\s+)?trasmutazione\s+alchemica\b/gi, "La sintesi profonda")
+    .replace(/\bvera\s+alkimia\b/gi, "convergenza profonda")
+    .replace(/\bquesta\s+alkimia\b/gi, "questa sintesi")
+    .replace(/\bnuova\s+alchimica\b/gi, "nuova convergenza")
+    .replace(/\bnuova\s+alkimia\b/gi, "nuova sintesi")
+    .replace(/\balkimia\b/gi, "convergenza")
+    .replace(/\balchimia\b/gi, "sintesi")
+    .replace(/\balchemica\b/gi, "intrinseca")
+    .replace(/\balchimica\b/gi, "convergenza")
+    .replace(/\balchemico\b/gi, "intrinseco")
+    .replace(/\bnella\s+sintesi\s+di\s+cinque\s+prospettive\s+che\s+hanno\s+guidato\s+la\s+ricerca\b/gi, "nell'intreccio dei diversi livelli di analisi")
+    .replace(/\bcinque\s+prospettive\b/gi, "molteplici dimensioni")
+    .replace(/\b5\s+prospettive\b/gi, "molteplici dimensioni")
+    .replace(/\bcinque\s+direzioni\b/gi, "molteplici traiettorie")
+    .replace(/\b5\s+direzioni\b/gi, "molteplici traiettorie")
+    .replace(/\b(?:Fase|Passo|Cassetto|Faglia)\s*\d+\b/gi, "indagine")
+    .replace(/\bLoop\s+cognitivo\b/gi, "percorso d'indagine")
+    .replace(/\bAffondo\s+finale\b/gi, "orizzonte conclusivo")
+    .replace(/\bAsse\s+cieco\b/gi, "punto limite")
+    .replace(/\bVerbo\s+fondamentale\b/gi, "principio operativo")
+    .replace(/\bCui\s+prodest\??\b/gi, "significato profondo")
+    .trim();
 }
 
 function extractNormalizedEssay(parsed: any, solarDateKey?: string): any | null {
@@ -734,7 +775,10 @@ function extractNormalizedEssay(parsed: any, solarDateKey?: string): any | null 
 
   let narrativeParagraphs: string[] = [];
   if (Array.isArray(rawNarrative)) {
-    narrativeParagraphs = rawNarrative.map(p => stripMarkdownBoldServer(p)).filter(Boolean);
+    narrativeParagraphs = rawNarrative
+      .flatMap(p => stripMarkdownBoldServer(p).split(/\n\s*\n/))
+      .map(p => p.trim())
+      .filter(Boolean);
   } else if (typeof rawNarrative === "string" && rawNarrative.trim().length > 0) {
     narrativeParagraphs = rawNarrative
       .split(/\n\s*\n/)
@@ -1813,6 +1857,12 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
       console.log(
         `[ALKIMIA] Tutte le 6 Fasi del ${formattedDate} sono state redatte in sequenza rigorosa e salvate con successo (Fase 6 completata da ${finalProvider}/${finalModel}).`
       );
+
+      // Pubblicazione automatica su Google Blogger (alkimiatoday.blogspot.com)
+      void publishDailyEssayToBlogger(solarDateKey, finalEssay, {
+        vectorA: selectedA.name,
+        vectorB: selectedB.name
+      });
     } catch (pipelineErr: any) {
       entry.status = 'failed';
       entry.error = pipelineErr?.message || String(pipelineErr);
@@ -2121,6 +2171,15 @@ app.post("/api/daily-edition/regenerate-phase6", async (req, res) => {
           completedAt: new Date().toISOString()
         };
       }
+      if (item.status !== 'completed') {
+        return {
+          ...item,
+          status: 'completed',
+          provider: item.provider || 'groq',
+          model: item.model || 'openai/gpt-oss-120b',
+          completedAt: item.completedAt || new Date().toISOString()
+        };
+      }
       return item;
     });
 
@@ -2145,16 +2204,74 @@ app.post("/api/daily-edition/regenerate-phase6", async (req, res) => {
 
     console.log(`[ALKIMIA] FASE 6 per ${solarDateKey} redatta e salvata con successo da ${result.provider} (${result.model})!`);
 
+    // Pubblicazione automatica su Blogger se configurato
+    const bloggerResult = await publishDailyEssayToBlogger(solarDateKey, finalEssay, {
+      vectorA: selectedA.name,
+      vectorB: selectedB.name,
+      force: req.body?.publishForce === true
+    });
+
     res.json({
       success: true,
       solarDateKey,
       provider: result.provider,
       model: result.model,
       usage: result.usage,
-      essay: finalEssay
+      essay: finalEssay,
+      blogger: bloggerResult
     });
   } catch (err: any) {
     console.error("[ALKIMIA] Errore rigenerazione Fase 6:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 6e. Stato e test di pubblicazione su Google Blogger (alkimiatoday.blogspot.com)
+app.get("/api/blogger/status", (req, res) => {
+  const solarDateKey =
+    typeof req.query.solarDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.solarDate)
+      ? req.query.solarDate
+      : new Date().toISOString().split('T')[0];
+  const savedDossier = readDossier(solarDateKey);
+  res.json({
+    success: true,
+    config: getBloggerConfigStatus(),
+    todayPublishedPost: savedDossier?.bloggerPost || null
+  });
+});
+
+app.post("/api/blogger/publish-daily", async (req, res) => {
+  try {
+    const bodyDate = typeof req.body?.solarDate === 'string' ? req.body.solarDate : undefined;
+    const solarDateKey =
+      bodyDate && /^\d{4}-\d{2}-\d{2}$/.test(bodyDate)
+        ? bodyDate
+        : new Date().toISOString().split('T')[0];
+
+    const entry = await getOrCreateDailyEdition(solarDateKey);
+    const savedDossier = readDossier(solarDateKey);
+    const essay = savedDossier?.essay || entry?.edition?.essay;
+
+    if (!essay || !essay.title) {
+      return res.status(400).json({
+        success: false,
+        error: `Nessun saggio disponibile per la data ${solarDateKey}.`
+      });
+    }
+
+    const result = await publishDailyEssayToBlogger(solarDateKey, essay, {
+      vectorA: entry?.edition?.systemPair?.vectorA,
+      vectorB: entry?.edition?.systemPair?.vectorB,
+      force: req.body?.force === true,
+      isDraft: req.body?.isDraft === true
+    });
+
+    res.status(result.published ? 200 : 400).json({
+      success: result.published,
+      solarDateKey,
+      blogger: result
+    });
+  } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
