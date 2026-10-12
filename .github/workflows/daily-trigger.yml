@@ -1,0 +1,102 @@
+name: Trigger Quotidiano Saggio del Giorno (Render)
+
+on:
+  schedule:
+    # Esegue ogni giorno alle 00:02 UTC (subito dopo lo scoccare della mezzanotte solare UTC)
+    - cron: '2 0 * * *'
+  # Permette anche l'avvio manuale con un clic dalla scheda "Actions" di GitHub per test immediati
+  workflow_dispatch:
+    inputs:
+      solarDate:
+        description: 'Data solare opzionale (YYYY-MM-DD). Lascia vuoto per usare la data odierna UTC.'
+        required: false
+        default: ''
+      forceRegenerate:
+        description: 'Forza la rigenerazione completa anche se esiste già un saggio per oggi'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  trigger-daily-essay:
+    name: Risveglio Render e Redazione 6 Fasi
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      # Usa il secret/variabile RENDER_APP_URL se definito su GitHub, altrimenti punta a https://alkimia.onrender.com
+      RENDER_URL: ${{ secrets.RENDER_APP_URL || vars.RENDER_APP_URL || 'https://alkimia.onrender.com' }}
+      INPUT_DATE: ${{ github.event.inputs.solarDate }}
+      FORCE_REGEN: ${{ github.event.inputs.forceRegenerate }}
+
+    steps:
+      - name: 1. Determina Data Solare UTC
+        id: date
+        run: |
+          if [ -n "$INPUT_DATE" ]; then
+            SOLAR_DATE="$INPUT_DATE"
+          else
+            SOLAR_DATE=$(date -u +"%Y-%m-%d")
+          fi
+          echo "solar_date=$SOLAR_DATE" >> $GITHUB_OUTPUT
+          echo "Data solare target: $SOLAR_DATE"
+
+      - name: 2. Risveglio istanza Render (Cold Start Wake-Up)
+        run: |
+          echo "Invio segnale di risveglio a $RENDER_URL/api/health ..."
+          curl -sS --retry 12 --retry-delay 10 --retry-all-errors --max-time 90 "$RENDER_URL/api/health" | jq .
+          echo "Istanza Render sveglia e operativa."
+
+      - name: 3. Avvio Redazione del Saggio del Giorno
+        run: |
+          SOLAR_DATE="${{ steps.date.outputs.solar_date }}"
+          if [ "$FORCE_REGEN" = "true" ]; then
+            echo "Avvio rigenerazione forzata per $SOLAR_DATE..."
+            curl -sS -X POST "$RENDER_URL/api/daily-edition/regenerate" \
+              -H "Content-Type: application/json" \
+              -d "{\"solarDate\": \"$SOLAR_DATE\", \"force\": true, \"wait\": false}" | jq .
+          else
+            echo "Richiesta edizione giornaliera per $SOLAR_DATE (avvia la catena se non ancora generata)..."
+            curl -sS "$RENDER_URL/api/daily-edition?solarDate=$SOLAR_DATE" | jq '{success, solarDateKey, generation}'
+          fi
+
+      - name: 4. Keep-Alive e Monitoraggio Fasi 1-6 fino al completamento
+        run: |
+          SOLAR_DATE="${{ steps.date.outputs.solar_date }}"
+          echo "Monitoraggio attivo ogni 30 secondi per impedire lo sleep di Render durante le pause TPM..."
+
+          MAX_POLLS=45 # 45 * 30s = 22.5 minuti massimi
+          for ((i=1; i<=MAX_POLLS; i++)); do
+            RESPONSE=$(curl -sS --max-time 30 "$RENDER_URL/api/daily-edition/status?solarDate=$SOLAR_DATE" || echo "{}")
+            STATUS=$(echo "$RESPONSE" | jq -r '.generation.status // "unknown"')
+            PROVIDER=$(echo "$RESPONSE" | jq -r '.generation.aiProvider // "n/a"')
+            MODEL=$(echo "$RESPONSE" | jq -r '.generation.aiModel // "n/a"')
+
+            echo "[Poll $i/$MAX_POLLS] Stato redazione ($SOLAR_DATE): $STATUS (Ultimo motore: $PROVIDER / $MODEL)"
+
+            # Mostra il progresso delle singole 6 fasi se presente
+            echo "$RESPONSE" | jq -r '.generation.phaseTelemetry[]? | "  -> Fase \(.phaseNumber): \(.status) (\(.provider // "-"))"' 2>/dev/null || true
+
+            if [ "$STATUS" = "generated" ]; then
+              echo "✅ Tutte le 6 Fasi e il Saggio del Giorno per $SOLAR_DATE sono stati completati con successo!"
+              echo "Verifica / Invio pubblicazione automatica su Google Blogger (alkimiatoday.blogspot.com)..."
+              curl -sS -X POST "$RENDER_URL/api/blogger/publish-daily" \
+                -H "Content-Type: application/json" \
+                -d "{\"solarDate\": \"$SOLAR_DATE\"}" | jq . || true
+              exit 0
+            fi
+
+            if [ "$STATUS" = "failed" ]; then
+              ERR=$(echo "$RESPONSE" | jq -r '.generation.error // "Errore sconosciuto"')
+              echo "⚠️ Tentativo fallito ($ERR). Riavvio la catena dopo pausa di raffreddamento..."
+              sleep 35
+              curl -sS -X POST "$RENDER_URL/api/daily-edition/regenerate" \
+                -H "Content-Type: application/json" \
+                -d "{\"solarDate\": \"$SOLAR_DATE\", \"force\": true, \"wait\": false}" >/dev/null || true
+            fi
+
+            sleep 30
+          done
+
+          echo "❌ Timeout raggiunto: la generazione non si è conclusa entro il tempo previsto."
+          exit 1
