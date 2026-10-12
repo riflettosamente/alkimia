@@ -279,152 +279,122 @@ export function buildStep2LiteraryEssayPrompt(
   vectorA: KeyOntologicalTopic,
   vectorB: KeyOntologicalTopic
 ): string {
-  // Funzione interna per rimuovere i marcatori **...** dagli appunti passati alla Fase 6,
+  // Funzione interna per rimuovere i marcatori **...** dagli appunti passati al saggio finale,
   // compattando i campi per rispettare la finestra TPM dei provider LPU (Groq TPM 8000).
-  const stripMdBold = (s?: string, maxChars: number = 180) => {
+  const stripMdBold = (s?: string, maxChars: number = 110) => {
     if (!s) return '';
     const clean = s.replace(/\*\*(.*?)\*\*/g, '$1').trim();
     if (clean.length <= maxChars) return clean;
     return clean.slice(0, maxChars) + '...';
   };
 
-  const syntheticVector = stripMdBold(step1Dossier?.systemPair?.syntheticVector, 200) || `Collisione tra ${vectorA.name} e ${vectorB.name}`;
-  const ontologicalMatrix = stripMdBold(step1Dossier?.systemPair?.ontologicalMatrix, 200) || "Matrice d'Attrito Ontologico";
+  const cleanTopicA = vectorA.name.replace(/^\d+\.\s*/, '');
+  const cleanTopicB = vectorB.name.replace(/^\d+\.\s*/, '');
+  const syntheticVector = stripMdBold(step1Dossier?.systemPair?.syntheticVector, 140) || `Convergenza tra ${cleanTopicA} e ${cleanTopicB}`;
+  const ontologicalMatrix = stripMdBold(step1Dossier?.systemPair?.ontologicalMatrix, 140) || "Campo d'indagine unificato";
   
   const vA = step1Dossier?.phase1Decomposition?.vectorA;
   const vB = step1Dossier?.phase1Decomposition?.vectorB;
   const empA = step1Dossier?.phase1EmpiricalArchive?.vectorA;
   const empB = step1Dossier?.phase1EmpiricalArchive?.vectorB;
-  const empSynthesis = stripMdBold(step1Dossier?.phase1EmpiricalArchive?.crossArchiveSynthesis, 260);
+  const empSynthesis = stripMdBold(step1Dossier?.phase1EmpiricalArchive?.crossArchiveSynthesis, 160);
   const p2 = step1Dossier?.phase2Collision;
   const p3 = step1Dossier?.phase3FinalStrike;
   const loopTracks = step1Dossier?.phase2Loop?.tracks || [];
 
-  const loopInsightsSummary = loopTracks.map((t: any, idx: number) => {
-    const dirNum = t.directionNumber || idx + 1;
+  const loopInsightsSummary = loopTracks.map((t: any) => {
     const s1 = t.collision?.step1StrippingFunction || {};
     const s2 = t.collision?.step2BlindAxis || {};
     const s3 = t.collision?.step3InvertedDirection || {};
     const s4 = t.collision?.step4CommonMetaphor || {};
     return [
-      `• DIREZIONE #${dirNum} — ${stripMdBold(t.directionTitle || 'Faglia Ontologica', 100)} (Reperti: ${stripMdBold(t.empiricalEvidenceExamined, 150)}):`,
-      `  - Inquadramento: ${stripMdBold(t.ontologicalAngle, 160)}`,
-      `  - Verbi Specifici: ${stripMdBold(s1.fundamentalVerbA, 60)} × ${stripMdBold(s1.fundamentalVerbB, 60)}`,
-      `  - Sintesi Funzionale: ${stripMdBold(s1.functionalSynthesis, 180)}`,
-      `  - Punto di Contatto: ${stripMdBold(s2.boundaryA, 120)} ⟶ ${stripMdBold(s2.accessDoorToB, 120)}`,
-      `  - Crepa Asimmetrica: ${stripMdBold(s2.creviceContactPoint, 150)}`,
-      `  - Inversione Operativa: ${stripMdBold(s3.methodAAppliedToB, 150)}`,
-      `  - Intuizione Contro-Intuitiva: ${stripMdBold(s3.counterIntuitiveInsight, 180)}`,
-      `  - Simbolo Archetipale: ${stripMdBold(s4.masterMetaphorTitle, 100)} — ${stripMdBold(s4.unifyingVision, 180)}`
+      `- Ambito «${stripMdBold(t.directionTitle || 'Nesso interdisciplinare', 70)}» (Reperti: ${stripMdBold(t.empiricalEvidenceExamined, 95)}):`,
+      `  Dinamica: ${stripMdBold(s1.fundamentalVerbA, 40)} / ${stripMdBold(s1.fundamentalVerbB, 40)} — ${stripMdBold(s1.functionalSynthesis, 110)}`,
+      `  Passaggio critico: ${stripMdBold(s2.creviceContactPoint, 105)} — Ribaltamento: ${stripMdBold(s3.counterIntuitiveInsight, 110)}`,
+      `  Immagine guida: ${stripMdBold(s4.masterMetaphorTitle, 70)} — ${stripMdBold(s4.unifyingVision, 110)}`
     ].join('\n');
-  }).join('\n\n');
+  }).join('\n');
 
-  return `HAI A DISPOSIZIONE L'INTERA INDAGINE PRELIMINARE ARTICOLATA NELLE FASI 1, 2, 3, 4 E 5.
-IL TUO UNICO COMPITO ORA È COMPORRE IL SAGGIO DEL GIORNO (FASE 6) IN PURA PROSA CONTINUA D'AUTORE (1.200 - 1.800 PAROLE), SENZA ELENCHI, SENZA GERGO PROCEDURALE E SENZA ALCUN GRASSETTO (**).
+  return `COMPONI IL SAGGIO DEL GIORNO IN PURA PROSA CONTINUA D'AUTORE (1.200 - 1.800 PAROLE), TRASFORMANDO GLI APPUNTI DI RICERCA SOTTOSTANTI IN UN RACCONTO FILOSOFICO-SCIENTIFICO UNITARIO, SENZA ELENCHI, SENZA LESSICO METODOLOGICO E SENZA ALCUN GRASSETTO (**).
 
 ================================================================================
-DOSSIER COMPLETO DELLE FASI PRECEDENTI (DA INCARDINARE NELLA PROSA DEL SAGGIO)
+MATERIALE DI RICERCA DA Fondere NELLA PROSA CONTINUA DEL SAGGIO
 ================================================================================
-PRIMO ARGOMENTO: ${vectorA.name}
-SECONDO ARGOMENTO: ${vectorB.name}
-SINTESI D'ATTRITO: ${syntheticVector}
-MATRICE ONTOLOGICA: ${ontologicalMatrix}
+TEMA A: ${cleanTopicA}
+TEMA B: ${cleanTopicB}
+NUCLEO CONCETTUALE: ${syntheticVector}
+ORIZZONTE TEORICO: ${ontologicalMatrix}
 
-1. COORDINATE E SOGLIE (dalla Fase 1):
-- ${vectorA.name}: Contesto: ${stripMdBold(vA?.whenWhere)} | Confine: ${stripMdBold(vA?.whichBoundary)} | Il Velato: ${stripMdBold(vA?.whyVeiled)}
-- ${vectorB.name}: Contesto: ${stripMdBold(vB?.whenWhere)} | Confine: ${stripMdBold(vB?.whichBoundary)} | Il Velato: ${stripMdBold(vB?.whyVeiled)}
+A. CONTESTO STORICO E CONFINE EPISTEMOLOGICO:
+- ${cleanTopicA}: ${stripMdBold(vA?.whenWhere)} | Limite: ${stripMdBold(vA?.whichBoundary)} | Zona d'ombra: ${stripMdBold(vA?.whyVeiled)}
+- ${cleanTopicB}: ${stripMdBold(vB?.whenWhere)} | Limite: ${stripMdBold(vB?.whichBoundary)} | Zona d'ombra: ${stripMdBold(vB?.whyVeiled)}
 
-2. ARCHIVIO EMPIRICO INTEGRALE DEI 4 CASSETTI (dalla Fase 2 — I NOMI, LE DATE, LE OPERE E GLI STRUMENTI DEVONO ESSERE CITATI NEL SAGGIO!):
-- [Cassetto Opere e Dossier di ${vectorA.name}]: ${stripMdBold(empA?.foundationalTexts)}
-- [Cassetto Scienziati e Testimoni di ${vectorA.name}]: ${stripMdBold(empA?.keyFiguresAndWitnesses)}
-- [Cassetto Strumenti, Frequenze e Reperti di ${vectorA.name}]: ${stripMdBold(empA?.materialEvidenceAndTools)}
-- [Cassetto Teoremi e Paradigmi di ${vectorA.name}]: ${stripMdBold(empA?.breakthroughTheories)}
-- [Cassetto Opere e Dossier di ${vectorB.name}]: ${stripMdBold(empB?.foundationalTexts)}
-- [Cassetto Scienziati e Testimoni di ${vectorB.name}]: ${stripMdBold(empB?.keyFiguresAndWitnesses)}
-- [Cassetto Strumenti, Frequenze e Reperti di ${vectorB.name}]: ${stripMdBold(empB?.materialEvidenceAndTools)}
-- [Cassetto Teoremi e Paradigmi di ${vectorB.name}]: ${stripMdBold(empB?.breakthroughTheories)}
-- [Sintesi dell'Incrocio Empirico]: ${empSynthesis}
+B. FONTI STORICHE, AUTORI, STRUMENTI E TEORIE (cita naturalmente nomi, date, opere e strumenti nel flusso del racconto):
+- Opere e documenti (${cleanTopicA}): ${stripMdBold(empA?.foundationalTexts)}
+- Protagonisti e studiosi (${cleanTopicA}): ${stripMdBold(empA?.keyFiguresAndWitnesses)}
+- Strumenti, misure e reperti (${cleanTopicA}): ${stripMdBold(empA?.materialEvidenceAndTools)}
+- Modelli teorici (${cleanTopicA}): ${stripMdBold(empA?.breakthroughTheories)}
+- Opere e documenti (${cleanTopicB}): ${stripMdBold(empB?.foundationalTexts)}
+- Protagonisti e studiosi (${cleanTopicB}): ${stripMdBold(empB?.keyFiguresAndWitnesses)}
+- Strumenti, misure e reperti (${cleanTopicB}): ${stripMdBold(empB?.materialEvidenceAndTools)}
+- Modelli teorici (${cleanTopicB}): ${stripMdBold(empB?.breakthroughTheories)}
+- Connessione empirica: ${empSynthesis}
 
-3. LA COLLISIONE E L'ESPERIMENTO INCROCIATO (dalla Fase 3):
-- Verbi estratti: ${stripMdBold(p2?.step1StrippingFunction?.fundamentalVerbA)} × ${stripMdBold(p2?.step1StrippingFunction?.fundamentalVerbB)} (${stripMdBold(p2?.step1StrippingFunction?.functionalSynthesis)})
-- Limite Strumentale e Soglia Cieca: ${stripMdBold(p2?.step2BlindAxis?.boundaryA)} ⟶ ${stripMdBold(p2?.step2BlindAxis?.accessDoorToB)} (${stripMdBold(p2?.step2BlindAxis?.creviceContactPoint)})
-- Esperimento di Laboratorio Incrociato: ${stripMdBold(p2?.step3InvertedDirection?.methodAAppliedToB)} — ${stripMdBold(p2?.step3InvertedDirection?.counterIntuitiveInsight)}
-- Metafora Madre: ${stripMdBold(p2?.step4CommonMetaphor?.masterMetaphorTitle)} — ${stripMdBold(p2?.step4CommonMetaphor?.unifyingVision)}
+C. MECCANISMO CONGIUNTO E IPOTESI SPERIMENTALE:
+- Azione reciproca: ${stripMdBold(p2?.step1StrippingFunction?.fundamentalVerbA)} / ${stripMdBold(p2?.step1StrippingFunction?.fundamentalVerbB)} (${stripMdBold(p2?.step1StrippingFunction?.functionalSynthesis)})
+- Soglia strumentale: ${stripMdBold(p2?.step2BlindAxis?.boundaryA)} ⟶ ${stripMdBold(p2?.step2BlindAxis?.accessDoorToB)} (${stripMdBold(p2?.step2BlindAxis?.creviceContactPoint)})
+- Verifica incrociata: ${stripMdBold(p2?.step3InvertedDirection?.methodAAppliedToB)} — ${stripMdBold(p2?.step3InvertedDirection?.counterIntuitiveInsight)}
+- Immagine unificante: ${stripMdBold(p2?.step4CommonMetaphor?.masterMetaphorTitle)} — ${stripMdBold(p2?.step4CommonMetaphor?.unifyingVision)}
 
-4. LE 5 DIREZIONI INTEGRALI DEL LOOP: SINTESI FUNZIONALI, CREPE ASIMMETRICHE E INTUIZIONI CONTRO-INTUITIVE (dalla Fase 4):
+D. APPROFONDIMENTI TEMATICI EMERSI DALL'INDAGINE (fondili nel discorso senza mai dire "cinque prospettive" o "cinque direzioni"):
 ${loopInsightsSummary}
 
-5. SINTESI NARRATIVA GENERALE DELL'INDAGINE INTEGRALE NEI 5 PUNTI ESTESI (dalla Fase 5):
-- [§1 Cosa cambia nella nostra comprensione]:
-${stripMdBold(p3?.cuiProdest)}
-- [§2 Il filo invisibile che unisce i due fenomeni]:
-${stripMdBold(p3?.groundbreakingDiscovery)}
-- [§3 Perché finora nessuno aveva unito i puntini]:
-${stripMdBold(p3?.uninvestigatedBias)}
-- [§4 La prova sul campo e la verifica sperimentale]:
-${stripMdBold(p3?.researchFocusIntersection)}
-- [§5 Lo sguardo d'insieme]:
-${stripMdBold(p3?.dizzyingRevelation)}
+E. IMPLICAZIONI SCIENTIFICHE, APPLICATIVE E FILOSOFICHE:
+- Mutamento di paradigma: ${stripMdBold(p3?.cuiProdest)}
+- Legge sottostante: ${stripMdBold(p3?.groundbreakingDiscovery)}
+- Ostacolo epistemologico superato: ${stripMdBold(p3?.uninvestigatedBias)}
+- Protocolli di verifica e applicazioni: ${stripMdBold(p3?.researchFocusIntersection)}
+- Visione conclusiva: ${stripMdBold(p3?.dizzyingRevelation)}
 
 ================================================================================
-DIRETTIVE DI COMPOSIZIONE PLASTICA DEL SAGGIO FINALE (LA VERA ALKIMIA E I NUOVI ORIZZONTI)
+DIRETTIVE DI COMPOSIZIONE DEL SAGGIO FINALE
 ================================================================================
-Il Saggio del Giorno (Fase 6) non deve essere una fredda cronaca di nomi e date, né un esercizio estetico astratto. Deve far capire con forza e chiarezza al lettore:
-1. QUAL È LA VERA ALKIMIA TRA «${vectorA.name}» E «${vectorB.name}»: cosa succede quando questi due mondi smettono di essere separati e si fecondano a vicenda?
-2. QUALE NUOVA INTUIZIONE ABBIAMO RIVELATO: qual è la scoperta concettuale o empirica emersa attraverso la Collisione (Fase 3) e le 5 Direzioni (Fase 4) che prima rimaneva invisibile?
-3. QUALI NUOVI CAMPI DI RICERCA E APPLICAZIONI POSSIAMO ESPLORARE: quali indagini scientifiche, tecnologiche, cliniche, antropologiche o filosofiche nascono da questa sintesi (Fase 5)?
+Il saggio non deve essere una fredda cronaca di nomi e date, né un esercizio astratto. Deve far comprendere al lettore con naturalezza e profondità:
+1. Cosa accade quando «${cleanTopicA}» e «${cleanTopicB}» smettono di essere trattati come compartimenti stagni e vengono letti attraverso un unico principio operativo.
+2. Qual è la scoperta concettuale o empirica che prima rimaneva invisibile a ciascuna disciplina presa singolarmente.
+3. Quali indagini scientifiche, tecnologiche, cliniche, antropologiche o filosofiche diventano concretamente possibili grazie a questa sintesi.
 
-REGOLA DI PLASTICITÀ SU MISURA PER LA COPPIA «${vectorA.name}» × «${vectorB.name}»:
-Adatta con intelligenza il registro, il lessico e la natura delle applicazioni ai due argomenti in gioco:
-- Se i due argomenti sono prevalentemente fisici, genetici o neurobiologici, approfondisci i meccanismi sperimentali, biofisici e tecnologici.
-- Se uno o entrambi gli argomenti riguardano l'esperienza interiore, la Spiritualità o l'Aldilà, non forzare artificiosamente gerghi di laboratorio dove suonerebbero finti: esplora con rigore e profondità la fenomenologia della coscienza, le scienze contemplative, la trasformazione interiore dell'uomo e le nuove domande filosofiche sul vivere e sul morire.
-- Se gli argomenti toccano anomalie di frontiera (UFO/UAP, Extraterrestri, Transcomunicazione), metti al centro il problema della percezione, della decodifica del segnale, dei limiti degli strumenti umani e dell'incontro con l'alterità cosmica.
-- Usa i nomi, le date, le opere e gli strumenti della Fase 2 come fondamenta reali del discorso, spiegando sempre PERCHÉ sono decisivi per la nostra tesi.
-
-REGOLA TIPOGRAFICA E LINGUISTICA TASSATIVA PER LA FASE 6:
-- NON USARE MAI IL GRASSETTO (**termine**) né asterischi nel titolo, nel sottotitolo, nella tesi o nei 5 paragrafi!
-- Scrivi in un ITALIANO CONTEMPORANEO LIMPIDO, NATURALE, SCORREVOLE E INCISIVO: frasi ben costruite, nessi logici cristallini, zero parole inventate o calchi innaturali, zero pose criptiche o barocche.
-
-Struttura il saggio in 5 ampi paragrafi narrativi continui (1.200 - 1.800 parole complessive):
-- Paragrafo 1 — L'Innesco e il Paradosso di Partenza:
-  Entra nel vivo mettendo in scena il contrasto apparente tra «${vectorA.name}» e «${vectorB.name}» attraverso i fatti, i protagonisti o i testi più emblematici dell'indagine (senza grassetti), facendo subito percepire al lettore quale grande domanda si nasconde dietro la loro separazione.
-- Paragrafo 2 — La Soglia Condivisa e il Punto di Contatto:
-  Racconta in modo limpido dove gli strumenti, i modelli o i linguaggi del primo ambito incontrano il proprio limite e mostra come proprio quella soglia apra il varco verso il secondo fenomeno (integrando con naturalezza la Collisione di Fase 3).
-- Paragrafo 3 — La Trasmutazione Alchemica e le Nuove Intuizioni:
-  Il cuore pulsante del saggio: intreccia in un discorso fluido e illuminante le Sintesi Funzionali, le Crepe Asimmetriche e le Intuizioni Contro-Intuitive emerse nelle 5 direzioni della Fase 4 (senza mai usare le parole "Loop", "Cassetto" o "Direzione"). Spiega chiaramente qual è la nuova chiave di lettura che trasforma entrambi gli argomenti.
-- Paragrafo 4 — Nuovi Campi di Ricerca, Applicazioni e Indagini Filosofiche:
-  Raccogli la ricchezza dei 5 punti della Fase 5 e mostra concretamente quali orizzonti inediti si aprono: quali nuovi esperimenti, protocolli di osservazione, applicazioni pratiche o nuove ricerche filosofiche sulla mente, sulla materia e sull'uomo diventano finalmente possibili grazie a questa Alkimia.
-- Paragrafo 5 — Lo Sguardo d'Insieme e la Nuova Prospettiva sul Reale:
-  Riprende l'immagine unificante del dossier e porta il discorso alla sua conclusione più ampia e luminosa, lasciando al lettore una visione chiara, profonda e trasformativa del legame tra i due mondi.
+REGOLA DI PLASTICITÀ SU MISURA PER «${cleanTopicA}» E «${cleanTopicB}»:
+- Se gli argomenti sono fisici, genetici o neurobiologici, approfondisci i meccanismi sperimentali, biofisici e tecnologici.
+- Se riguardano l'esperienza interiore, la Spiritualità o l'Aldilà, non forzare gerghi di laboratorio dove suonerebbero artificiosi: esplora con rigore la fenomenologia della coscienza, le scienze contemplative, la trasformazione interiore dell'uomo e le domande sul vivere e sul morire.
+- Se toccano anomalie di frontiera (UFO/UAP, Extraterrestri, Transcomunicazione), metti al centro il problema della percezione, della decodifica del segnale, dei limiti degli strumenti umani e dell'incontro con l'alterità cosmica.
 
 ================================================================================
-NEGATIVE CONSTRAINT LIST (LISTA NERA ASSOLUTA - MAI NEL TESTO)
+REGOLE TASSATIVE SULLA FORMA E SUL LESSICO (OBBLIGATORIE)
 ================================================================================
-Nel testo del saggio (titolo, sottotitolo, tesi ontologica, paragrafi) È TASSATIVAMENTE VIETATO:
-- NON USARE asterischi o grassetti Markdown (**...**)
-- NON USARE parole deformate, neologismi spuri o calchi non italiani (es. "regula", "ipotese", "pinealico", "spaziativa", "piante cerebrale")
-- NON USARE le formule: "Cui prodest", "Cui prodest?", "A chi giova", "viene scardinato", "vengono legittimati", "monopolio interpretativo"
-- NON USARE la formula: "La vertigine finale" o "vertigine finale"
-- NON USARE formule preconfezionate come: "Stanza del reale", "porte girevoli tra i piani"
-- NON USARE etichette procedurali: "Fase 1", "Fase 2", "Fase 3", "Fase 4", "Fase 5", "Fase 6", "Passo 1", "Passo 2", "Cassetto 1", "Cassetto 2", "Cassetto", "Vettore A", "Vettore B"
-- NON USARE nomi di passaggi: "Loop cognitivo", "5 direzioni", "Asse cieco", "Trapianto di funzione", "When/Where", "What", "How"
-- NON USARE elenchi puntati, elenchi numerati, né titoletti o notazioni (§)
-- NON USARE formule metanarrative da chatbot ("In questo saggio...", "Analizzeremo ora...")
+1. DIVIETO TOTALE DI IMPALCATURE: Non utilizzare mai elenchi puntati, elenchi numerati, schemi, tabelle o titoletti di paragrafo. Non usare mai asterischi o grassetti Markdown (**...**) né simboli (§).
 
-COMPUTO TOTALE PAROLE: Rigorosamente compreso tra 1.200 e 1.800 parole.
+2. DIVIETO DI LESSICO METODOLOGICO: Non nominare mai le fasi ("Fase 1", "Fase 2", "Fase 3", "Fase 4", "Fase 5", "Fase 6", "Passo 1", "Passo 2", "Loop", "Loop cognitivo", "Faglia 3", "Faglia", "Affondo", "Affondo finale", "Interrogativo", "Asse cieco", "Verbo fondamentale", "Cui prodest", "Collisione", "Cassetto", "Cassetto 1", "Cassetto 2", "Vettore A", "Vettore B", "Direzione", "5 direzioni", "cinque direzioni", "cinque prospettive", "5 prospettive", "Sintesi funzionale", "Crepa asimmetrica", "Intuizione contro-intuitiva", "intuizioni controintuitive", "Paradosso di partenza", "Soglia condivisa", "Punto di contatto"). L'apparato metodologico deve essere completamente invisibile, come le ossa sotto la pelle viva.
+
+3. DIVIETO DI AUTOREFERENZIALITÀ E METACOMMENTO:
+- NON USARE MAI le parole "Alkimia", "alkimia", "alchimia", "alchemico", "alchemica", "trasformazione alchemica" o "trasmutazione alchemica" né nel titolo, né nel sottotitolo, né nella tesi, né nei paragrafi!
+- NON USARE formule scolastiche o metanarrative come "In questo saggio...", "La domanda che si pone è...", "Il paradosso di partenza è...", "La sintesi di cinque prospettive...", "I nuovi campi di ricerca che emergono sono...".
+- NON USARE parole deformate, neologismi spuri o calchi non italiani (es. "regula", "ipotese", "pinealico", "spaziativa", "piante cerebrale").
+
+COMPUTO TOTALE PAROLE: Rigorosamente compreso tra 1.200 e 1.800 parole, articolato in 5 ampi paragrafi continui di prosa d'autore.
 
 Rispondi RIGOROSAMENTE con questo JSON:
 {
   "essay": {
-    "title": "string (titolo limpido, evocativo e incisivo che esprima l'Alkimia tra i due argomenti, privo di numeri e privo di asterischi)",
-    "subtitle": "string (sottotitolo chiaro che sintetizzi la nuova intuizione e l'orizzonte di ricerca, privo di asterischi)",
-    "ontologicalThesis": "string (la tesi centrale dell'Alkimia formulata in modo cristallino, profondo e memorabile, priva di asterischi)",
+    "title": "string (titolo limpido, evocativo e incisivo sul legame profondo tra i due fenomeni, privo delle parole alkimia/alchimia, privo di numeri e privo di asterischi)",
+    "subtitle": "string (sottotitolo chiaro che sintetizzi l'ipotesi centrale e il nuovo orizzonte di studio, privo delle parole alkimia/alchimia e privo di asterischi)",
+    "ontologicalThesis": "string (la tesi centrale formulata in modo cristallino, profondo e memorabile, priva delle parole alkimia/alchimia e priva di asterischi)",
     "narrativeParagraphs": [
-      "string (Paragrafo 1: L'Innesco e il Paradosso di Partenza, in italiano limpido e senza grassetti, minimo 250 parole)",
-      "string (Paragrafo 2: La Soglia Condivisa e il Punto di Contatto, senza grassetti, minimo 250 parole)",
-      "string (Paragrafo 3: La Trasmutazione Alchemica e le Nuove Intuizioni emerse dall'indagine, senza grassetti, minimo 300 parole)",
-      "string (Paragrafo 4: Nuovi Campi di Ricerca, Applicazioni e Indagini Filosofiche aperti da questa Alkimia, senza grassetti, minimo 280 parole)",
-      "string (Paragrafo 5: Lo Sguardo d'Insieme e la Nuova Prospettiva sul Reale, senza grassetti, minimo 250 parole)"
+      "string (Primo paragrafo in pura prosa continua: entra direttamente nei fatti storici, negli autori e negli esperimenti concreti dei due ambiti, senza grassetti e senza formule metanarrative, minimo 250 parole)",
+      "string (Secondo paragrafo in pura prosa continua: esplora il limite degli strumenti e dei modelli del primo ambito e mostra come esso apra il passaggio verso il secondo fenomeno, senza grassetti, minimo 250 parole)",
+      "string (Terzo paragrafo in pura prosa continua: sviluppa in modo unitario e fluido il meccanismo profondo che lega i due fenomeni senza mai menzionare prospettive numerate, fasi o lessico metodologico, senza grassetti, minimo 300 parole)",
+      "string (Quarto paragrafo in pura prosa continua: delinea concretamente le nuove piste sperimentali, cliniche, tecnologiche, antropologiche e filosofiche aperte da questa scoperta, senza grassetti, minimo 280 parole)",
+      "string (Quinto paragrafo in pura prosa continua: conduce il ragionamento alla sua visione conclusiva sulla materia, sulla coscienza e sul reale, senza grassetti, minimo 250 parole)"
     ]
   }
 }`;
@@ -760,6 +730,9 @@ export function buildStage4LoopPrompt(
       ? 'Il tuo compito in questa chiamata è sviluppare con la MASSIMA PROFONDITÀ NARRATIVA le DIREZIONI 4 e 5 della FASE 4 (Loop a 5 Direzioni).'
       : 'Il tuo compito è sviluppare integralmente le 5 DIREZIONI della FASE 4 (Loop a 5 Direzioni).';
 
+  const compact4 = (s?: string, max: number = 420) =>
+    s ? (s.length > max ? s.slice(0, max) + '...' : s) : '';
+
   return `SEI IL MOTORE DEL LOOP COGNITIVO A 5 DIREZIONI DI ALKIMIA (FASE 4).
 ${batchHeader}
 
@@ -767,29 +740,29 @@ ${batchHeader}
 INVENTARIO INTEGRALE PER CASSETTI DELLA FASE 2 (ARCHIVIO EMPIRICO):
 
 [CASSETTO 1 — STRUMENTI, FREQUENZE E REPERTI MATERIALI (materialEvidenceAndTools)]
-- ${vectorA.name}: ${empA.materialEvidenceAndTools || ''}
-- ${vectorB.name}: ${empB.materialEvidenceAndTools || ''}
+- ${vectorA.name}: ${compact4(empA.materialEvidenceAndTools, 450)}
+- ${vectorB.name}: ${compact4(empB.materialEvidenceAndTools, 450)}
 
 [CASSETTO 2 — PERSONE, SCIENZIATI, CLINICI E TESTIMONI (keyFiguresAndWitnesses)]
-- ${vectorA.name}: ${empA.keyFiguresAndWitnesses || ''}
-- ${vectorB.name}: ${empB.keyFiguresAndWitnesses || ''}
+- ${vectorA.name}: ${compact4(empA.keyFiguresAndWitnesses, 450)}
+- ${vectorB.name}: ${compact4(empB.keyFiguresAndWitnesses, 450)}
 
 [CASSETTO 3 — SUPPORTI, LIBRI E DOSSIER FONDATIVI (foundationalTexts)]
-- ${vectorA.name}: ${empA.foundationalTexts || ''}
-- ${vectorB.name}: ${empB.foundationalTexts || ''}
+- ${vectorA.name}: ${compact4(empA.foundationalTexts, 450)}
+- ${vectorB.name}: ${compact4(empB.foundationalTexts, 450)}
 
 [CASSETTO 4 — CORPO, BIOLOGIA E SOGLIE SOMATICHE (Dati biologici/fisiologici/chimici dai Reperti e Testimoni)]
-- ${vectorA.name}: ${empA.materialEvidenceAndTools || ''} | ${empA.keyFiguresAndWitnesses || ''}
-- ${vectorB.name}: ${empB.materialEvidenceAndTools || ''} | ${empB.keyFiguresAndWitnesses || ''}
+- ${vectorA.name}: ${compact4(empA.materialEvidenceAndTools, 300)} | ${compact4(empA.keyFiguresAndWitnesses, 300)}
+- ${vectorB.name}: ${compact4(empB.materialEvidenceAndTools, 300)} | ${compact4(empB.keyFiguresAndWitnesses, 300)}
 
 [CASSETTO 5 — PARADIGMI, TEOREMI ED EQUAZIONI DI SVOLTA (breakthroughTheories + Sintesi)]
-- ${vectorA.name}: ${empA.breakthroughTheories || ''}
-- ${vectorB.name}: ${empB.breakthroughTheories || ''}
-- Sintesi d'Incrocio: ${empSynthesis}
+- ${vectorA.name}: ${compact4(empA.breakthroughTheories, 450)}
+- ${vectorB.name}: ${compact4(empB.breakthroughTheories, 450)}
+- Sintesi d'Incrocio: ${compact4(empSynthesis, 450)}
 
 COLLISIONE MADRE DI FASE 3 (DA NON RIPETERE NEI VERBI):
 - Verbi già usati in Fase 3 (VIETATO riusarli identici!): ${col.step1StrippingFunction?.fundamentalVerbA || ''} × ${col.step1StrippingFunction?.fundamentalVerbB || ''}
-- Crepa sull'Asse Cieco: ${col.step2BlindAxis?.creviceContactPoint || ''}
+- Crepa sull'Asse Cieco: ${compact4(col.step2BlindAxis?.creviceContactPoint, 350)}
 - Metafora Madre: ${col.step4CommonMetaphor?.masterMetaphorTitle || ''}
 ================================================================================
 
@@ -835,12 +808,14 @@ export function buildStage5FinalStrikePrompt(
   const empA = phase2EmpiricalArchive?.vectorA || {};
   const empB = phase2EmpiricalArchive?.vectorB || {};
   const empSynthesis = phase2EmpiricalArchive?.crossArchiveSynthesis || '';
+  const compact5 = (s?: string, max: number = 350) =>
+    s ? (s.length > max ? s.slice(0, max) + '...' : s) : '';
 
   const tracksSummary = Array.isArray(phase4Loop?.tracks)
     ? phase4Loop.tracks
         .map(
           (t: any) =>
-            `- ${t.directionTitle} [${t.empiricalDrawerLabel || ''}]: Reperti: ${t.empiricalEvidenceExamined || ''} | Angolo: ${t.ontologicalAngle || ''} | Punto di contatto: ${t.collision?.step2BlindAxis?.creviceContactPoint || ''} | Esperimento: ${t.collision?.step3InvertedDirection?.methodAAppliedToB || ''} | Intuizione: ${t.collision?.step3InvertedDirection?.counterIntuitiveInsight || ''} | Metafora: ${t.collision?.step4CommonMetaphor?.masterMetaphorTitle || ''}`
+            `- ${t.directionTitle} [${t.empiricalDrawerLabel || ''}]: Reperti: ${compact5(t.empiricalEvidenceExamined, 180)} | Angolo: ${compact5(t.ontologicalAngle, 220)} | Punto di contatto: ${compact5(t.collision?.step2BlindAxis?.creviceContactPoint, 220)} | Esperimento: ${compact5(t.collision?.step3InvertedDirection?.methodAAppliedToB, 220)} | Intuizione: ${compact5(t.collision?.step3InvertedDirection?.counterIntuitiveInsight, 220)} | Metafora: ${t.collision?.step4CommonMetaphor?.masterMetaphorTitle || ''}`
         )
         .join('\n')
     : '';
@@ -893,31 +868,31 @@ Il tuo compito è tirare le fila dell'Archivio Empirico (FASE 2), della Collisio
 MATERIALE DELL'INDAGINE DA RACCONTARE E UNIFICARE NELLA SINTESI:
 
 [CASSETTO 1 — STRUMENTI, FREQUENZE E MISURAZIONI]
-- ${vectorA.name}: ${empA.materialEvidenceAndTools || ''}
-- ${vectorB.name}: ${empB.materialEvidenceAndTools || ''}
+- ${vectorA.name}: ${compact5(empA.materialEvidenceAndTools, 350)}
+- ${vectorB.name}: ${compact5(empB.materialEvidenceAndTools, 350)}
 
 [CASSETTO 2 — PERSONE, SCIENZIATI, CLINICI E TESTIMONI]
-- ${vectorA.name}: ${empA.keyFiguresAndWitnesses || ''}
-- ${vectorB.name}: ${empB.keyFiguresAndWitnesses || ''}
+- ${vectorA.name}: ${compact5(empA.keyFiguresAndWitnesses, 350)}
+- ${vectorB.name}: ${compact5(empB.keyFiguresAndWitnesses, 350)}
 
 [CASSETTO 3 — LIBRI, DOSSIER E TESTI FONDATIVI]
-- ${vectorA.name}: ${empA.foundationalTexts || ''}
-- ${vectorB.name}: ${empB.foundationalTexts || ''}
+- ${vectorA.name}: ${compact5(empA.foundationalTexts, 350)}
+- ${vectorB.name}: ${compact5(empB.foundationalTexts, 350)}
 
 [CASSETTO 4 — CORPO, TESSUTI E ESPERIENZA UMANA]
-- ${vectorA.name}: ${empA.materialEvidenceAndTools || ''} | ${empA.keyFiguresAndWitnesses || ''}
-- ${vectorB.name}: ${empB.materialEvidenceAndTools || ''} | ${empB.keyFiguresAndWitnesses || ''}
+- ${vectorA.name}: ${compact5(empA.materialEvidenceAndTools, 220)} | ${compact5(empA.keyFiguresAndWitnesses, 220)}
+- ${vectorB.name}: ${compact5(empB.materialEvidenceAndTools, 220)} | ${compact5(empB.keyFiguresAndWitnesses, 220)}
 
 [CASSETTO 5 — PARADIGMI, TEOREMI E MODELLI INTERPRETATIVI]
-- ${vectorA.name}: ${empA.breakthroughTheories || ''}
-- ${vectorB.name}: ${empB.breakthroughTheories || ''}
-- Sintesi d'Incrocio: ${empSynthesis}
+- ${vectorA.name}: ${compact5(empA.breakthroughTheories, 350)}
+- ${vectorB.name}: ${compact5(empB.breakthroughTheories, 350)}
+- Sintesi d'Incrocio: ${compact5(empSynthesis, 350)}
 
 SCOPERTE EMERSE IN FASE 3 (LA COLLISIONE):
 - Gesti operativi: ${phase3Collision?.step1StrippingFunction?.fundamentalVerbA || ''} × ${phase3Collision?.step1StrippingFunction?.fundamentalVerbB || ''}
-- Punto di contatto sul limite strumentale: ${phase3Collision?.step2BlindAxis?.creviceContactPoint || ''}
-- Esperimento incrociato: ${phase3Collision?.step3InvertedDirection?.methodAAppliedToB || ''}
-- Metafora Comune: ${phase3Collision?.step4CommonMetaphor?.masterMetaphorTitle || ''} — ${phase3Collision?.step4CommonMetaphor?.unifyingVision || ''}
+- Punto di contatto sul limite strumentale: ${compact5(phase3Collision?.step2BlindAxis?.creviceContactPoint, 300)}
+- Esperimento incrociato: ${compact5(phase3Collision?.step3InvertedDirection?.methodAAppliedToB, 300)}
+- Metafora Comune: ${phase3Collision?.step4CommonMetaphor?.masterMetaphorTitle || ''} — ${compact5(phase3Collision?.step4CommonMetaphor?.unifyingVision, 300)}
 
 SCOPERTE EMERSE NELLE 5 DIREZIONI DI FASE 4:
 ${tracksSummary}

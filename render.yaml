@@ -68,3 +68,15 @@ services:
       - key: AI_RETRY_COOLDOWN_MS
         scope: runtime
         value: "180000"
+      - key: BLOGGER_BLOG_ID
+        scope: runtime
+        value: "7470004339260692954"
+      - key: GOOGLE_CLIENT_ID
+        scope: runtime
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        scope: runtime
+        sync: false
+      - key: GOOGLE_REFRESH_TOKEN
+        scope: runtime
+        sync: false
