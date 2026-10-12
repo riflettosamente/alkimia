@@ -109,7 +109,7 @@ export function buildBloggerPostHtml(essay: {
   if (essay.ontologicalThesis && essay.ontologicalThesis.trim()) {
     parts.push(
       `<blockquote style="border-left: 3px solid #8b7355; padding: 0.75em 1.25em; margin: 0 0 2em 0; background-color: #faf8f5; font-style: italic; color: #333333; line-height: 1.65;">` +
-        `<strong>Tesi Ontologica:</strong> ${escapeHtml(essay.ontologicalThesis.trim())}` +
+        `${escapeHtml(essay.ontologicalThesis.trim())}` +
         `</blockquote>`
     );
   }
