@@ -1,0 +1,28 @@
+{
+  "lastUpdated": "2026-10-14T08:12:53.924Z",
+  "totalExtractions": 1,
+  "statistics": {
+    "Gli UFO/UAP (Fenomeni Anomali Non Identificati)": {
+      "asVectorA": 1,
+      "asVectorB": 0,
+      "total": 1,
+      "lastExtracted": "2026-10-14"
+    },
+    "L'Aldilà": {
+      "asVectorA": 0,
+      "asVectorB": 1,
+      "total": 1,
+      "lastExtracted": "2026-10-14"
+    }
+  },
+  "chronicle": [
+    {
+      "id": "ext-1791965573924-t8f1w",
+      "solarDateKey": "2026-10-14",
+      "timestamp": "2026-10-14T08:12:53.924Z",
+      "type": "daily_edition",
+      "vectorA": "Gli UFO/UAP (Fenomeni Anomali Non Identificati)",
+      "vectorB": "L'Aldilà"
+    }
+  ]
+}

@@ -47,6 +47,11 @@ export function readExtractionHistory(): ExtractionHistoryData {
   };
 }
 
+export function normalizeVectorName(name: string): string {
+  if (!name) return "";
+  return name.replace(/^\d+\.\s*/, "").replace(/\s*\(Afterlife\)/i, "").trim();
+}
+
 /**
  * Registra una nuova estrazione di Vettore A e Vettore B.
  * Se per 'daily_edition' esiste già un record con la stessa data solare e la stessa coppia,
@@ -63,6 +68,9 @@ export function recordVectorExtraction(
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
 
+    const cleanA = normalizeVectorName(vectorA);
+    const cleanB = normalizeVectorName(vectorB);
+
     const current = readExtractionHistory();
 
     // Se per la stessa data solare e lo stesso tipo la coppia è identica, evitiamo registrazioni duplicate
@@ -70,8 +78,8 @@ export function recordVectorExtraction(
       (entry) =>
         entry.solarDateKey === solarDateKey &&
         entry.type === type &&
-        entry.vectorA === vectorA &&
-        entry.vectorB === vectorB
+        normalizeVectorName(entry.vectorA) === cleanA &&
+        normalizeVectorName(entry.vectorB) === cleanB
     );
 
     if (alreadyLogged) {
@@ -83,8 +91,8 @@ export function recordVectorExtraction(
       solarDateKey,
       timestamp: new Date().toISOString(),
       type,
-      vectorA,
-      vectorB
+      vectorA: cleanA,
+      vectorB: cleanB
     };
 
     // Aggiungi alla cronologia (in cima il più recente)
@@ -92,39 +100,42 @@ export function recordVectorExtraction(
     current.totalExtractions = current.chronicle.length;
     current.lastUpdated = new Date().toISOString();
 
-    // Ricalcola le statistiche aggregate per ogni vettore
+    // Ricalcola le statistiche aggregate per ogni vettore (normalizzando anche i record storici)
     const stats: Record<string, VectorStatsSummary> = {};
 
     for (const record of current.chronicle) {
+      const vA = normalizeVectorName(record.vectorA);
+      const vB = normalizeVectorName(record.vectorB);
+
       // Vettore A
-      if (!stats[record.vectorA]) {
-        stats[record.vectorA] = {
+      if (!stats[vA]) {
+        stats[vA] = {
           asVectorA: 0,
           asVectorB: 0,
           total: 0,
           lastExtracted: record.solarDateKey
         };
       }
-      stats[record.vectorA].asVectorA += 1;
-      stats[record.vectorA].total += 1;
+      stats[vA].asVectorA += 1;
+      stats[vA].total += 1;
 
       // Vettore B
-      if (!stats[record.vectorB]) {
-        stats[record.vectorB] = {
+      if (!stats[vB]) {
+        stats[vB] = {
           asVectorA: 0,
           asVectorB: 0,
           total: 0,
           lastExtracted: record.solarDateKey
         };
       }
-      stats[record.vectorB].asVectorB += 1;
-      stats[record.vectorB].total += 1;
+      stats[vB].asVectorB += 1;
+      stats[vB].total += 1;
     }
 
     current.statistics = stats;
 
     fs.writeFileSync(HISTORY_FILE, JSON.stringify(current, null, 2), "utf-8");
-    console.log(`[VectorTracker] Cronologia aggiornata: «${vectorA}» (A) × «${vectorB}» (B) per ${solarDateKey}`);
+    console.log(`[VectorTracker] Cronologia aggiornata: «${cleanA}» (A) × «${cleanB}» (B) per ${solarDateKey}`);
     return current;
   } catch (err) {
     console.error("[VectorTracker] Errore durante il salvataggio dell'estrazione:", err);
