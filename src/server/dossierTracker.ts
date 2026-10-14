@@ -41,3 +41,15 @@ export function readDossier(solarDateKey: string): Record<string, any> | null {
   } catch {}
   return null;
 }
+
+export function deleteDossier(solarDateKey: string): void {
+  try {
+    const filePath = path.join(DOSSIER_DIR, `dossier-${solarDateKey}.json`);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      console.log(`[DossierTracker] Dossier rimosso con successo per ${solarDateKey}.`);
+    }
+  } catch (err) {
+    console.warn(`[DossierTracker] Impossibile rimuovere dossier per ${solarDateKey}:`, err);
+  }
+}

@@ -31,7 +31,7 @@ import { buildPhase2LoopFiveDirections } from "./src/data/canonicalLoopFiveDirec
 import { normalizePhase2Loop } from "./src/utils/phase2LoopUtils";
 import { buildPhase3FinalStrike } from "./src/data/canonicalFinalStrikes";
 import { recordVectorExtraction } from "./src/server/vectorTracker";
-import { saveDossierStep, readDossier } from "./src/server/dossierTracker";
+import { saveDossierStep, readDossier, deleteDossier } from "./src/server/dossierTracker";
 import { fetchTopicWebContext } from "./src/server/webSearchService";
 import {
   publishDailyEssayToBlogger,
@@ -1337,10 +1337,10 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
       `Primo Argomento «${selectedA.name}» × Secondo Argomento «${selectedB.name}».`
     );
 
-    // Pausa di 60 secondi tra una Fase/Parte e la successiva per azzerare completamente il contatore TPM (Tokens Per Minute)
-    const STAGE_PAUSE_MS = Number(process.env.STAGE_PAUSE_MS) || 60000;
+    // Pausa protettiva tra una Fase/Parte e la successiva (default 5s, estendibile via env STAGE_PAUSE_MS)
+    const STAGE_PAUSE_MS = Number(process.env.STAGE_PAUSE_MS) || 5000;
     const waitBetweenStages = (stageLabel: string | number) => {
-      console.log(`[ALKIMIA] Pausa di 60 secondi dopo Fase ${stageLabel} per azzerare i Token Per Minuto (TPM) e garantire la massima qualità...`);
+      console.log(`[ALKIMIA] Pausa di ${Math.round(STAGE_PAUSE_MS / 1000)}s dopo Fase ${stageLabel}...`);
       return new Promise((r) => setTimeout(r, STAGE_PAUSE_MS));
     };
 
@@ -2083,8 +2083,13 @@ app.post("/api/daily-edition/regenerate", async (req, res) => {
         ? bodyDate
         : new Date().toISOString().split('T')[0];
 
+    // Reset totale della cache e rimozione del dossier su disco per redazione da zero
+    delete dailyEditionsCache[solarDateKey];
+    delete inFlightDaily[solarDateKey];
+    deleteDossier(solarDateKey);
+
     await getOrCreateDailyEdition(solarDateKey);
-    const promise = startDailyAiDrafting(solarDateKey, req.body?.force !== false);
+    const promise = startDailyAiDrafting(solarDateKey, true);
 
     if (req.body?.wait === true) {
       await promise;
