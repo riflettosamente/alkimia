@@ -94,31 +94,26 @@ export function selectRandomVectorPair(): {
   return { vectorA, vectorB };
 }
 
+export function findTopicByName(nameOrId: string): KeyOntologicalTopic | null {
+  if (!nameOrId) return null;
+  const clean = nameOrId.replace(/^\d+\.\s*/, "").replace(/\s*\(Afterlife\)/i, "").trim().toLowerCase();
+  for (const topic of Object.values(KEY_ONTOLOGICAL_TOPICS)) {
+    if (topic.id.toLowerCase() === clean) return topic;
+    const cleanTopicName = topic.name.replace(/^\d+\.\s*/, "").replace(/\s*\(Afterlife\)/i, "").trim().toLowerCase();
+    if (cleanTopicName === clean) return topic;
+  }
+  return null;
+}
+
 /**
- * Selezione deterministica a rotazione giornaliera basata sulla data solare,
- * attingendo sempre e solo dai nostri 8 vettori ontologici senza mai duplicati.
+ * Estrazione casuale autentica della coppia di vettori ontologici.
+ * La scelta è completamente casuale (estrazione da urna) e non è determinata o legata alla data solare.
  */
-export function selectDailyVectorPair(solarDateKey: string): {
+export function selectDailyVectorPair(_solarDateKey?: string): {
   vectorA: KeyOntologicalTopic;
   vectorB: KeyOntologicalTopic;
 } {
-  const allVectors = Object.values(KEY_ONTOLOGICAL_TOPICS);
-  let hash = 0;
-  for (let i = 0; i < solarDateKey.length; i++) {
-    hash = ((hash << 5) - hash) + solarDateKey.charCodeAt(i);
-    hash |= 0;
-  }
-  const seed = Math.abs(hash);
-  const indexA = seed % allVectors.length;
-  let indexB = (seed * 7 + 3) % allVectors.length;
-  if (indexB === indexA) {
-    indexB = (indexA + 1) % allVectors.length;
-  }
-
-  return {
-    vectorA: allVectors[indexA],
-    vectorB: allVectors[indexB]
-  };
+  return selectRandomVectorPair();
 }
 
 /**

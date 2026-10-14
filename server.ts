@@ -4,12 +4,14 @@ import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
 import { jsonrepair } from "jsonrepair";
 import { 
-  KEY_ONTOLOGICAL_TOPICS, 
+  KEY_ONTOLOGICAL_TOPICS,
+  KeyOntologicalTopic,
   buildOntologicalSystemPrompt,
   buildAnalyticalSystemPrompt,
   buildLiteraryEssaySystemPrompt,
   selectRandomVectorPair,
-  selectDailyVectorPair
+  selectDailyVectorPair,
+  findTopicByName
 } from "./src/ai/ontologicalSystemPrompt";
 import { 
   buildStep1AnalysisPrompt,
@@ -995,10 +997,38 @@ app.get("/api/topics", (_req, res) => {
   });
 });
 
+/**
+ * Recupera la coppia assegnata alla giornata (se già estratta e registrata nel dossier)
+ * oppure effettua una nuova estrazione PURAMENTE CASUALE dall'urna degli 8 vettori
+ * (senza alcuna dipendenza dalla data solare né condizionamenti da vector-extractions.json).
+ */
+function getOrDrawDailyVectorPair(solarDateKey: string): {
+  vectorA: KeyOntologicalTopic;
+  vectorB: KeyOntologicalTopic;
+} {
+  // Se per questa data solare esiste già una coppia nel dossier salvato su disco, la preserviamo
+  const savedDossier = readDossier(solarDateKey);
+  const existingPair =
+    savedDossier?.fullEdition?.systemPair ||
+    savedDossier?.systemPair ||
+    savedDossier?.phase1_decomposition?.systemPair;
+
+  if (existingPair?.vectorA && existingPair?.vectorB) {
+    const topA = findTopicByName(existingPair.vectorA);
+    const topB = findTopicByName(existingPair.vectorB);
+    if (topA && topB) {
+      return { vectorA: topA, vectorB: topB };
+    }
+  }
+
+  // Altrimenti, estrazione autenticamente casuale (urna degli 8 vettori, nessun legame con la data)
+  return selectRandomVectorPair();
+}
+
 // 4. Estrazione automatica e casuale di due vettori distinti (Vettore A e Vettore B)
 app.get("/api/select-vector-pair", (req, res) => {
   const solarDate = typeof req.query.solarDate === 'string' ? req.query.solarDate : undefined;
-  const pair = solarDate ? selectDailyVectorPair(solarDate) : selectRandomVectorPair();
+  const pair = solarDate ? getOrDrawDailyVectorPair(solarDate) : selectRandomVectorPair();
   res.json({
     vectorA: pair.vectorA,
     vectorB: pair.vectorB
@@ -1326,7 +1356,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     }
 
     const formattedDate = formatItalianDateServer(solarDateKey);
-    const pair = selectDailyVectorPair(solarDateKey);
+    const pair = getOrDrawDailyVectorPair(solarDateKey);
     const selectedA = pair.vectorA;
     const selectedB = pair.vectorB;
 
@@ -1911,8 +1941,9 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
   const savedDossier = readDossier(solarDateKey);
   if (savedDossier?.fullEdition) {
     const fe = savedDossier.fullEdition;
-    const vAName = fe.systemPair?.vectorA || selectDailyVectorPair(solarDateKey).vectorA.name;
-    const vBName = fe.systemPair?.vectorB || selectDailyVectorPair(solarDateKey).vectorB.name;
+    const fallbackPair = getOrDrawDailyVectorPair(solarDateKey);
+    const vAName = fe.systemPair?.vectorA || fallbackPair.vectorA.name;
+    const vBName = fe.systemPair?.vectorB || fallbackPair.vectorB.name;
     const safeEssay =
       extractNormalizedEssay(fe.essay, solarDateKey) ||
       extractNormalizedEssay(savedDossier.essay, solarDateKey) ||
@@ -1944,7 +1975,7 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
     return stampSolarDate(syncEditionWithEntry(loadedEntry), solarDateKey);
   }
 
-  const pair = selectDailyVectorPair(solarDateKey);
+  const pair = getOrDrawDailyVectorPair(solarDateKey);
   const selectedA = pair.vectorA;
   const selectedB = pair.vectorB;
 
@@ -2124,7 +2155,7 @@ app.post("/api/daily-edition/regenerate-phase6", async (req, res) => {
       return res.status(404).json({ success: false, error: `Nessun dossier trovato per la data ${solarDateKey}.` });
     }
 
-    const pair = selectDailyVectorPair(solarDateKey);
+    const pair = getOrDrawDailyVectorPair(solarDateKey);
     const selectedA = pair.vectorA;
     const selectedB = pair.vectorB;
 

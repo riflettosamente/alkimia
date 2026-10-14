@@ -14,29 +14,32 @@ Pubblicazione: <https://alkimia.onrender.com>
 
 Definiti in [`src/ai/ontologicalSystemPrompt.ts`](src/ai/ontologicalSystemPrompt.ts):
 
-1. La Fisica (dei campi e dei quanti)
-2. La Transcomunicazione Strumentale (TCI)
-3. La Tecnologia CRISPR
-4. La Ghiandola Pineale
-5. La Spiritualità
-6. L'Aldilà (Afterlife)
-7. Gli UFO/UAP (Fenomeni Anomali Non Identificati)
-8. Gli Extraterrestri
+- La Fisica (dei campi e dei quanti)
+- La Transcomunicazione Strumentale (TCI)
+- La Tecnologia CRISPR
+- La Ghiandola Pineale
+- La Spiritualità
+- L'Aldilà
+- Gli UFO/UAP (Fenomeni Anomali Non Identificati)
+- Gli Extraterrestri
 
-La coppia giornaliera è **deterministica**: `selectDailyVectorPair()` deriva un seed
-dall'hash della data `YYYY-MM-DD`, quindi la stessa data produce sempre la stessa coppia
-su ogni istanza e a ogni riavvio. `selectRandomVectorPair()` è invece usata
-dall'endpoint di generazione manuale.
+L'estrazione dei due vettori è **completamente casuale** (pesca alla cieca dall'urna degli 8 vettori, senza alcun legame deterministico con la data del calendario).
+- Il motore **non** altera la probabilità in base alle statistiche pregresse, garantendo una casualità autentica e naturale.
+- Una volta estratta la coppia per la nuova giornata solare, essa viene registrata nel dossier quotidiano (`data/daily-dossiers/dossier-YYYY-MM-DD.json`) per garantire la stabilità di lettura nelle 24 ore.
+- Lo storico di tutte le estrazioni viene archiviato in `data/vector-extractions.json`, che funge da registro notarile e statistica a disposizione della consultazione dell'utente.
 
-## Il protocollo a tre fasi
+## Il protocollo rigoroso a 6 Fasi
 
-Implementato in [`src/ai/speculativeInvestigationEngine.ts`](src/ai/speculativeInvestigationEngine.ts).
+Implementato con catena di cancelli sequenziali in [`server.ts`](server.ts):
 
 | Fase | Contenuto |
 | --- | --- |
 | **Fase 1 — Scomposizione strutturale** | Griglia 6W + il Velato applicata a ciascun vettore: When/Where, What, How, Who, Which Boundary, Why / The Veiled Reality. |
-| **Fase 2 — Collisione e loop cognitivo** | Quattro passaggi (spogliamento della funzione, asse cieco, inversione di direzione, metafora comune) attraversati da cinque prospettive: termodinamica/entropica, ecologico-evolutiva, semiotica/di traduzione, metamorfica/biologica, architetturale/sistemica. |
-| **Fase 3 — Affondo e sintesi** | Saggio narrativo continuo di 1.200–1.800 parole con *zero structural leakage*: nessun elenco, nessuna etichetta di fase. Include «cui prodest», la denuncia dei recinti disciplinari inesplorati, la proposta di un nuovo campo di ricerca e la vertigine finale sull'infrastruttura del reale. |
+| **Fase 2 — Archivio empirico** | Censimento rigoroso dei dati di campo, reperti, protocolli sperimentali, anomalie strumentali e testimonianze. |
+| **Fase 3 — La collisione** | Quattro passaggi ontologici: spogliamento della funzione, asse cieco, inversione di direzione, metafora comune. |
+| **Fase 4 — Loop a 5 direzioni** | Attraversamento in 5 angolazioni epistemiche: termodinamica/entropica, ecologico-evolutiva, semiotica/traduzione, metamorfica/biologica, architetturale/sistemica. |
+| **Fase 5 — L'affondo finale** | I 5 punti cardine: cui prodest, rottura del dogma, recinti disciplinari inesplorati, nuovo campo di ricerca ed esperienza vertiginosa. |
+| **Fase 6 — Saggio del Giorno** | Saggio narrativo continuo in pura prosa letteraria con *zero structural leakage*: nessun gergo procedurale, nessuna etichetta burocratica. |
 
 Le fasi 1 e 2 hanno anche una resa **canonica locale** (`src/data/canonical*.ts`), usata come
 contenuto provvisorio mentre l'AI lavora e come riserva se tutti i provider falliscono.
