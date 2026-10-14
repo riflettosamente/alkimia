@@ -488,45 +488,51 @@ export function buildStage2EmpiricalPrompt(
   const p1B = phase1Decomposition?.vectorB;
 
   return `SEI IL CUSTODE DELL'ARCHIVIO EMPIRICO E FENOMENICO DI ALKIMIA (FASE 2).
-Il tuo compito è compilare la FASE 2 (Archivio dei Fatti, delle Opere, dei Testimoni e delle Strumentazioni)
-per i due argomenti del giorno, attingendo ai riscontri oggettivi raccolti sul web in tempo reale e alle coordinate di Fase 1.
+Il tuo compito è compilare la FASE 2 (Archivio dei Fatti, delle Opere, dei Testimoni, dei Reperti e delle Mappe Mitico-Sapienziali) per i due argomenti del giorno.
+
+I due argomenti NON SONO ENTITÀ PIATTE DEL PRESENTE: possiedono una PROFONDITÀ TEMPORALE MILLENARIA.
+L'uomo contemporaneo sta spesso cercando di riprodurre, misurare o riscrivere mediante la tecnica (elettrodi, forbici molecolari, telescopi, circuiti a valvole) ciò che le antiche civiltà avevano già codificato nei loro testi sacri, riti misterici, oracoli e cosmogonie.
 
 ================================================================================
 PRIMO ARGOMENTO: ${vectorA.name}
+${vectorA.sapientialHeuristics ? `Bussola Paleo-Ontologica (indicativa): ${vectorA.sapientialHeuristics}` : ''}
 ${p1A ? `Coordinate di Fase 1: Contesto: ${p1A.whenWhere} | Meccanismo: ${p1A.how}` : ''}
-FONTI WEB RACCOLTE IN TEMPO REALE:
+FONTI WEB RACCOLTE IN TEMPO REALE (SCIENTIFICHE & MITICO-SAPIENZIALI):
 ${webContextA || 'Nessuna fonte web specifica reperita.'}
 
 SECONDO ARGOMENTO: ${vectorB.name}
+${vectorB.sapientialHeuristics ? `Bussola Paleo-Ontologica (indicativa): ${vectorB.sapientialHeuristics}` : ''}
 ${p1B ? `Coordinate di Fase 1: Contesto: ${p1B.whenWhere} | Meccanismo: ${p1B.how}` : ''}
-FONTI WEB RACCOLTE IN TEMPO REALE:
+FONTI WEB RACCOLTE IN TEMPO REALE (SCIENTIFICHE & MITICO-SAPIENZIALI):
 ${webContextB || 'Nessuna fonte web specifica reperita.'}
 ================================================================================
 
-REGOLA TASSATIVA PER LA FASE 2 (ARCHIVIO EMPIRICO):
+REGOLA TASSATIVA PER LA FASE 2 (ARCHIVIO EMPIRICO LIQUIDO A PROFONDITÀ TEMPORALE):
 1. È SEVERAMENTE VIETATO usare le parole "Vettore A", "Vettore B", "Argomento I", "Argomento II" nel testo!
 2. È SEVERAMENTE VIETATO usare formule vaghe come "alcuni scienziati", "studi recenti", "varie monografie".
-3. DEVI OBBLIGATORIAMENTE citare NOMI E COGNOMI REALI, DATE ESATTE, TITOLI D'OPERA O DOSSIER TRA VIRGOLETTE, SITI ARCHEOLOGICI O MONUMENTI, NOMI DI STRUMENTI TECNOLOGICI E RILEVATORI SPECIALISTICI.
-4. EVIDENZIA OGNI NOME, DATA, TITOLO E STRUMENTO USANDO IL GRASSETTO **termine**!
+3. RADICE SAPIENZIALE LIQUIDA E DINAMICA: Non limitarti a schemi fissi. Attingi liberamente e con flessibilità alle fonti web in tempo reale qui sopra e alla sterminata memoria mitico-sapienziale dell'umanità (civiltà egizia, vedica, mesopotamica, biblica, sciamanica, taoista, greca o indigena). Seleziona per ogni indagine una risonanza antica specifica, fresca e non ripetitiva.
+4. DEVI OBBLIGATORIAMENTE intrecciare nei 4 cassetti la MASSA CRITICA MODERNA (brevetti, scienziati, date recenti, strumenti di misura) con la RADICE MITICO-SAPIENZIALE E RITUALE emersa.
+5. DEVI OBBLIGATORIAMENTE citare NOMI E COGNOMI REALI, DATE ESATTE, TITOLI D'OPERA O TRATTATI ANTICHI/MODERNI TRA VIRGOLETTE, SITI ARCHEOLOGICI O MONUMENTI, NOMI DI STRUMENTI TECNOLOGICI E RILEVATORI SPECIALISTICI.
+6. EVIDENZIA OGNI NOME, DATA, TITOLO E STRUMENTO USANDO IL GRASSETTO **termine**!
 
 Rispondi RIGOROSAMENTE con questo JSON:
 {
   "phase1EmpiricalArchive": {
     "vectorA": {
       "topicName": "${vectorA.name}",
-      "foundationalTexts": "string (titoli di libri, dossier, codici, autori e date esatte in grassetto **...**, 2-3 frasi dense)",
-      "keyFiguresAndWitnesses": "string (scienziati, pionieri, testimoni oculari con nome e cognome in grassetto **...** e date, 2-3 frasi)",
-      "materialEvidenceAndTools": "string (strumentazioni tecnologiche, frequenze, misurazioni EEG/radar, monumenti in grassetto **...**, 2-3 frasi)",
-      "breakthroughTheories": "string (modelli teorici e teoremi con formulatore e data in grassetto **...**, 2-3 frasi)"
+      "foundationalTexts": "string (opere fondative moderne e trattati mitico-sapienziali/antichi con titoli esatti tra virgolette, autori e date in grassetto **...**, 2-3 frasi dense)",
+      "keyFiguresAndWitnesses": "string (scienziati moderni, pionieri, ma anche sacerdoti, iniziati, testimoni e formulari storici con nome e cognome in grassetto **...** e date, 2-3 frasi)",
+      "materialEvidenceAndTools": "string (strumentazioni tecnologiche moderne, ma anche reperti archeologici, iconografie millenarie, iscrizioni e manufatti rituali in grassetto **...**, 2-3 frasi)",
+      "breakthroughTheories": "string (modelli teorici scientifici ed equazioni, confrontati con le dottrine ontologiche sapienziali primordiali con formulatore e data in grassetto **...**, 2-3 frasi)"
     },
     "vectorB": {
       "topicName": "${vectorB.name}",
-      "foundationalTexts": "string (titoli di libri, dossier, codici, autori e date esatte in grassetto **...**, 2-3 frasi dense)",
-      "keyFiguresAndWitnesses": "string (scienziati, pionieri, testimoni oculari con nome e cognome in grassetto **...** e date, 2-3 frasi)",
-      "materialEvidenceAndTools": "string (strumentazioni tecnologiche, frequenze, misurazioni EEG/radar, monumenti in grassetto **...**, 2-3 frasi)",
-      "breakthroughTheories": "string (modelli teorici e teoremi con formulatore e data in grassetto **...**, 2-3 frasi)"
+      "foundationalTexts": "string (opere fondative moderne e trattati mitico-sapienziali/antichi con titoli esatti tra virgolette, autori e date in grassetto **...**, 2-3 frasi dense)",
+      "keyFiguresAndWitnesses": "string (scienziati moderni, pionieri, ma anche sacerdoti, iniziati, testimoni e formulari storici con nome e cognome in grassetto **...** e date, 2-3 frasi)",
+      "materialEvidenceAndTools": "string (strumentazioni tecnologiche moderne, ma anche reperti archeologici, iconografie millenarie, iscrizioni e manufatti rituali in grassetto **...**, 2-3 frasi)",
+      "breakthroughTheories": "string (modelli teorici scientifici ed equazioni, confrontati con le dottrine ontologiche sapienziali primordiali con formulatore e data in grassetto **...**, 2-3 frasi)"
     },
-    "crossArchiveSynthesis": "string (sintesi dell'incrocio tra la massa critica dei fatti e reperti reali dei due argomenti, con elementi chiave in grassetto **...**, 2-3 frasi dense)"
+    "crossArchiveSynthesis": "string (sintesi dell'incrocio tra la massa critica contemporanea e le mappe mitico-sapienziali ancestrali dei due argomenti, con elementi chiave in grassetto **...**, 2-3 frasi dense)"
   }
 }`;
 }
@@ -534,7 +540,7 @@ Rispondi RIGOROSAMENTE con questo JSON:
 export const buildPhase1_5EmpiricalPrompt = buildStage2EmpiricalPrompt;
 
 /**
- * STADIO 3 — Prompt dedicato per FASE 3: LA COLLISIONE (I 4 Passaggi di Attrito).
+ * STADIO 3 — Prompt dedicato per FASE 3: LA COLLISIONE (I 4 Passaggi di Attrito con Profondità Temporale Liquida).
  * Riceve direttamente in ingresso l'Archivio Empirico appena generato nella Fase 2!
  */
 export function buildStage3CollisionPrompt(
@@ -548,22 +554,27 @@ export function buildStage3CollisionPrompt(
   const empSynthesis = phase2EmpiricalArchive?.crossArchiveSynthesis || '';
 
   return `SEI IL LABORATORIO DI COLLISIONE ONTOLOGICA DI ALKIMIA (FASE 3: LA COLLISIONE).
-Il tuo compito è eseguire i 4 Passaggi di Attrito della FASE 3 facendo collidere DIRETTAMENTE E MATERIALMENTE i reperti, gli strumenti, i testimoni e le opere appena censiti nella FASE 2 (Archivio Empirico).
+Il tuo compito è eseguire i 4 Passaggi di Attrito della FASE 3 facendo collidere DIRETTAMENTE E MATERIALMENTE sia gli strumenti tecnologici moderni sia le mappe mitico-sapienziali censite nella FASE 2.
+
+LA COLLISIONE NON È UN CONFRONTO RIGIDO O PREFISSATO:
+È la dimostrazione fluida che l'uomo del presente sta tentando di misurare o fabbricare con la tecnica ciò che le civiltà passate avevano formalizzato nei loro misteri, cosmogonie, testi sacri e riti arcaici.
 
 ================================================================================
-INVENTARIO VINCOLANTE DELLA FASE 2 (ARCHIVIO EMPIRICO APPENA SALVATO):
+INVENTARIO VINCOLANTE DELLA FASE 2 (ARCHIVIO EMPIRICO CON SPESSORE TEMPORALE):
 
 PRIMO ARGOMENTO: ${vectorA.name}
-- Opere e Dossier Fondativi: ${empA.foundationalTexts || ''}
-- Scienziati, Pionieri e Testimoni: ${empA.keyFiguresAndWitnesses || ''}
-- Strumenti, Frequenze e Reperti Materiali: ${empA.materialEvidenceAndTools || ''}
-- Teorie di Svolta: ${empA.breakthroughTheories || ''}
+${vectorA.sapientialHeuristics ? `Bussola indicativa: ${vectorA.sapientialHeuristics}` : ''}
+- Opere e Trattati Fondativi: ${empA.foundationalTexts || ''}
+- Scienziati, Testimoni e Iniziati: ${empA.keyFiguresAndWitnesses || ''}
+- Strumenti Tecnologici, Reperti e Iconografie: ${empA.materialEvidenceAndTools || ''}
+- Teorie e Dottrine di Svolta: ${empA.breakthroughTheories || ''}
 
 SECONDO ARGOMENTO: ${vectorB.name}
-- Opere e Dossier Fondativi: ${empB.foundationalTexts || ''}
-- Scienziati, Pionieri e Testimoni: ${empB.keyFiguresAndWitnesses || ''}
-- Strumenti, Frequenze e Reperti Materiali: ${empB.materialEvidenceAndTools || ''}
-- Teorie di Svolta: ${empB.breakthroughTheories || ''}
+${vectorB.sapientialHeuristics ? `Bussola indicativa: ${vectorB.sapientialHeuristics}` : ''}
+- Opere e Trattati Fondativi: ${empB.foundationalTexts || ''}
+- Scienziati, Testimoni e Iniziati: ${empB.keyFiguresAndWitnesses || ''}
+- Strumenti Tecnologici, Reperti e Iconografie: ${empB.materialEvidenceAndTools || ''}
+- Teorie e Dottrine di Svolta: ${empB.breakthroughTheories || ''}
 
 INCROCIO PRELIMINARE DEI REPERTI:
 ${empSynthesis}
@@ -571,29 +582,29 @@ ${empSynthesis}
 
 REGOLA TASSATIVA PER LA FASE 3 (LA COLLISIONE):
 - È SEVERAMENTE VIETATO restare sul piano filosofico astratto o usare le diciture "Vettore A" / "Vettore B".
-- DEVI OBBLIGATORIAMENTE citare e far scontrare nei 4 passaggi gli **strumenti tecnici**, i **testimoni/scienziati**, le **date/frequenze** e i **dossier/libri** elencati qui sopra nella Fase 2, evidenziandoli in grassetto **termine**!
+- DEVI OBBLIGATORIAMENTE far scontrare nei 4 passaggi gli **strumenti tecnici e protocolli moderni** con le **mappe sapienziali e i reperti storici** della Fase 2, evidenziandoli in grassetto **termine**!
 
-1. step1StrippingFunction (Trapianto di Funzione: Dai Reperti al Verbo):
-   - fundamentalVerbA: Singolo verbo all'infinito in MAIUSCOLO che esprime il gesto tecnico dello strumento di ${vectorA.name} censito in Fase 2.
-   - abstractFunctionA: Spiega (2-3 frasi) la funzione astratta di ${vectorA.name} partendo dai suoi **strumenti e protocolli reali** della Fase 2.
-   - fundamentalVerbB: Singolo verbo all'infinito in MAIUSCOLO che esprime il gesto tecnico o fenomenico di ${vectorB.name} censito in Fase 2.
-   - abstractFunctionB: Spiega (2-3 frasi) la funzione astratta di ${vectorB.name} partendo dai suoi **reperti, studi e misurazioni reali** della Fase 2.
-   - functionalSynthesis: Sintesi d'attrito (2-3 frasi) che mostra come i due gesti strumentali operino sulla medesima soglia.
+1. step1StrippingFunction (Trapianto di Funzione: Dai Reperti al Verbo Operativo):
+   - fundamentalVerbA: Singolo verbo all'infinito in MAIUSCOLO che esprime l'atto operativo o rituale di ${vectorA.name} (es. TAGLIARE, TRASMETTERE, ACCORDARE, MISURARE).
+   - abstractFunctionA: Spiega (2-3 frasi) la funzione astratta di ${vectorA.name} mostrando come il gesto strumentale contemporaneo incarni un'operazione cosmogonica o rituale arcaica (con nomi in **grassetto**).
+   - fundamentalVerbB: Singolo verbo all'infinito in MAIUSCOLO che esprime l'atto operativo o rituale di ${vectorB.name}.
+   - abstractFunctionB: Spiega (2-3 frasi) la funzione astratta di ${vectorB.name} svelandone la medesima tensione paleo-ontologica (con nomi in **grassetto**).
+   - functionalSynthesis: Sintesi d'attrito (2-3 frasi) che mostra come i due gesti operino sulla medesima soglia di realtà.
 
-2. step2BlindAxis (Cercare l'Asse Cieco: Il Fallimento dello Strumento di Fase 2):
-   - boundaryA: Indica il punto esatto in cui lo **strumento di misura o protocollo** di ${vectorA.name} citato in Fase 2 tocca il suo limite fisico, di frequenza o di risoluzione (2-3 frasi con nomi in **grassetto**).
-   - accessDoorToB: Mostra come quel vicolo cieco strumentale diventi la porta d'accesso per i **fenomeni, testimoni o tracciati** di ${vectorB.name} censiti in Fase 2 (2-3 frasi con nomi in **grassetto**).
-   - creviceContactPoint: Il punto esatto di frattura sulla crepa ontologica tra i due apparati empirici (2-3 frasi).
+2. step2BlindAxis (Cercare l'Asse Cieco: Il Fallimento dello Strumento e il Richiamo dell'Antico):
+   - boundaryA: Indica il punto esatto in cui lo **strumento di misura moderno** di ${vectorA.name} tocca il proprio vicolo cieco empirico (2-3 frasi con nomi in **grassetto**).
+   - accessDoorToB: Mostra come proprio quel fallimento tecnico costringa a riaprire la mappa sapienziale, l'archivio rituale o i reperti di ${vectorB.name} censiti in Fase 2 (2-3 frasi con nomi in **grassetto**).
+   - creviceContactPoint: Il punto esatto di frattura sulla crepa ontologica tra apparato tecnico e memoria ancestrale (2-3 frasi).
 
 3. step3InvertedDirection (Ribaltare la Direzione: L'Esperimento di Laboratorio Incrociato):
-   - methodAAppliedToB: Prendi per nome uno **strumento tecnologico o protocollo** di ${vectorA.name} (dalla Fase 2) e applicalo brutalmente a un **reperto, caso clinico o testo** di ${vectorB.name} (dalla Fase 2) (2-3 frasi con elementi in **grassetto**).
-   - provocativeViolationQuestion: Una domanda provocatoria e radicale centrata su questo esperimento incrociato tra i reperti di Fase 2.
-   - counterIntuitiveInsight: L'intuizione controintuitiva che ribalta il paradigma ordinario (2-3 frasi).
+   - methodAAppliedToB: Prendi per nome uno **strumento tecnologico o protocollo** di ${vectorA.name} e applicalo all'**archivio rituale, testo sacro o fenomeno anomalo** di ${vectorB.name} censito in Fase 2 (2-3 frasi con elementi in **grassetto**).
+   - provocativeViolationQuestion: Una domanda provocatoria e radicale centrata su questo scontro tra tecno-scienza e matrice sapienziale.
+   - counterIntuitiveInsight: L'intuizione controintuitiva che ribalta sia il dogma positivista sia la mera superstizione (2-3 frasi).
 
 4. step4CommonMetaphor (Isolare la Metafora Comune):
-   - masterMetaphorTitle: Titolo evocativo in MAIUSCOLO della metafora generatrice radicata nei supporti materiali di Fase 2.
-   - cosmologicalAnthropologicalGround: La radice antropologica e cosmologica profonda che unisce i due reperti (2-3 frasi).
-   - unifyingVision: La visione unificante a livello sistemico che fonde i due archivi empirici (2-3 frasi).
+   - masterMetaphorTitle: Titolo evocativo in MAIUSCOLO della metafora generatrice radicata nei supporti materiali e sapienziali di Fase 2.
+   - cosmologicalAnthropologicalGround: La radice antropologica e cosmologica profonda che unisce la macchina moderna al mito primordiale (2-3 frasi).
+   - unifyingVision: La visione unificante a livello sistemico che fonde tecnica e sapienza arcaica (2-3 frasi).
 
 Rispondi RIGOROSAMENTE con questo JSON:
 {

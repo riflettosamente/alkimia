@@ -7,51 +7,62 @@ export interface KeyOntologicalTopic {
   id: string;
   name: string;
   operationalDefinition: string;
+  sapientialHeuristics?: string;
 }
 
 /**
- * Dizionario dei Vettori: I nostri 8 elementi.
+ * Dizionario dei Vettori: I nostri 8 elementi con bussola paleo-ontologica liquida.
+ * I suggerimenti sapienziali sono orientamenti aperti: l'indagine attinge liberamente
+ * alla ricerca web e alla sterminata memoria mitico-filosofica dell'umanità.
  */
 export const KEY_ONTOLOGICAL_TOPICS: Record<string, KeyOntologicalTopic> = {
   FISICA_CAMPI_QUANTI: {
     id: "FISICA_CAMPI_QUANTI",
     name: "1. La Fisica (dei campi e dei quanti)",
-    operationalDefinition: "Lo studio delle leggi fondamentali della materia e dell'energia, dove il determinismo macroscopico svanisce in campi probabilistici, sovrapposizioni e interconnessioni non locali (entanglement)."
+    operationalDefinition: "Lo studio delle leggi fondamentali della materia e dell'energia, dove il determinismo macroscopico svanisce in campi probabilistici, sovrapposizioni e interconnessioni non locali (entanglement).",
+    sapientialHeuristics: "Bussola sapienziale aperta: scandaglia liberamente le dottrine del non-due, il vuoto fecondo cosmico, la Tavola di Smeraldo, l'Apeiron presocratico o le metafisiche della luce e della vibrazione primordiale."
   },
   TRANSCOMUNICAZIONE_STRUMENTALE: {
     id: "TRANSCOMUNICAZIONE_STRUMENTALE",
     name: "2. La Transcomunicazione Strumentale (TCI)",
-    operationalDefinition: "La pratica di captare voci, immagini o segnali da presunte entità disincarnate sfruttando il rumore bianco, le interferenze elettromagnetiche e il caos entropico dei dispositivi tecnologici."
+    operationalDefinition: "La pratica di captare voci, immagini o segnali da presunte entità disincarnate sfruttando il rumore bianco, le interferenze elettromagnetiche e il caos entropico dei dispositivi tecnologici.",
+    sapientialHeuristics: "Bussola sapienziale aperta: scandaglia liberamente le arti oracolari e divinatorie del suono e della visione (piromanzia, idromanzia, scrying, querce parlanti, specchi divinatori), dove il sacro emerge dal rumore della natura."
   },
   TECNOLOGIA_CRISPR: {
     id: "TECNOLOGIA_CRISPR",
     name: "3. La Tecnologia CRISPR",
-    operationalDefinition: "Lo strumento di ingegneria genetica basato su forbici molecolari (Cas9) capace di tagliare, modificare e riscrivere con precisione ortografica il codice sorgente del DNA biologico."
+    operationalDefinition: "Lo strumento di ingegneria genetica basato su forbici molecolari (Cas9) capace di tagliare, modificare e riscrivere con precisione ortografica il codice sorgente del DNA biologico.",
+    sapientialHeuristics: "Bussola sapienziale aperta: scandaglia liberamente i miti di demiurgia biologica e alchimia operativa (la ricombinazione dell'alfabeto cosmico, l'argilla plasmata dagli dèi creatori, l'Homunculus, il Golem) come sogno archetipico di riprogrammare il soffio vitale."
   },
   GHIANDOLA_PINEALE: {
     id: "GHIANDOLA_PINEALE",
     name: "4. La Ghiandola Pineale",
-    operationalDefinition: "Il trasduttore neurochimico fotoreattivo situato al centro del cervello, storicamente associato alla \"sede dell'anima\" e biologicamente incaricato di tradurre i cicli di luce e buio in stati di coscienza."
+    operationalDefinition: "Il trasduttore neurochimico fotoreattivo situato al centro del cervello, storicamente associato alla \"sede dell'anima\" e biologicamente incaricato di tradurre i cicli di luce e buio in stati di coscienza.",
+    sapientialHeuristics: "Bussola sapienziale aperta: scandaglia liberamente il simbolismo millenario dell'occhio interiore, della pigna sacra, dell'Occhio di Horus o del terzo occhio solare/lunare nelle diverse civiltà antiche come soglia di visione oltre il velo."
   },
   SPIRITUALITA: {
     id: "SPIRITUALITA",
     name: "5. La Spiritualità",
-    operationalDefinition: "Il sistema di traduzione interiore e mista che cerca l'ordine trascendente, l'unità del cosmo e la comunione con l'invisibile attraverso pratiche meditative, ascetiche o rituali."
+    operationalDefinition: "Il sistema di traduzione interiore e mista che cerca l'ordine trascendente, l'unità del cosmo e la comunione con l'invisibile attraverso pratiche meditative, ascetiche o rituali.",
+    sapientialHeuristics: "Bussola sapienziale aperta: scandaglia liberamente i grandi testi saprenziali, i riti di fondazione, i misteri antichi (eleusini, orfici), il Tempo del Sogno o le geometrie templari come tecnologie sacre per sintonizzare la polis con l'infinito."
   },
   ALDILA: {
     id: "ALDILA",
     name: "6. L'Aldilà (Afterlife)",
-    operationalDefinition: "L'ipotesi o l'esperienza della continuazione dell'identità personale e del flusso informativo della coscienza oltre il confine definitivo della dissoluzione biologica."
+    operationalDefinition: "L'ipotesi o l'esperienza della continuazione dell'identità personale e del flusso informativo della coscienza oltre il confine definitivo della dissoluzione biologica.",
+    sapientialHeuristics: "Bussola sapienziale aperta: scandaglia liberamente le cartografie dell'oltretomba (libri dei morti, discese agl'inferi, guide sciamaniche dei bardo e psicopompi) che codificano il viaggio della coscienza post-mortem."
   },
   UFO_UAP: {
     id: "UFO_UAP",
     name: "7. Gli UFO/UAP (Fenomeni Anomali Non Identificati)",
-    operationalDefinition: "Manifestazioni aerospaziali o sottomarine che esibiscono accelerazioni e comportamenti incompatibili con la fisica nota, interpretate come intrusioni di intelligenze o tecnologie estranee al nostro piano."
+    operationalDefinition: "Manifestazioni aerospaziali o sottomarine che esibiscono accelerazioni e comportamenti incompatibili con la fisica nota, interpretate come intrusioni di intelligenze o tecnologie estranee al nostro piano.",
+    sapientialHeuristics: "Bussola sapienziale aperta: scandaglia liberamente le teofanie aeree storiche (clipeologia romana, scudi infuocati medievali, Merkavah/carri di fuoco, nubi luminose e leggende sul popolo dell'invisibile)."
   },
   EXTRATERRESTRI: {
     id: "EXTRATERRESTRI",
     name: "8. Gli Extraterrestri",
-    operationalDefinition: "L'ipotesi cosmologica e filosofica dell'esistenza di forme di vita intelligenti nate su altri corpi celesti, che mettono in discussione l'unicità e l'isolamento della civiltà terrestre."
+    operationalDefinition: "L'ipotesi cosmologica e filosofica dell'esistenza di forme di vita intelligenti nate su altri corpi celesti, che mettono in discussione l'unicità e l'isolamento della civiltà terrestre.",
+    sapientialHeuristics: "Bussola sapienziale aperta: scandaglia liberamente i miti di visitatori ancestrali, maestri discesi dal cielo, divinità celesti con veicoli volanti (Vimana) e stirpi stellari nelle cosmologie indigene e arcaiche."
   }
 };
 

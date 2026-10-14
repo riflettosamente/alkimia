@@ -59,29 +59,34 @@ async function searchWikipedia(query: string, lang: 'it' | 'en' = 'it'): Promise
  */
 export async function fetchTopicWebContext(rawTopicName: string): Promise<TopicWebContext> {
   const cleanName = cleanTopicQuery(rawTopicName);
-  console.log(`[WebSearchService] Avvio ricerca web live a zero token per: «${cleanName}»...`);
+  console.log(`[WebSearchService] Avvio ricerca web live poliedrica (empirica + storico-sapienziale) per: «${cleanName}»...`);
 
-  // Esegui ricerche parallele: nome pulito, + libri/scienziati, + evidenze
-  const [resultsGeneral, resultsSpecific] = await Promise.all([
-    searchWikipedia(cleanName, 'it'),
-    searchWikipedia(`${cleanName} esperimenti scienziati libri`, 'it')
+  // Esegui ricerche parallele: 
+  // 1. Dati empirico-scientifici moderni (scienziati, esperimenti, brevetti, strumenti)
+  // 2. Mappe mitico-sapienziali, simboliche e filosofiche arcaiche (archetipi, cosmogonie, testi sacri)
+  const [resultsModern, resultsSapiential] = await Promise.all([
+    searchWikipedia(`${cleanName} esperimenti scienziati libri strumenti`, 'it'),
+    searchWikipedia(`${cleanName} mito archetipo simbolo cosmogonia storia antica`, 'it')
   ]);
 
   // Unifica e deduplica per titolo
   const seenTitles = new Set<string>();
   const combined: WebSearchResultItem[] = [];
 
-  for (const item of [...resultsGeneral, ...resultsSpecific]) {
+  for (const item of [...resultsModern, ...resultsSapiential]) {
     if (!seenTitles.has(item.title.toLowerCase())) {
       seenTitles.add(item.title.toLowerCase());
       combined.push(item);
     }
   }
 
-  // Se i risultati in italiano sono meno di 2, effettua un rapido fallback in inglese
-  if (combined.length < 2) {
-    const enResults = await searchWikipedia(cleanName, 'en');
-    for (const item of enResults) {
+  // Se i risultati in italiano sono insufficienti, fallback mirato in inglese
+  if (combined.length < 3) {
+    const [enModern, enSapiential] = await Promise.all([
+      searchWikipedia(`${cleanName} history experiments scientists`, 'en'),
+      searchWikipedia(`${cleanName} mythology archetype ancient philosophy`, 'en')
+    ]);
+    for (const item of [...enModern, ...enSapiential]) {
       if (!seenTitles.has(item.title.toLowerCase())) {
         seenTitles.add(item.title.toLowerCase());
         combined.push(item);
@@ -90,11 +95,11 @@ export async function fetchTopicWebContext(rawTopicName: string): Promise<TopicW
   }
 
   const combinedContext = combined
-    .slice(0, 4)
-    .map((item, idx) => `[Fonte ${idx + 1}: ${item.title}] ${item.snippet.slice(0, 220)}`)
+    .slice(0, 5)
+    .map((item, idx) => `[Fonte ${idx + 1}: ${item.title}] ${item.snippet.slice(0, 240)}`)
     .join('\n\n');
 
-  console.log(`[WebSearchService] Trovate ${combined.length} fonti web live per «${cleanName}» (sintetizzate ${Math.min(4, combined.length)} fonti essenziali).`);
+  console.log(`[WebSearchService] Trovate ${combined.length} fonti web live per «${cleanName}» (selezionate ${Math.min(5, combined.length)} fonti composite tra scienza moderna e radici sapienziali).`);
 
   return {
     topic: rawTopicName,
