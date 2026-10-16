@@ -2193,6 +2193,44 @@ app.get("/api/daily-edition/status", async (req, res) => {
   }
 });
 
+// 6c. Endpoint per il download del dossier completo (usato da GitHub Actions per l'archiviazione storica)
+app.get("/api/daily-edition/dossier", (req, res) => {
+  try {
+    const solarDateKey =
+      typeof req.query.solarDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.solarDate)
+        ? req.query.solarDate
+        : new Date().toISOString().split('T')[0];
+
+    const savedDossier = readDossier(solarDateKey);
+    if (savedDossier && savedDossier.essay) {
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      return res.send(JSON.stringify(savedDossier, null, 2));
+    }
+
+    const cachedEntry = dailyEditionsCache[solarDateKey];
+    if (cachedEntry?.edition?.essay) {
+      const liveDossier = {
+        solarDateKey,
+        lastUpdated: new Date().toISOString(),
+        systemPair: cachedEntry.edition.systemPair,
+        phase1_decomposition: cachedEntry.edition.phase1Decomposition,
+        phase2_empiricalArchive: cachedEntry.edition.phase2EmpiricalArchive,
+        phase3_collision: cachedEntry.edition.phase2Collision,
+        phase4_loop: cachedEntry.edition.phase2Loop,
+        phase5_finalStrike: cachedEntry.edition.phase3FinalStrike,
+        essay: cachedEntry.edition.essay,
+        phaseTelemetry: cachedEntry.phaseTelemetry
+      };
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      return res.send(JSON.stringify(liveDossier, null, 2));
+    }
+
+    res.status(404).json({ success: false, error: `Dossier non disponibile o non ancora generato per ${solarDateKey}.` });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // 6c. Endpoint di rigenerazione disattivato permanentemente: ogni data solare ammette un unico saggio immutabile.
 app.post("/api/daily-edition/regenerate", (_req, res) => {
   res.status(403).json({
