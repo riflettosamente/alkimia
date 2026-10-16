@@ -386,15 +386,15 @@ COMPUTO TOTALE PAROLE: Rigorosamente compreso tra 1.200 e 1.800 parole, articola
 Rispondi RIGOROSAMENTE con questo JSON:
 {
   "essay": {
-    "title": "string (titolo limpido, evocativo e incisivo sul legame profondo tra i due fenomeni, privo delle parole alkimia/alchimia, privo di numeri e privo di asterischi)",
-    "subtitle": "string (sottotitolo chiaro che sintetizzi l'ipotesi centrale e il nuovo orizzonte di studio, privo delle parole alkimia/alchimia e privo di asterischi)",
-    "ontologicalThesis": "string (la tesi centrale formulata in modo cristallino, profondo e memorabile, priva delle parole alkimia/alchimia e priva di asterischi)",
+    "title": "string (titolo originale, privo di numeri e senza asterischi)",
+    "subtitle": "string (sottotitolo essenziale)",
+    "ontologicalThesis": "string (la tesi centrale filosofico-scientifica)",
     "narrativeParagraphs": [
-      "string (Primo paragrafo in pura prosa continua: entra direttamente nei fatti storici, negli autori e negli esperimenti concreti dei due ambiti, senza grassetti e senza formule metanarrative, minimo 250 parole)",
-      "string (Secondo paragrafo in pura prosa continua: esplora il limite degli strumenti e dei modelli del primo ambito e mostra come esso apra il passaggio verso il secondo fenomeno, senza grassetti, minimo 250 parole)",
-      "string (Terzo paragrafo in pura prosa continua: sviluppa in modo unitario e fluido il meccanismo profondo che lega i due fenomeni senza mai menzionare prospettive numerate, fasi o lessico metodologico, senza grassetti, minimo 300 parole)",
-      "string (Quarto paragrafo in pura prosa continua: delinea concretamente le nuove piste sperimentali, cliniche, tecnologiche, antropologiche e filosofiche aperte da questa scoperta, senza grassetti, minimo 280 parole)",
-      "string (Quinto paragrafo in pura prosa continua: conduce il ragionamento alla sua visione conclusiva sulla materia, sulla coscienza e sul reale, senza grassetti, minimo 250 parole)"
+      "string (testo completo del paragrafo 1)",
+      "string (testo completo del paragrafo 2)",
+      "string (testo completo del paragrafo 3)",
+      "string (testo completo del paragrafo 4)",
+      "string (testo completo del paragrafo 5)"
     ]
   }
 }`;

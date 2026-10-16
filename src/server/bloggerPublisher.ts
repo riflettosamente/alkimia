@@ -126,7 +126,7 @@ export function buildBloggerPostHtml(essay: {
   return parts.join("\n\n");
 }
 
-function extractCleanLabels(vectorA?: string, vectorB?: string): string[] {
+function extractCleanLabels(vectorA?: string, vectorB?: string, solarDateKey?: string): string[] {
   const cleanLabel = (v?: string) =>
     v
       ? v
@@ -137,6 +137,9 @@ function extractCleanLabels(vectorA?: string, vectorB?: string): string[] {
       : "";
 
   const labels = ["Saggio del Giorno"];
+  if (solarDateKey && /^\d{4}-\d{2}-\d{2}$/.test(solarDateKey)) {
+    labels.push(solarDateKey);
+  }
   const lA = cleanLabel(vectorA);
   const lB = cleanLabel(vectorB);
   if (lA) labels.push(lA);
@@ -145,9 +148,79 @@ function extractCleanLabels(vectorA?: string, vectorB?: string): string[] {
 }
 
 /**
- * Pubblica automaticamente il Saggio del Giorno su Blogger (alkimiatoday.blogspot.com).
- * Se per quella data solare il post risulta già pubblicato nel dossier e `force` è false,
- * evita duplicati restituendo il riferimento esistente.
+ * Interroga Blogger via API per verificare se esiste già un post pubblicato con l'etichetta della data solare
+ * o con data di pubblicazione corrispondente.
+ */
+export async function findBloggerPostByDate(solarDateKey: string): Promise<{
+  postId: string;
+  url: string;
+  title: string;
+  publishedAt: string;
+} | null> {
+  if (!isBloggerConfigured()) return null;
+
+  try {
+    const accessToken = await getGoogleAccessToken();
+    const blogId = process.env.BLOGGER_BLOG_ID?.trim() || DEFAULT_ALKIMIA_BLOG_ID;
+
+    // 1. Ricerca mirata per etichetta della data solare (es. "2026-10-15")
+    const labelUrl = `https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts?labels=${encodeURIComponent(
+      solarDateKey
+    )}&maxResults=5`;
+    const labelRes = await fetch(labelUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal: AbortSignal.timeout(10000)
+    });
+
+    if (labelRes.ok) {
+      const data: any = await labelRes.json();
+      if (Array.isArray(data.items) && data.items.length > 0) {
+        const item = data.items[0];
+        return {
+          postId: String(item.id),
+          url: String(item.url),
+          title: String(item.title || "Saggio del Giorno"),
+          publishedAt: String(item.published || "")
+        };
+      }
+    }
+
+    // 2. Controllo secondario sugli ultimi post pubblicati (nel caso il post non avesse ancora il tag data)
+    const recentUrl = `https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts?maxResults=15`;
+    const recentRes = await fetch(recentUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal: AbortSignal.timeout(10000)
+    });
+
+    if (recentRes.ok) {
+      const recentData: any = await recentRes.json();
+      if (Array.isArray(recentData.items)) {
+        for (const item of recentData.items) {
+          const itemPublishedDate = String(item.published || "").slice(0, 10);
+          const hasDateLabel = Array.isArray(item.labels) && item.labels.includes(solarDateKey);
+          if (hasDateLabel || itemPublishedDate === solarDateKey) {
+            return {
+              postId: String(item.id),
+              url: String(item.url),
+              title: String(item.title || "Saggio del Giorno"),
+              publishedAt: String(item.published || "")
+            };
+          }
+        }
+      }
+    }
+
+    return null;
+  } catch (err: any) {
+    console.warn(`[Blogger] Verifica remota non riuscita per ${solarDateKey} (${err.message}). Si procede con il controllo locale.`);
+    return null;
+  }
+}
+
+/**
+ * Pubblica automaticamente il Saggio del Giorno su Google Blogger (alkimiatoday.blogspot.com).
+ * Se per quella data solare il post risulta già pubblicato (nel dossier locale o su Blogger remoto),
+ * evita tassativamente qualsiasi duplicato restituendo il riferimento esistente.
  */
 export async function publishDailyEssayToBlogger(
   solarDateKey: string,
@@ -173,20 +246,47 @@ export async function publishDailyEssayToBlogger(
       };
     }
 
+    // Controllo 1: Dossier locale
     const existingDossier = readDossier(solarDateKey);
     if (!options?.force && existingDossier?.bloggerPost?.postId && existingDossier?.bloggerPost?.url) {
       console.log(
-        `[Blogger] Saggio del ${solarDateKey} già pubblicato su Blogger (${existingDossier.bloggerPost.url}). Salto duplicato.`
+        `[Blogger] Saggio del ${solarDateKey} già registrato nel dossier locale (${existingDossier.bloggerPost.url}). Salto duplicato.`
       );
       return {
         published: true,
         skipped: true,
-        reason: "Già pubblicato per questa data solare.",
+        reason: "Già pubblicato per questa data solare (riscontro locale).",
         postId: existingDossier.bloggerPost.postId,
         url: existingDossier.bloggerPost.url,
         title: existingDossier.bloggerPost.title,
         publishedAt: existingDossier.bloggerPost.publishedAt
       };
+    }
+
+    // Controllo 2: Verifica remota preventiva su Blogger
+    if (!options?.force) {
+      const remotePost = await findBloggerPostByDate(solarDateKey);
+      if (remotePost) {
+        console.log(
+          `[Blogger] Saggio del ${solarDateKey} già presente sul blog remoto (${remotePost.url}). Salto duplicato e allineo dossier locale.`
+        );
+        saveDossierStep(solarDateKey, "bloggerPost", {
+          postId: remotePost.postId,
+          url: remotePost.url,
+          title: remotePost.title,
+          publishedAt: remotePost.publishedAt,
+          solarDateKey
+        });
+        return {
+          published: true,
+          skipped: true,
+          reason: "Già presente su Blogger (riscontro remoto).",
+          postId: remotePost.postId,
+          url: remotePost.url,
+          title: remotePost.title,
+          publishedAt: remotePost.publishedAt
+        };
+      }
     }
 
     if (!essay || !essay.title || !Array.isArray(essay.narrativeParagraphs) || essay.narrativeParagraphs.length === 0) {
@@ -201,7 +301,8 @@ export async function publishDailyEssayToBlogger(
     const htmlContent = buildBloggerPostHtml(essay);
     const labels = extractCleanLabels(
       options?.vectorA || existingDossier?.fullEdition?.systemPair?.vectorA,
-      options?.vectorB || existingDossier?.fullEdition?.systemPair?.vectorB
+      options?.vectorB || existingDossier?.fullEdition?.systemPair?.vectorB,
+      solarDateKey
     );
 
     const endpoint = new URL(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/`);

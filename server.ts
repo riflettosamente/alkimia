@@ -37,7 +37,8 @@ import { saveDossierStep, readDossier, deleteDossier } from "./src/server/dossie
 import { fetchTopicWebContext } from "./src/server/webSearchService";
 import {
   publishDailyEssayToBlogger,
-  getBloggerConfigStatus
+  getBloggerConfigStatus,
+  findBloggerPostByDate
 } from "./src/server/bloggerPublisher";
 
 dotenv.config();
@@ -792,6 +793,32 @@ function extractNormalizedEssay(parsed: any, solarDateKey?: string): any | null 
     return null;
   }
 
+  // Filtro tassativo anti-fuga di istruzioni di sistema (prompt leakage):
+  // Se il modello ha copiato le istruzioni del prompt o segnaposti anziché scrivere la prosa, scarta l'output.
+  const LEAK_PATTERNS = [
+    /in pura prosa continua/i,
+    /senza grassetti/i,
+    /minimo \d+ parole/i,
+    /(?:primo|secondo|terzo|quarto|quinto)\s+paragrafo\s+in/i,
+    /testo completo del paragrafo/i,
+    /testo del (?:primo|secondo|terzo|quarto|quinto) paragrafo/i,
+    /string\s*\(/i
+  ];
+
+  for (const p of narrativeParagraphs) {
+    if (LEAK_PATTERNS.some(rgx => rgx.test(p))) {
+      console.warn(`[ALKIMIA] Scartato saggio non conforme: rilevata fuga di istruzioni del prompt nel testo («${p.slice(0, 80)}...»).`);
+      return null;
+    }
+  }
+
+  // Verifica ampiezza e integrità minima della narrazione
+  const totalWords = narrativeParagraphs.join(" ").split(/\s+/).filter(Boolean).length;
+  if (narrativeParagraphs.length < 3 || totalWords < 400) {
+    console.warn(`[ALKIMIA] Scartato saggio non conforme: lunghezza insufficiente (${narrativeParagraphs.length} paragrafi, ${totalWords} parole).`);
+    return null;
+  }
+
   return {
     id: rawEssay.id || `saggio-${solarDateKey || new Date().toISOString().slice(0, 10)}`,
     cycleId: rawEssay.cycleId || `cycle-${solarDateKey || new Date().toISOString().slice(0, 10)}`,
@@ -1340,8 +1367,25 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
   if (existing) return existing;
 
   const cached = dailyEditionsCache[solarDateKey];
-  if (!force && cached && cached.status === 'generated') return Promise.resolve();
-  if (!force && cached && cached.status === 'generating') return Promise.resolve();
+  if (cached && cached.status === 'generated') {
+    return Promise.resolve();
+  }
+  if (cached && cached.status === 'generating') {
+    return Promise.resolve();
+  }
+
+  // Blocco ferreo: se esiste già un dossier valido e integro salvato su disco, non avviare alcuna produzione
+  const savedDossier = readDossier(solarDateKey);
+  const existingDossierEssay = extractNormalizedEssay(
+    savedDossier?.fullEdition?.essay || savedDossier?.essay,
+    solarDateKey
+  );
+  if (existingDossierEssay) {
+    console.log(
+      `[ALKIMIA] Saggio del Giorno per ${solarDateKey} già presente e sigillato su disco («${existingDossierEssay.title}»). Produzione bloccata.`
+    );
+    return Promise.resolve();
+  }
 
   const run = (async () => {
     if (cached) {
@@ -1939,32 +1983,57 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
 
   // Se esiste un dossier salvato su disco con l'edizione generata, la ripristiniamo immediatamente
   const savedDossier = readDossier(solarDateKey);
-  if (savedDossier?.fullEdition) {
+  const candidateEssay = savedDossier?.fullEdition?.essay || savedDossier?.essay;
+  const verifiedEssay = candidateEssay ? extractNormalizedEssay(candidateEssay, solarDateKey) : null;
+
+  if (savedDossier && verifiedEssay) {
     const fe = savedDossier.fullEdition;
     const fallbackPair = getOrDrawDailyVectorPair(solarDateKey);
-    const vAName = fe.systemPair?.vectorA || fallbackPair.vectorA.name;
-    const vBName = fe.systemPair?.vectorB || fallbackPair.vectorB.name;
-    const safeEssay =
-      extractNormalizedEssay(fe.essay, solarDateKey) ||
-      extractNormalizedEssay(savedDossier.essay, solarDateKey) ||
-      buildSynthesizedEssayFromDossier(fe, vAName, vBName, solarDateKey);
+    const vAName = fe?.systemPair?.vectorA || fallbackPair.vectorA.name;
+    const vBName = fe?.systemPair?.vectorB || fallbackPair.vectorB.name;
     const restoredTelemetry = buildCompletedTelemetryFromSavedDossier(savedDossier, fe);
 
     const loadedEntry: DailyEditionEntry = {
       solarDateKey,
-      cycle: fe.cycle || {
+      cycle: fe?.cycle || {
         ...CURRENT_EDITORIAL_CYCLE,
         cyclicalDate: formattedDate,
         nextScheduledPublication: "Al compimento della rotazione diurna"
       },
       edition: {
-        ...fe,
-        essay: safeEssay,
+        ...(fe || {}),
+        id: `edition-${solarDateKey}`,
+        isLatest: true,
+        cycle: fe?.cycle || {
+          ...CURRENT_EDITORIAL_CYCLE,
+          cyclicalDate: formattedDate,
+          nextScheduledPublication: "Al compimento della rotazione diurna"
+        },
+        systemPair: fe?.systemPair || {
+          vectorA: vAName,
+          vectorB: vBName,
+          syntheticVector: `Convergenza tra ${vAName} e ${vBName}`,
+          ontologicalMatrix: "Campo d'indagine unificato",
+          derivationTimestamp: formattedDate
+        },
+        phase1Decomposition: savedDossier.phase1_decomposition || fe?.phase1Decomposition || buildPhase1Decomposition(vAName, vBName),
+        phase1EmpiricalArchive: savedDossier.phase2_empiricalArchive || savedDossier.phase1_5_empiricalArchive || fe?.phase1EmpiricalArchive || buildPhase1EmpiricalArchive(vAName, vBName),
+        phase2Collision: savedDossier.phase3_collision || fe?.phase2Collision || buildPhase2Collision(vAName, vBName),
+        phase2Loop: savedDossier.phase4_loop || fe?.phase2Loop || buildPhase2LoopFiveDirections(vAName, vBName),
+        phase3FinalStrike: savedDossier.phase5_finalStrike || fe?.phase3FinalStrike || buildPhase3FinalStrike(vAName, vBName),
+        essay: verifiedEssay,
+        pins: [],
+        tensions: [],
+        aiProvider: fe?.aiProvider || 'groq',
+        aiModel: fe?.aiModel || 'openai/gpt-oss-120b',
+        generationStatus: 'generated',
+        generationError: null,
+        generationAttempts: 1,
         phaseTelemetry: restoredTelemetry
       },
       status: 'generated',
-      aiProvider: fe.aiProvider || 'groq',
-      aiModel: fe.aiModel || 'qwen/qwen3.8-27b',
+      aiProvider: fe?.aiProvider || 'groq',
+      aiModel: fe?.aiModel || 'openai/gpt-oss-120b',
       phaseTelemetry: restoredTelemetry,
       error: null,
       attempts: 1,
@@ -1972,7 +2041,26 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
       finishedAt: Date.now()
     };
     dailyEditionsCache[solarDateKey] = loadedEntry;
+    console.log(`[ALKIMIA] Edizione del ${solarDateKey} ripristinata con successo dal dossier salvato («${verifiedEssay.title}»). Nessuna nuova produzione necessaria.`);
     return stampSolarDate(syncEditionWithEntry(loadedEntry), solarDateKey);
+  }
+
+  // Verifica remota su Blogger: se un post per questa data solare è già online su Blogger,
+  // allinea il riferimento per evitare qualsiasi pubblicazione duplicata futura.
+  try {
+    const remotePost = await findBloggerPostByDate(solarDateKey);
+    if (remotePost) {
+      console.log(`[ALKIMIA] Saggio del ${solarDateKey} già pubblicato su Blogger (${remotePost.url}). Riferimento memorizzato nel dossier.`);
+      saveDossierStep(solarDateKey, "bloggerPost", {
+        postId: remotePost.postId,
+        url: remotePost.url,
+        title: remotePost.title,
+        publishedAt: remotePost.publishedAt,
+        solarDateKey
+      });
+    }
+  } catch (err: any) {
+    console.warn(`[ALKIMIA] Controllo Blogger non bloccante per ${solarDateKey}:`, err.message || err);
   }
 
   const pair = getOrDrawDailyVectorPair(solarDateKey);
@@ -2105,161 +2193,20 @@ app.get("/api/daily-edition/status", async (req, res) => {
   }
 });
 
-// 6c. Rigenerazione esplicita del Saggio del Giorno (diagnostica e ripristino manuale).
-app.post("/api/daily-edition/regenerate", async (req, res) => {
-  try {
-    const bodyDate = typeof req.body?.solarDate === 'string' ? req.body.solarDate : undefined;
-    const solarDateKey =
-      bodyDate && /^\d{4}-\d{2}-\d{2}$/.test(bodyDate)
-        ? bodyDate
-        : new Date().toISOString().split('T')[0];
-
-    // Reset totale della cache e rimozione del dossier su disco per redazione da zero
-    delete dailyEditionsCache[solarDateKey];
-    delete inFlightDaily[solarDateKey];
-    deleteDossier(solarDateKey);
-
-    await getOrCreateDailyEdition(solarDateKey);
-    const promise = startDailyAiDrafting(solarDateKey, true);
-
-    if (req.body?.wait === true) {
-      await promise;
-      const entry = dailyEditionsCache[solarDateKey];
-      res.json({
-        success: entry?.status === 'generated',
-        solarDateKey,
-        generation: entry ? describeGeneration(entry) : null,
-        edition: entry?.edition ?? null,
-        cycle: entry?.cycle ?? null
-      });
-      return;
-    }
-
-    res.json({ success: true, solarDateKey, started: true });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
-  }
+// 6c. Endpoint di rigenerazione disattivato permanentemente: ogni data solare ammette un unico saggio immutabile.
+app.post("/api/daily-edition/regenerate", (_req, res) => {
+  res.status(403).json({
+    success: false,
+    error: "Comando di rigenerazione disattivato in modo permanente: ogni data solare ammette un unico saggio originale e immutabile."
+  });
 });
 
-// 6d. Rigenerazione esplicita della sola Fase 6 (Saggio del Giorno) fondata sul dossier esistente delle Fasi 1-5.
-app.post("/api/daily-edition/regenerate-phase6", async (req, res) => {
-  try {
-    const bodyDate = typeof req.body?.solarDate === 'string' ? req.body.solarDate : undefined;
-    const solarDateKey =
-      bodyDate && /^\d{4}-\d{2}-\d{2}$/.test(bodyDate)
-        ? bodyDate
-        : new Date().toISOString().split('T')[0];
-
-    const savedDossier = readDossier(solarDateKey);
-    if (!savedDossier) {
-      return res.status(404).json({ success: false, error: `Nessun dossier trovato per la data ${solarDateKey}.` });
-    }
-
-    const pair = getOrDrawDailyVectorPair(solarDateKey);
-    const selectedA = pair.vectorA;
-    const selectedB = pair.vectorB;
-
-    const parsedStep1 = savedDossier.phase1To4 || {
-      systemPair: savedDossier.fullEdition?.systemPair || {
-        vectorA: selectedA.name,
-        vectorB: selectedB.name,
-        syntheticVector: `Collisione speculativa tra ${selectedA.name} e ${selectedB.name}`,
-        ontologicalMatrix: "Soglia di attrito ontologico",
-        derivationTimestamp: formatItalianDateServer(solarDateKey)
-      },
-      phase1Decomposition: savedDossier.phase1_decomposition || savedDossier.fullEdition?.phase1Decomposition,
-      phase1EmpiricalArchive: savedDossier.phase2_empiricalArchive || savedDossier.phase1_5_empiricalArchive || savedDossier.fullEdition?.phase1EmpiricalArchive,
-      phase2Collision: savedDossier.phase3_collision || savedDossier.fullEdition?.phase2Collision,
-      phase2Loop: savedDossier.phase4_loop || savedDossier.fullEdition?.phase2Loop,
-      phase3FinalStrike: savedDossier.phase5_finalStrike || savedDossier.fullEdition?.phase3FinalStrike
-    };
-
-    const literarySystemPrompt = buildLiteraryEssaySystemPrompt();
-    const step2Prompt = buildStep2LiteraryEssayPrompt(parsedStep1, selectedA, selectedB);
-
-    console.log(`[ALKIMIA] Rigenerazione mirata Fase 6 per ${solarDateKey} con Groq in corso...`);
-    const result = await runAiProviderChain(literarySystemPrompt, step2Prompt, { step: 'phase6' });
-
-    if (!result.ok) {
-      return res.status(500).json({ success: false, error: (result as any).error || "Errore durante la generazione della Fase 6 con Groq" });
-    }
-
-    const parsed = cleanAndParseJson(result.text);
-    const finalEssay = extractNormalizedEssay(parsed, solarDateKey);
-    if (!finalEssay) {
-      return res.status(500).json({ success: false, error: "Impossibile formattare il saggio generato da Groq." });
-    }
-
-    const entry = dailyEditionsCache[solarDateKey] || (await getOrCreateDailyEdition(solarDateKey));
-
-    entry.aiProvider = result.provider;
-    entry.aiModel = result.model;
-    entry.phaseTelemetry = (entry.phaseTelemetry || createInitialPhaseTelemetry()).map(item => {
-      if (item.phaseNumber === 6) {
-        return {
-          ...item,
-          status: 'completed',
-          provider: result.provider,
-          model: result.model,
-          promptTokens: result.usage.promptTokens,
-          completionTokens: result.usage.completionTokens,
-          totalTokens: result.usage.totalTokens,
-          completedAt: new Date().toISOString()
-        };
-      }
-      if (item.status !== 'completed') {
-        return {
-          ...item,
-          status: 'completed',
-          provider: item.provider || 'groq',
-          model: item.model || 'openai/gpt-oss-120b',
-          completedAt: item.completedAt || new Date().toISOString()
-        };
-      }
-      return item;
-    });
-
-    if (entry.edition) {
-      entry.edition.essay = finalEssay;
-      entry.edition.aiProvider = result.provider;
-      entry.edition.aiModel = result.model;
-      entry.edition.phaseTelemetry = entry.phaseTelemetry;
-      entry.edition.generationStatus = 'generated';
-      entry.edition.generationError = null;
-    }
-
-    entry.status = 'generated';
-    entry.error = null;
-    entry.finishedAt = Date.now();
-
-    saveDossierStep(solarDateKey, 'essay', finalEssay);
-    saveDossierStep(solarDateKey, 'phaseTelemetry', entry.phaseTelemetry);
-    if (entry.edition) {
-      saveDossierStep(solarDateKey, 'fullEdition', entry.edition);
-    }
-
-    console.log(`[ALKIMIA] FASE 6 per ${solarDateKey} redatta e salvata con successo da ${result.provider} (${result.model})!`);
-
-    // Pubblicazione automatica su Blogger se configurato
-    const bloggerResult = await publishDailyEssayToBlogger(solarDateKey, finalEssay, {
-      vectorA: selectedA.name,
-      vectorB: selectedB.name,
-      force: req.body?.publishForce === true
-    });
-
-    res.json({
-      success: true,
-      solarDateKey,
-      provider: result.provider,
-      model: result.model,
-      usage: result.usage,
-      essay: finalEssay,
-      blogger: bloggerResult
-    });
-  } catch (err: any) {
-    console.error("[ALKIMIA] Errore rigenerazione Fase 6:", err);
-    res.status(500).json({ success: false, error: err.message });
-  }
+// 6d. Endpoint di rigenerazione Fase 6 disattivato permanentemente.
+app.post("/api/daily-edition/regenerate-phase6", (_req, res) => {
+  res.status(403).json({
+    success: false,
+    error: "Comando di rigenerazione disattivato in modo permanente: ogni data solare ammette un unico saggio originale e immutabile."
+  });
 });
 
 // 6e. Stato e test di pubblicazione su Google Blogger (alkimiatoday.blogspot.com)
@@ -2324,16 +2271,16 @@ setInterval(async () => {
       `[ALKIMIA 00:00] Transizione alla data ${currentKey}. Elaborazione automatica nuovo Saggio del Giorno in corso...`
     );
     try {
-      await getOrCreateDailyEdition(currentKey);
-      const drafting = startDailyAiDrafting(currentKey, true);
-      await drafting;
-      const entry = dailyEditionsCache[currentKey];
-      if (entry?.status === 'generated') {
-        console.log(`[ALKIMIA 00:00] Nuovo Saggio del Giorno per ${currentKey} redatto con successo.`);
+      const entry = await getOrCreateDailyEdition(currentKey);
+      if (entry.status !== 'generated' && !inFlightDaily[currentKey]) {
+        await startDailyAiDrafting(currentKey, false);
+      }
+      const finalEntry = dailyEditionsCache[currentKey];
+      if (finalEntry?.status === 'generated') {
+        console.log(`[ALKIMIA 00:00] Saggio del Giorno per ${currentKey} pronto con successo.`);
       } else {
-        console.error(
-          `[ALKIMIA 00:00] Saggio del Giorno per ${currentKey} NON redatto: ${entry?.error || 'stato ' + entry?.status}. ` +
-          `Verrà ritentato automaticamente alla prossima richiesta.`
+        console.log(
+          `[ALKIMIA 00:00] Saggio del Giorno per ${currentKey} in stato: ${finalEntry?.status || 'provvisorio'}.`
         );
       }
     } catch (err: any) {
@@ -2381,8 +2328,8 @@ async function startServer() {
   const todayKey = new Date().toISOString().split('T')[0];
   lastMonitoredSolarKey = todayKey;
   try {
-    await getOrCreateDailyEdition(todayKey);
-    console.log(`[ALKIMIA] Warm-up completato: redazione del Saggio del Giorno ${todayKey} avviata.`);
+    const entry = await getOrCreateDailyEdition(todayKey);
+    console.log(`[ALKIMIA] Warm-up completato per ${todayKey} (stato: ${entry.status}).`);
   } catch (err: any) {
     console.error(`[ALKIMIA] Warm-up fallito per ${todayKey}:`, err.message || err);
   }
