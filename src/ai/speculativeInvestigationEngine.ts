@@ -357,10 +357,11 @@ E. IMPLICAZIONI SCIENTIFICHE, APPLICATIVE E FILOSOFICHE:
 - Visione conclusiva: ${stripMdBold(p3?.dizzyingRevelation)}
 
 ================================================================================
-DIRETTIVE DI COMPOSIZIONE DEL SAGGIO FINALE
+DIRETTIVE DI COMPOSIZIONE DEL SAGGIO FINALE: IL "NON-MODELLO" ORGANICO
 ================================================================================
-Il saggio non deve essere una fredda cronaca di nomi e date, né un esercizio astratto. Deve far comprendere al lettore con naturalezza e profondità:
-1. Cosa accade quando «${cleanTopicA}» e «${cleanTopicB}» smettono di essere trattati come compartimenti stagni e vengono letti attraverso un unico principio operativo.
+Il saggio non deve seguire uno schema stereotipato né una divisione a compartimenti stagni. Non usare una scaletta fissa (tipo: paragrafo 1 presentazione separata, 2 limiti, 3 meccanismo, 4 ricadute, 5 cosmologia).
+La narrazione deve fluire come un unico arco argomentativo vivo, in cui ogni paragrafo scaturisce per necessità interna da quello precedente:
+1. Cosa accade quando «${cleanTopicA}» e «${cleanTopicB}» smettono di essere trattati come mondi separati e vengono letti attraverso un unico principio operativo.
 2. Qual è la scoperta concettuale o empirica che prima rimaneva invisibile a ciascuna disciplina presa singolarmente.
 3. Quali indagini scientifiche, tecnologiche, cliniche, antropologiche o filosofiche diventano concretamente possibili grazie a questa sintesi.
 
@@ -376,7 +377,12 @@ REGOLE TASSATIVE SULLA FORMA E SUL LESSICO (OBBLIGATORIE)
 
 2. DIVIETO DI LESSICO METODOLOGICO: Non nominare mai le fasi ("Fase 1", "Fase 2", "Fase 3", "Fase 4", "Fase 5", "Fase 6", "Passo 1", "Passo 2", "Loop", "Loop cognitivo", "Faglia 3", "Faglia", "Affondo", "Affondo finale", "Interrogativo", "Asse cieco", "Verbo fondamentale", "Cui prodest", "Collisione", "Cassetto", "Cassetto 1", "Cassetto 2", "Vettore A", "Vettore B", "Direzione", "5 direzioni", "cinque direzioni", "cinque prospettive", "5 prospettive", "Sintesi funzionale", "Crepa asimmetrica", "Intuizione contro-intuitiva", "intuizioni controintuitive", "Paradosso di partenza", "Soglia condivisa", "Punto di contatto"). L'apparato metodologico deve essere completamente invisibile, come le ossa sotto la pelle viva.
 
-3. DIVIETO DI AUTOREFERENZIALITÀ E METACOMMENTO:
+3. DIVIETO CATEGORICO DI SCHEMI BINARI E CONNETTIVI MECCANICI («PARALLELAMENTE»):
+- È SEVERAMENTE VIETATO aprire il saggio o collegare i due temi con la struttura binaria simmetrica: "da un lato argomento A, e parallelamente argomento B".
+- È VIETATO usare connettivi pigri o formule di transizione stereotipate come "parallelamente", "simmetricamente", "d'altro canto", "sul versante opposto", "dal canto suo", "allo stesso modo", "mentre da una parte... dall'altra".
+- L'incipit deve essere organico e vivo: entra direttamente in medias res da una scena storica, da un reperto, da uno strumento, da una faglia sperimentale o dall'attrito immediato tra i due mondi.
+
+4. DIVIETO DI AUTOREFERENZIALITÀ E METACOMMENTO:
 - NON USARE MAI le parole "Alkimia", "alkimia", "alchimia", "alchemico", "alchemica", "trasformazione alchemica" o "trasmutazione alchemica" né nel titolo, né nel sottotitolo, né nella tesi, né nei paragrafi!
 - NON USARE formule scolastiche o metanarrative come "In questo saggio...", "La domanda che si pone è...", "Il paradosso di partenza è...", "La sintesi di cinque prospettive...", "I nuovi campi di ricerca che emergono sono...".
 - NON USARE parole deformate, neologismi spuri o calchi non italiani (es. "regula", "ipotese", "pinealico", "spaziativa", "piante cerebrale").

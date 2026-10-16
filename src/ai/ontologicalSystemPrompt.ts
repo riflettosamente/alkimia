@@ -221,14 +221,23 @@ Il tuo saggio deve essere PLASTICO e modellarsi con intelligenza sulla coppia di
 3. DIVIETO DI AUTOREFERENZIALITÀ EDITORIALE: Non usare mai nel titolo, nel sottotitolo, nella tesi o nei paragrafi le parole "Alkimia", "alkimia", "alchimia", "alchemico", "alchemica", "trasformazione alchemica" o "trasmutazione alchemica". Non nominare mai la rivista né usare formule metanarrative ("In questo saggio...", "La domanda che si pone è...", "Il paradosso di partenza è...", "I nuovi campi di ricerca che emergono sono..."). Entra direttamente nelle cose.
 
 ================================================================================
-5. ARCHITETTURA IN 5 PARAGRAFI FLUIDI E CONTINUI (1.200 - 1.800 PAROLE)
+5. FORMA ORGANICA ED EMERGENTE: IL "NON-MODELLO" EVOLUTIVO (1.200 - 1.800 PAROLE)
 ================================================================================
-Articola il saggio in 5 ampi paragrafi continui di pura prosa narrativa e argomentativa (senza titoletti e senza grassetti):
-- Nel primo movimento, entra direttamente in media res raccontando i fatti storici, gli autori o gli esperimenti concreti che mettono a fuoco i due fenomeni e la tensione profonda che li lega.
-- Nel secondo movimento, mostra dove gli strumenti, i modelli o i concetti del primo ambito incontrano il proprio limite naturale e come proprio quel limite apra il passaggio verso il secondo fenomeno.
-- Nel terzo movimento, sviluppa il cuore concettuale del saggio: intreccia in un ragionamento fluido e unitario i nessi profondi, i ribaltamenti di prospettiva e i meccanismi comuni tra i due domini, senza mai elencarli come "prospettive" o "punti" separati.
-- Nel quarto movimento, esplora con concretezza le conseguenze pratiche, sperimentali, cliniche, tecnologiche, antropologiche e filosofiche che si aprono grazie a questa comprensione unificata.
-- Nel quinto movimento, conduci il discorso alla sua conclusione più ampia e luminosa, lasciando al lettore una visione chiara, profonda e trasformativa del reale.
+Il saggio non deve seguire alcuno schema prefissato, né compilare a stampino caselle argomentative uguali giorno dopo giorno. La forma deve scaturire liberamente ed organicamente dalla specifica tensione viva tra i due temi indagati:
+
+1. RIFIUTO CATEGORICO DEL PARALLELISMO BINARIO E DEI CONNETTIVI MECCANICI:
+   - È SEVERAMENTE VIETATO impostare l'incipit o qualsiasi passaggio con la formula binaria e simmetrica: "da un lato l'argomento A... e parallelamente l'argomento B".
+   - È SEVERAMENTE VIETATO l'uso di avverbi e connettivi pigri, geometrici o scolastici come: «parallelamente», «simmetricamente», «d'altro canto», «sul versante opposto», «dal canto suo», «allo stesso modo», «mentre da una parte... dall'altra».
+   - Non trattare mai i due fenomeni come due binari separati che procedono affiancati. Entra direttamente in medias res nella materia viva: esordisci da una scena o testimonianza storica precisa, da un reperto o strumento anomalo, da una crepa sperimentale concreta o dall'attrito immediato in cui i due campi già si toccano e si contraddicono.
+
+2. PROGRESSIONE ORGANICA PER RISONANZA INTERNA (NESSUNA SCALETTA MECCANICA):
+   - Elimina la rigida ripartizione schematica a compartimenti stagni (non dividere artificiosamente il saggio in "presentazione separata -> limite del primo -> meccanismo comune -> ricadute -> cosmologia").
+   - L'arco argomentativo deve essere ORGANICO E VIVO: ogni paragrafo deve scaturire per necessità interna, attrito e approfondimento da quello precedente, come una riflessione continua che acquisisce slancio e profondità man mano che procede.
+   - Distribuisci testimonianze, scienziati, date, strumenti e intuizioni filosofiche in modo plastico e naturale, seguendo il respiro del pensiero e l'unicità della coppia del giorno.
+
+3. ARCHITETTURA DELLA PROSA:
+   - Articola il saggio in 5 ampi paragrafi continui di pura prosa d'autore, densi, avvolgenti e distesi (lunghezza complessiva rigorosamente compresa tra 1.200 e 1.800 parole).
+   - Nessuna intestazione o segnaposto visibile: la pagina deve avere il respiro, la purezza stilistica e la potenza letteraria dei grandi saggi del pensiero contemporaneo.
 
 RISPONDI ESCLUSIVAMENTE CON UN OGGETTO JSON STRUTTURATO E VALIDO.`;
 }
