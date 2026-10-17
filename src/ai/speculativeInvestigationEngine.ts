@@ -329,15 +329,9 @@ A. CONTESTO STORICO E CONFINE EPISTEMOLOGICO:
 - ${cleanTopicA}: ${stripMdBold(vA?.whenWhere)} | Limite: ${stripMdBold(vA?.whichBoundary)} | Zona d'ombra: ${stripMdBold(vA?.whyVeiled)}
 - ${cleanTopicB}: ${stripMdBold(vB?.whenWhere)} | Limite: ${stripMdBold(vB?.whichBoundary)} | Zona d'ombra: ${stripMdBold(vB?.whyVeiled)}
 
-B. FONTI STORICHE, AUTORI, STRUMENTI E TEORIE (cita naturalmente nomi, date, opere e strumenti nel flusso del racconto):
-- Opere e documenti (${cleanTopicA}): ${stripMdBold(empA?.foundationalTexts)}
-- Protagonisti e studiosi (${cleanTopicA}): ${stripMdBold(empA?.keyFiguresAndWitnesses)}
-- Strumenti, misure e reperti (${cleanTopicA}): ${stripMdBold(empA?.materialEvidenceAndTools)}
-- Modelli teorici (${cleanTopicA}): ${stripMdBold(empA?.breakthroughTheories)}
-- Opere e documenti (${cleanTopicB}): ${stripMdBold(empB?.foundationalTexts)}
-- Protagonisti e studiosi (${cleanTopicB}): ${stripMdBold(empB?.keyFiguresAndWitnesses)}
-- Strumenti, misure e reperti (${cleanTopicB}): ${stripMdBold(empB?.materialEvidenceAndTools)}
-- Modelli teorici (${cleanTopicB}): ${stripMdBold(empB?.breakthroughTheories)}
+B. REPERTI, STUDIOSI, TESTI E STRUMENTI (NON elencarli tutti: seleziona solo 1 o 2 riferimenti cardine per ciascun tema, spiegando brevemente con parole chiare cosa osservavano e che funzione avevano):
+- ${cleanTopicA}: ${stripMdBold(empA?.keyFiguresAndWitnesses, 130)} | Testo: ${stripMdBold(empA?.foundationalTexts, 120)} | Strumento/Misura: ${stripMdBold(empA?.materialEvidenceAndTools, 120)} | Modello: ${stripMdBold(empA?.breakthroughTheories, 120)}
+- ${cleanTopicB}: ${stripMdBold(empB?.keyFiguresAndWitnesses, 130)} | Testo: ${stripMdBold(empB?.foundationalTexts, 120)} | Strumento/Misura: ${stripMdBold(empB?.materialEvidenceAndTools, 120)} | Modello: ${stripMdBold(empB?.breakthroughTheories, 120)}
 - Connessione empirica: ${empSynthesis}
 
 C. MECCANISMO CONGIUNTO E IPOTESI SPERIMENTALE:
@@ -365,6 +359,11 @@ La narrazione deve fluire come un unico arco argomentativo vivo, in cui ogni par
 2. Qual è la scoperta concettuale o empirica che prima rimaneva invisibile a ciascuna disciplina presa singolarmente.
 3. Quali indagini scientifiche, tecnologiche, cliniche, antropologiche o filosofiche diventano concretamente possibili grazie a questa sintesi.
 
+CHIAREZZA DIVULGATIVA ED ELIMINAZIONE DEL "NAME-DROPPING":
+- Il lettore comune non conosce trattati rari né sigle astruse: NON fare sfoggio di erudizione sterile né sciorinare liste di nomi o date a vuoto.
+- REGOLA DEL "MENO MA RACCONTATO VIVO": seleziona pochissimi riferimenti (1 o 2 per tema). Ogni volta che nomini uno scienziato o un'apparecchiatura, spiega in 1-2 frasi limpide: cosa cercava quella persona e come funzionava quello strumento in parole semplici e tangibili.
+- OBBLIGO DEL PONTE CAUSALE: non accostare mai due ricerche dicendo solo che "convergono"; spiega sempre il legame di causa-effetto (perché il limite del primo campo apre la porta alla scoperta del secondo). Il saggio deve essere autosufficiente al 100% senza che il lettore debba consultare enciclopedie.
+
 REGOLA DI PLASTICITÀ SU MISURA PER «${cleanTopicA}» E «${cleanTopicB}»:
 - Se gli argomenti sono fisici, genetici o neurobiologici, approfondisci i meccanismi sperimentali, biofisici e tecnologici.
 - Se riguardano l'esperienza interiore, la Spiritualità o l'Aldilà, non forzare gerghi di laboratorio dove suonerebbero artificiosi: esplora con rigore la fenomenologia della coscienza, le scienze contemplative, la trasformazione interiore dell'uomo e le domande sul vivere e sul morire.
@@ -382,7 +381,11 @@ REGOLE TASSATIVE SULLA FORMA E SUL LESSICO (OBBLIGATORIE)
 - È VIETATO usare connettivi pigri o formule di transizione stereotipate come "parallelamente", "simmetricamente", "d'altro canto", "sul versante opposto", "dal canto suo", "allo stesso modo", "mentre da una parte... dall'altra".
 - L'incipit deve essere organico e vivo: entra direttamente in medias res da una scena storica, da un reperto, da uno strumento, da una faglia sperimentale o dall'attrito immediato tra i due mondi.
 
-4. DIVIETO DI AUTOREFERENZIALITÀ E METACOMMENTO:
+4. DIVIETO DI NAME-DROPPING E CATALOGHI STERILI:
+- È vietato accumulare elenchi di nomi propri, date o trattati a scopo puramente ornamentale.
+- Ogni elemento citato deve spiegare la propria funzione pratica in parole comprensibili ed essere integrato nel filo causale del ragionamento.
+
+5. DIVIETO DI AUTOREFERENZIALITÀ E METACOMMENTO:
 - NON USARE MAI le parole "Alkimia", "alkimia", "alchimia", "alchemico", "alchemica", "trasformazione alchemica" o "trasmutazione alchemica" né nel titolo, né nel sottotitolo, né nella tesi, né nei paragrafi!
 - NON USARE formule scolastiche o metanarrative come "In questo saggio...", "La domanda che si pone è...", "Il paradosso di partenza è...", "La sintesi di cinque prospettive...", "I nuovi campi di ricerca che emergono sono...".
 - NON USARE parole deformate, neologismi spuri o calchi non italiani (es. "regula", "ipotese", "pinealico", "spaziativa", "piante cerebrale").
