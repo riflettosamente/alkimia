@@ -66,13 +66,22 @@ export const Phase1StructuralDecompositionView: React.FC<Phase1StructuralDecompo
   systemPair,
   decomposition
 }) => {
-  // Risolve la scomposizione per i due vettori correnti
-  const activeDecomposition = decomposition || buildPhase1Decomposition(
-    systemPair.vectorA,
-    systemPair.vectorB
+  // Risolve la scomposizione per i due vettori correnti, gestendo sia la forma piatta che quella annidata
+  const rawDecomp: any = decomposition;
+  const unpackedDecomp = rawDecomp?.phase1Decomposition?.vectorA
+    ? rawDecomp.phase1Decomposition
+    : rawDecomp?.vectorA
+    ? rawDecomp
+    : null;
+
+  const fallbackDecomp = buildPhase1Decomposition(
+    systemPair?.vectorA || "Primo Argomento",
+    systemPair?.vectorB || "Secondo Argomento"
   );
 
-  const { vectorA, vectorB } = activeDecomposition;
+  const activeDecomposition = unpackedDecomp || fallbackDecomp;
+  const vectorA = activeDecomposition?.vectorA || fallbackDecomp.vectorA;
+  const vectorB = activeDecomposition?.vectorB || fallbackDecomp.vectorB;
 
   return (
     <motion.div 

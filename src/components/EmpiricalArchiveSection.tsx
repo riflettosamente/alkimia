@@ -104,7 +104,17 @@ export const EmpiricalArchiveSection: React.FC<EmpiricalArchiveSectionProps> = (
   const topicA = systemPair?.vectorA || "Primo Argomento";
   const topicB = systemPair?.vectorB || "Secondo Argomento";
 
-  const activeArchive = archive || buildPhase1EmpiricalArchive(topicA, topicB);
+  const rawArchive: any = archive;
+  const unpackedArchive = rawArchive?.phase1EmpiricalArchive?.vectorA
+    ? rawArchive.phase1EmpiricalArchive
+    : rawArchive?.vectorA
+    ? rawArchive
+    : null;
+
+  const fallbackArchive = buildPhase1EmpiricalArchive(topicA, topicB);
+  const activeArchive = unpackedArchive || fallbackArchive;
+  const vectorAData = activeArchive?.vectorA || fallbackArchive.vectorA;
+  const vectorBData = activeArchive?.vectorB || fallbackArchive.vectorB;
 
   return (
     <motion.section 
@@ -128,11 +138,11 @@ export const EmpiricalArchiveSection: React.FC<EmpiricalArchiveSectionProps> = (
       {/* Griglia a Due Colonne affiancate per gli Argomenti */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ArchiveTopicCard
-          archiveData={activeArchive.vectorA}
+          archiveData={vectorAData}
           borderColorClass="border-l-4 border-l-[#b0872e]"
         />
         <ArchiveTopicCard
-          archiveData={activeArchive.vectorB}
+          archiveData={vectorBData}
           borderColorClass="border-l-4 border-l-[#5c6e8c]"
         />
       </div>

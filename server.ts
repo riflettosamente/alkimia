@@ -2016,11 +2016,34 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
           ontologicalMatrix: "Campo d'indagine unificato",
           derivationTimestamp: formattedDate
         },
-        phase1Decomposition: savedDossier.phase1_decomposition || fe?.phase1Decomposition || buildPhase1Decomposition(vAName, vBName),
-        phase1EmpiricalArchive: savedDossier.phase2_empiricalArchive || savedDossier.phase1_5_empiricalArchive || fe?.phase1EmpiricalArchive || buildPhase1EmpiricalArchive(vAName, vBName),
-        phase2Collision: savedDossier.phase3_collision || fe?.phase2Collision || buildPhase2Collision(vAName, vBName),
-        phase2Loop: savedDossier.phase4_loop || fe?.phase2Loop || buildPhase2LoopFiveDirections(vAName, vBName),
-        phase3FinalStrike: savedDossier.phase5_finalStrike || fe?.phase3FinalStrike || buildPhase3FinalStrike(vAName, vBName),
+        phase1Decomposition:
+          savedDossier.phase1_decomposition?.phase1Decomposition ||
+          (savedDossier.phase1_decomposition?.vectorA ? savedDossier.phase1_decomposition : null) ||
+          fe?.phase1Decomposition?.phase1Decomposition ||
+          fe?.phase1Decomposition ||
+          buildPhase1Decomposition(vAName, vBName),
+        phase1EmpiricalArchive:
+          savedDossier.phase2_empiricalArchive?.phase1EmpiricalArchive ||
+          (savedDossier.phase2_empiricalArchive?.vectorA ? savedDossier.phase2_empiricalArchive : null) ||
+          savedDossier.phase1_5_empiricalArchive?.phase1EmpiricalArchive ||
+          (savedDossier.phase1_5_empiricalArchive?.vectorA ? savedDossier.phase1_5_empiricalArchive : null) ||
+          fe?.phase1EmpiricalArchive ||
+          buildPhase1EmpiricalArchive(vAName, vBName),
+        phase2Collision:
+          savedDossier.phase3_collision?.phase2Collision ||
+          (savedDossier.phase3_collision?.step1StrippingFunction ? savedDossier.phase3_collision : null) ||
+          fe?.phase2Collision ||
+          buildPhase2Collision(vAName, vBName),
+        phase2Loop:
+          savedDossier.phase4_loop?.phase2Loop ||
+          (savedDossier.phase4_loop?.tracks ? savedDossier.phase4_loop : null) ||
+          fe?.phase2Loop ||
+          buildPhase2LoopFiveDirections(vAName, vBName),
+        phase3FinalStrike:
+          savedDossier.phase5_finalStrike?.phase3FinalStrike ||
+          (savedDossier.phase5_finalStrike?.cuiProdest ? savedDossier.phase5_finalStrike : null) ||
+          fe?.phase3FinalStrike ||
+          buildPhase3FinalStrike(vAName, vBName),
         essay: verifiedEssay,
         pins: [],
         tensions: [],
@@ -2046,11 +2069,11 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
   }
 
   // Verifica remota su Blogger: se un post per questa data solare è già online su Blogger,
-  // allinea il riferimento per evitare qualsiasi pubblicazione duplicata futura.
+  // evita qualsiasi nuova produzione da zero e blocca categoricamente i duplicati.
   try {
     const remotePost = await findBloggerPostByDate(solarDateKey);
     if (remotePost) {
-      console.log(`[ALKIMIA] Saggio del ${solarDateKey} già pubblicato su Blogger (${remotePost.url}). Riferimento memorizzato nel dossier.`);
+      console.log(`[ALKIMIA] Saggio del ${solarDateKey} già presente su Blogger («${remotePost.title}» - ${remotePost.url}). Blocco rigenerazione da zero.`);
       saveDossierStep(solarDateKey, "bloggerPost", {
         postId: remotePost.postId,
         url: remotePost.url,
@@ -2058,9 +2081,73 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
         publishedAt: remotePost.publishedAt,
         solarDateKey
       });
+
+      const fallbackPair = getOrDrawDailyVectorPair(solarDateKey);
+      const loadedFromBlogger: DailyEditionEntry = {
+        solarDateKey,
+        cycle: {
+          ...CURRENT_EDITORIAL_CYCLE,
+          cyclicalDate: formattedDate,
+          nextScheduledPublication: "Al compimento della rotazione diurna"
+        },
+        edition: {
+          id: `edition-${solarDateKey}`,
+          isLatest: true,
+          cycle: {
+            ...CURRENT_EDITORIAL_CYCLE,
+            cyclicalDate: formattedDate,
+            nextScheduledPublication: "Al compimento della rotazione diurna"
+          },
+          systemPair: {
+            vectorA: fallbackPair.vectorA.name,
+            vectorB: fallbackPair.vectorB.name,
+            syntheticVector: `Convergenza tra ${fallbackPair.vectorA.name} e ${fallbackPair.vectorB.name}`,
+            ontologicalMatrix: "Campo d'indagine unificato",
+            derivationTimestamp: formattedDate
+          },
+          phase1Decomposition: buildPhase1Decomposition(fallbackPair.vectorA.name, fallbackPair.vectorB.name),
+          phase1EmpiricalArchive: buildPhase1EmpiricalArchive(fallbackPair.vectorA.name, fallbackPair.vectorB.name),
+          phase2Collision: buildPhase2Collision(fallbackPair.vectorA.name, fallbackPair.vectorB.name),
+          phase2Loop: buildPhase2LoopFiveDirections(fallbackPair.vectorA.name, fallbackPair.vectorB.name),
+          phase3FinalStrike: buildPhase3FinalStrike(fallbackPair.vectorA.name, fallbackPair.vectorB.name),
+          essay: {
+            id: `saggio-${solarDateKey}`,
+            cycleId: `cycle-${solarDateKey}`,
+            title: remotePost.title,
+            subtitle: `Saggio pubblicato su Blogger: ${remotePost.url}`,
+            ontologicalThesis: `Saggio del Giorno diffuso attraverso Google Blogger per la data solare ${solarDateKey}.`,
+            preamble: "",
+            narrativeParagraphs: [
+              `L'edizione odierna è stata redatta e pubblicata su Google Blogger all'indirizzo: ${remotePost.url}`
+            ],
+            sections: [],
+            corollaries: [],
+            openAporias: [],
+            bibliographicResonances: []
+          },
+          pins: [],
+          tensions: [],
+          aiProvider: 'groq',
+          aiModel: 'cloud-published',
+          generationStatus: 'generated',
+          generationError: null,
+          generationAttempts: 1,
+          phaseTelemetry: []
+        },
+        status: 'generated',
+        aiProvider: 'groq',
+        aiModel: 'cloud-published',
+        phaseTelemetry: [],
+        error: null,
+        attempts: 1,
+        startedAt: null,
+        finishedAt: Date.now()
+      };
+      dailyEditionsCache[solarDateKey] = loadedFromBlogger;
+      return stampSolarDate(syncEditionWithEntry(loadedFromBlogger), solarDateKey);
     }
   } catch (err: any) {
-    console.warn(`[ALKIMIA] Controllo Blogger non bloccante per ${solarDateKey}:`, err.message || err);
+    console.warn(`[ALKIMIA] Controllo Blogger per ${solarDateKey}:`, err.message || err);
   }
 
   const pair = getOrDrawDailyVectorPair(solarDateKey);

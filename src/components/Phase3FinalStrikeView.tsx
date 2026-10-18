@@ -49,9 +49,16 @@ export const Phase3FinalStrikeView: React.FC<Phase3FinalStrikeViewProps> = ({
   systemPair,
   finalStrike
 }) => {
-  const baseStrike = finalStrike || buildPhase3FinalStrike(
-    systemPair.vectorA,
-    systemPair.vectorB
+  const rawStrike: any = finalStrike;
+  const unpackedStrike = rawStrike?.phase3FinalStrike?.cuiProdest
+    ? rawStrike.phase3FinalStrike
+    : rawStrike?.cuiProdest
+    ? rawStrike
+    : null;
+
+  const baseStrike = unpackedStrike || buildPhase3FinalStrike(
+    systemPair?.vectorA || '',
+    systemPair?.vectorB || ''
   );
 
   // Pulisce eventuali espressioni forzate o da proclama rimaste in dossier generati con versioni precedenti del prompt,
