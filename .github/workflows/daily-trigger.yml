@@ -11,15 +11,13 @@ on:
         description: 'Data solare opzionale (YYYY-MM-DD). Lascia vuoto per usare la data odierna UTC.'
         required: false
         default: ''
-      forceRegenerate:
-        description: 'Forza la rigenerazione completa anche se esiste già un saggio per oggi'
-        required: false
-        type: boolean
-        default: false
+
+permissions:
+  contents: write
 
 jobs:
   trigger-daily-essay:
-    name: Risveglio Render e Redazione 6 Fasi
+    name: Risveglio Render, Redazione e Archiviazione (Finestra 30gg)
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -27,10 +25,14 @@ jobs:
       # Usa il secret/variabile RENDER_APP_URL se definito su GitHub, altrimenti punta a https://alkimia.onrender.com
       RENDER_URL: ${{ secrets.RENDER_APP_URL || vars.RENDER_APP_URL || 'https://alkimia.onrender.com' }}
       INPUT_DATE: ${{ github.event.inputs.solarDate }}
-      FORCE_REGEN: ${{ github.event.inputs.forceRegenerate }}
 
     steps:
-      - name: 1. Determina Data Solare UTC
+      - name: 1. Checkout repository per archiviazione
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 2. Determina Data Solare UTC
         id: date
         run: |
           if [ -n "$INPUT_DATE" ]; then
@@ -41,62 +43,99 @@ jobs:
           echo "solar_date=$SOLAR_DATE" >> $GITHUB_OUTPUT
           echo "Data solare target: $SOLAR_DATE"
 
-      - name: 2. Risveglio istanza Render (Cold Start Wake-Up)
+      - name: 3. Risveglio istanza Render (Cold Start Wake-Up)
         run: |
           echo "Invio segnale di risveglio a $RENDER_URL/api/health ..."
           curl -sS --retry 12 --retry-delay 10 --retry-all-errors --max-time 90 "$RENDER_URL/api/health" | jq .
           echo "Istanza Render sveglia e operativa."
 
-      - name: 3. Avvio Redazione del Saggio del Giorno
+      - name: 4. Avvio Redazione del Saggio del Giorno
         run: |
           SOLAR_DATE="${{ steps.date.outputs.solar_date }}"
-          if [ "$FORCE_REGEN" = "true" ]; then
-            echo "Avvio rigenerazione forzata per $SOLAR_DATE..."
-            curl -sS -X POST "$RENDER_URL/api/daily-edition/regenerate" \
-              -H "Content-Type: application/json" \
-              -d "{\"solarDate\": \"$SOLAR_DATE\", \"force\": true, \"wait\": false}" | jq .
-          else
-            echo "Richiesta edizione giornaliera per $SOLAR_DATE (avvia la catena se non ancora generata)..."
-            curl -sS "$RENDER_URL/api/daily-edition?solarDate=$SOLAR_DATE" | jq '{success, solarDateKey, generation}'
-          fi
+          echo "Richiesta edizione giornaliera per $SOLAR_DATE (avvia la catena se non ancora generata)..."
+          curl -sS "$RENDER_URL/api/daily-edition?solarDate=$SOLAR_DATE" | jq '{success, solarDateKey, generation}'
 
-      - name: 4. Keep-Alive e Monitoraggio Fasi 1-6 fino al completamento
+      - name: 5. Keep-Alive, Monitoraggio Fasi 1-6 e Pubblicazione su Blogger
         run: |
           SOLAR_DATE="${{ steps.date.outputs.solar_date }}"
-          echo "Monitoraggio attivo ogni 30 secondi per impedire lo sleep di Render durante le pause TPM..."
+          echo "Monitoraggio attivo ogni 30 secondi..."
 
           MAX_POLLS=45 # 45 * 30s = 22.5 minuti massimi
+          COMPLETED=false
           for ((i=1; i<=MAX_POLLS; i++)); do
             RESPONSE=$(curl -sS --max-time 30 "$RENDER_URL/api/daily-edition/status?solarDate=$SOLAR_DATE" || echo "{}")
             STATUS=$(echo "$RESPONSE" | jq -r '.generation.status // "unknown"')
             PROVIDER=$(echo "$RESPONSE" | jq -r '.generation.aiProvider // "n/a"')
             MODEL=$(echo "$RESPONSE" | jq -r '.generation.aiModel // "n/a"')
 
-            echo "[Poll $i/$MAX_POLLS] Stato redazione ($SOLAR_DATE): $STATUS (Ultimo motore: $PROVIDER / $MODEL)"
+            echo "[Poll $i/$MAX_POLLS] Stato redazione ($SOLAR_DATE): $STATUS ($PROVIDER / $MODEL)"
 
             # Mostra il progresso delle singole 6 fasi se presente
             echo "$RESPONSE" | jq -r '.generation.phaseTelemetry[]? | "  -> Fase \(.phaseNumber): \(.status) (\(.provider // "-"))"' 2>/dev/null || true
 
             if [ "$STATUS" = "generated" ]; then
-              echo "✅ Tutte le 6 Fasi e il Saggio del Giorno per $SOLAR_DATE sono stati completati con successo!"
-              echo "Verifica / Invio pubblicazione automatica su Google Blogger (alkimiatoday.blogspot.com)..."
+              echo "✅ Tutte le 6 Fasi e il Saggio del Giorno per $SOLAR_DATE sono completati!"
+              echo "Invio pubblicazione su Google Blogger (alkimiatoday.blogspot.com)..."
               curl -sS -X POST "$RENDER_URL/api/blogger/publish-daily" \
                 -H "Content-Type: application/json" \
                 -d "{\"solarDate\": \"$SOLAR_DATE\"}" | jq . || true
-              exit 0
+              COMPLETED=true
+              break
             fi
 
             if [ "$STATUS" = "failed" ]; then
-              ERR=$(echo "$RESPONSE" | jq -r '.generation.error // "Errore sconosciuto"')
-              echo "⚠️ Tentativo fallito ($ERR). Riavvio la catena dopo pausa di raffreddamento..."
+              echo "⚠️ Stato generazione non completato. Attesa 35s..."
               sleep 35
-              curl -sS -X POST "$RENDER_URL/api/daily-edition/regenerate" \
-                -H "Content-Type: application/json" \
-                -d "{\"solarDate\": \"$SOLAR_DATE\", \"force\": true, \"wait\": false}" >/dev/null || true
             fi
 
             sleep 30
           done
 
-          echo "❌ Timeout raggiunto: la generazione non si è conclusa entro il tempo previsto."
-          exit 1
+          if [ "$COMPLETED" != "true" ]; then
+            echo "❌ Timeout: la generazione non si è conclusa entro il tempo previsto."
+            exit 1
+          fi
+
+      - name: 6. Archiviazione Dossier e Rotazione Finestra Scorrevole (30 Giorni)
+        run: |
+          SOLAR_DATE="${{ steps.date.outputs.solar_date }}"
+          mkdir -p data/daily-dossiers
+
+          echo "Scaricamento dossier completo per $SOLAR_DATE..."
+          HTTP_CODE=$(curl -sS -w "%{http_code}" -o "data/daily-dossiers/dossier-$SOLAR_DATE.json" "$RENDER_URL/api/daily-edition/dossier?solarDate=$SOLAR_DATE" || echo "500")
+
+          if [ "$HTTP_CODE" != "200" ] || [ ! -s "data/daily-dossiers/dossier-$SOLAR_DATE.json" ]; then
+            echo "Avviso: endpoint dossier non ha restituito 200 (HTTP $HTTP_CODE). Tentativo su /api/daily-edition..."
+            curl -sS "$RENDER_URL/api/daily-edition?solarDate=$SOLAR_DATE" > "data/daily-dossiers/dossier-$SOLAR_DATE.json"
+          fi
+
+          echo "Dossier scaricato (dimensione: $(wc -c < "data/daily-dossiers/dossier-$SOLAR_DATE.json") bytes)."
+
+          # Finestra Scorrevole a 30 giorni:
+          # Conta quanti file dossier-*.json sono presenti; se superano 30, rimuove i più vecchi
+          ALL_DOSSIERS=$(ls -1 data/daily-dossiers/dossier-*.json 2>/dev/null | sort)
+          TOTAL_COUNT=$(echo "$ALL_DOSSIERS" | grep -c "dossier-" || echo "0")
+          echo "Dossier totali presenti: $TOTAL_COUNT (limite finestra: 30)"
+
+          if [ "$TOTAL_COUNT" -gt 30 ]; then
+            EXCESS=$((TOTAL_COUNT - 30))
+            echo "Rimozione automatica di $EXCESS file obsoleti per rispettare la finestra di 30 giorni..."
+            echo "$ALL_DOSSIERS" | head -n "$EXCESS" | while read -r old_file; do
+              if [ -n "$old_file" ] && [ -f "$old_file" ]; then
+                echo "Cancellazione file fuori finestra: $old_file"
+                git rm -f "$old_file" || rm -f "$old_file"
+              fi
+            done
+          fi
+
+          git config user.name "Alkimia Bot"
+          git config user.email "bot@alkimia.today"
+          git add data/daily-dossiers/
+
+          if git status --porcelain | grep -q "data/daily-dossiers"; then
+            git commit -m "chore(archive): archiviazione dossier $SOLAR_DATE (finestra 30gg)"
+            git push origin HEAD:${{ github.ref }}
+            echo "✅ Archivio aggiornato e sincronizzato su GitHub con successo."
+          else
+            echo "Nessuna variazione nei dossier da committare."
+          fi
