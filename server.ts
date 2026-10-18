@@ -112,8 +112,7 @@ async function getGroqActiveModels(apiKey: string): Promise<string[]> {
   const fallbackList = [
     "openai/gpt-oss-120b",
     "llama-3.3-70b-versatile",
-    "meta-llama/llama-4-scout-17b-16e-instruct",
-    "openai/gpt-oss-20b"
+    "meta-llama/llama-4-scout-17b-16e-instruct"
   ];
   try {
     const res = await fetch("https://api.groq.com/openai/v1/models", {
@@ -223,10 +222,13 @@ async function generateWithGroq(
   for (const model of candidateModels) {
     // Se il modello principale incontra un rate-limit temporaneo (429), attendiamo 60 secondi
     // per azzerare il contatore TPM al minuto e riproviamo sullo STESSO modello di punta prima di scendere di livello!
-    for (let attempt = 1; attempt <= 2; attempt++) {
+    for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         const isGptOss = model.includes("gpt-oss");
-        const effectiveMaxTokens = model.includes("qwen") ? 950 : 4096;
+        const estPromptTokens = Math.round((systemPrompt.length + userPrompt.length) / 3.8);
+        const effectiveMaxTokens = model.includes("qwen") 
+          ? 950 
+          : (model.includes("120b") ? Math.min(2200, Math.max(1024, 7800 - estPromptTokens)) : 4096);
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
           signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
@@ -256,12 +258,12 @@ async function generateWithGroq(
             break;
           }
           if (response.status === 429 || /rate_limit|tokens per minute/i.test(errorBody)) {
-            if (attempt === 1) {
-              console.log(`[Groq] Finestra TPM raggiunta su ${model} (${response.status}): attendo 61 secondi per azzerare il contatore TPM e riprovo sullo stesso modello Groq...`);
-              await new Promise((r) => setTimeout(r, 61000));
+            if (attempt <= 2) {
+              console.log(`[Groq] Finestra TPM raggiunta su ${model} (${response.status}) [Tentativo ${attempt}/3]: attendo 65 secondi per azzerare il contatore TPM e riprovo sullo stesso modello Groq...`);
+              await new Promise((r) => setTimeout(r, 65000));
               continue;
             }
-            console.warn(`[Groq] Limite TPM/Rate su ${model} (${response.status}): passaggio al modello successivo...`);
+            console.warn(`[Groq] Limite TPM/Rate persistente su ${model} (${response.status}): passaggio al modello successivo...`);
             errors.push(`${model}: rate limit (${response.status})`);
             await new Promise((r) => setTimeout(r, 2000));
             break;
@@ -1872,7 +1874,8 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
       // Provider primario: OpenAI -> Groq -> OpenRouter -> Cloudflare -> Gemini
       // =========================================================================
       markPhaseGenerating(6);
-      console.log(`[ALKIMIA] [Stadio 6/6] Redazione FASE 6 (Saggio del Giorno) in corso...`);
+      console.log(`[ALKIMIA] [Stadio 6/6] Redazione FASE 6 (Saggio del Giorno) in corso... Attesa protettiva di 65s per azzerare il TPM di Groq...`);
+      await new Promise((r) => setTimeout(r, 65000));
       const step2Prompt = buildStep2LiteraryEssayPrompt(parsedStep1, selectedA, selectedB);
 
       const stage6Strict = await runStrictSequentialStep(
