@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ALKIMIA — Registro e Frequenza degli 8 Vettori</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=JetBrains+Mono:wght@300;400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --bg-main: #f7f5f0;
+        --bg-card: #fdfcf9;
+        --border-light: #ded7ca;
+        --border-dark: #c4baa7;
+        --text-primary: #24211e;
+        --text-muted: #6e685c;
+        --accent-gold: #9e7627;
+        --accent-gold-hover: #7b5b1c;
+        --bar-bg: #ece6da;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background-color: var(--bg-main);
+        color: var(--text-primary);
+        font-family: 'Newsreader', serif;
+        min-height: 100vh;
+        padding: 2.5rem 1rem 5rem;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      header {
+        border-bottom: 1px solid var(--border-light);
+        padding-bottom: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .top-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        margin-bottom: 1rem;
+      }
+      .back-link {
+        color: var(--accent-gold);
+        text-decoration: none;
+        transition: color 0.15s ease;
+      }
+      .back-link:hover {
+        color: var(--accent-gold-hover);
+        text-decoration: underline;
+      }
+      .secret-badge {
+        background: #ede8dc;
+        color: var(--text-muted);
+        padding: 0.2rem 0.5rem;
+        border-radius: 2px;
+        border: 1px solid var(--border-light);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      h1 {
+        font-family: 'Cinzel', serif;
+        font-size: 1.6rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--text-primary);
+        margin-bottom: 0.35rem;
+      }
+      .subtitle {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        font-style: italic;
+      }
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+      }
+      .metric-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        padding: 1.25rem;
+        border-radius: 2px;
+      }
+      .metric-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+        margin-bottom: 0.4rem;
+      }
+      .metric-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.75rem;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+      .metric-sub {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 0.2rem;
+      }
+      section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light);
+        border-radius: 2px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+        border-bottom: 1px solid var(--border-light);
+        padding-bottom: 0.75rem;
+      }
+      h2 {
+        font-family: 'Cinzel', serif;
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+      .section-desc {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+        font-style: italic;
+      }
+      .search-box {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.6rem;
+        background: #f7f5f0;
+        border: 1px solid var(--border-light);
+        color: var(--text-primary);
+        border-radius: 2px;
+        outline: none;
+      }
+      .search-box:focus {
+        border-color: var(--accent-gold);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+      th {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        text-align: left;
+        padding: 0.6rem 0.75rem;
+        border-bottom: 1px solid var(--border-light);
+      }
+      td {
+        padding: 0.7rem 0.75rem;
+        border-bottom: 1px solid #f0ece3;
+        vertical-align: middle;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover td {
+        background-color: #faf7f0;
+      }
+      .num-col {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85rem;
+        text-align: center;
+      }
+      .date-col {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+      }
+      .zero-badge {
+        color: #aba294;
+      }
+      .bar-cell {
+        width: 130px;
+      }
+      .bar-track {
+        height: 6px;
+        background: var(--bar-bg);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .bar-fill {
+        height: 100%;
+        background: var(--accent-gold);
+        border-radius: 2px;
+      }
+      .tag-vector-a {
+        display: inline-block;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        color: #7b5b1c;
+        background: #f6eedb;
+        padding: 0.1rem 0.4rem;
+        border-radius: 2px;
+        margin-right: 0.45rem;
+      }
+      .tag-vector-b {
+        display: inline-block;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        color: #4f5a65;
+        background: #e8ecf1;
+        padding: 0.1rem 0.4rem;
+        border-radius: 2px;
+        margin-right: 0.45rem;
+      }
+      .loading, .error {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        text-align: center;
+        padding: 2.5rem 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="top-nav">
+          <a href="/" class="back-link">← Torna all'Edizione Quotidiana</a>
+          <span class="secret-badge">Registro Riservato</span>
+        </div>
+        <h1>Registro e Frequenza dei Vettori</h1>
+        <p class="subtitle">Monitoraggio delle collisioni e indice di rotazione degli 8 Vettori del Canone</p>
+      </header>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Collisioni Registrate</div>
+          <div class="metric-value" id="val-total">-</div>
+          <div class="metric-sub">Edizioni archiviate</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Vettori del Canone</div>
+          <div class="metric-value">8</div>
+          <div class="metric-sub">Elementi ontologici ufficiali</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Vettori Già Estratti</div>
+          <div class="metric-value" id="val-activated">-</div>
+          <div class="metric-sub" id="val-coverage">Copertura ciclo</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Ultima Collisione</div>
+          <div class="metric-value" style="font-size: 1.25rem; line-height: 2rem;" id="val-last-date">-</div>
+          <div class="metric-sub">Rotazione diurna</div>
+        </div>
+      </div>
+
+      <!-- Sezione Indice di Frequenza degli 8 Vettori -->
+      <section>
+        <div class="section-header">
+          <h2>Indice di Frequenza dei Temi (Gli 8 Vettori)</h2>
+        </div>
+        <p class="section-desc">Frequenza cumulativa di estrazione per ciascuno degli 8 argomenti ufficiali del motore Alkimia.</p>
+        <div id="topics-table-wrapper">
+          <div class="loading">Caricamento delle metriche in corso...</div>
+        </div>
+      </section>
+
+      <!-- Sezione Cronistoria delle Collisioni -->
+      <section>
+        <div class="section-header">
+          <h2>Cronistoria delle Collisioni</h2>
+          <input type="text" id="filter-chronicle" class="search-box" placeholder="Filtra per data o tema..." />
+        </div>
+        <div id="chronicle-table-wrapper">
+          <div class="loading">Caricamento cronistoria in corso...</div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      let statsData = null;
+
+      async function fetchStats() {
+        try {
+          const res = await fetch('/api/vector-extractions');
+          if (!res.ok) throw new Error('Risposta API non valida: ' + res.status);
+          const data = await res.json();
+          if (!data.success) throw new Error(data.error || 'Errore sconosciuto');
+
+          statsData = data;
+          renderMetrics(data);
+          renderTopics(data.topicsStats || []);
+          renderChronicle(data.chronicle || []);
+        } catch (err) {
+          console.error('Errore durante il recupero dei dati:', err);
+          document.getElementById('topics-table-wrapper').innerHTML = 
+            '<div class="error">Impossibile recuperare i dati dei vettori: ' + err.message + '</div>';
+          document.getElementById('chronicle-table-wrapper').innerHTML = 
+            '<div class="error">Impossibile recuperare la cronistoria: ' + err.message + '</div>';
+        }
+      }
+
+      function renderMetrics(data) {
+        document.getElementById('val-total').textContent = data.totalExtractions || 0;
+        document.getElementById('val-activated').textContent = data.distinctTopicsExtracted || 0;
+        
+        const coverage = data.totalCanonicalTopics 
+          ? Math.round(((data.distinctTopicsExtracted || 0) / data.totalCanonicalTopics) * 100)
+          : 0;
+        document.getElementById('val-coverage').textContent = coverage + '% del canone attivato';
+
+        if (data.chronicle && data.chronicle.length > 0) {
+          document.getElementById('val-last-date').textContent = data.chronicle[0].solarDateKey;
+        } else {
+          document.getElementById('val-last-date').textContent = 'Nessuna data';
+        }
+      }
+
+      function renderTopics(topics) {
+        const wrapper = document.getElementById('topics-table-wrapper');
+        if (!topics || topics.length === 0) {
+          wrapper.innerHTML = '<div class="loading">Nessun dato registrato.</div>';
+          return;
+        }
+
+        const maxTotal = Math.max(...topics.map(t => t.total), 1);
+
+        let html = `
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 44%;">Vettore Ontologico</th>
+                <th class="num-col" title="Uscite come Primo Vettore (A)">Come A</th>
+                <th class="num-col" title="Uscite come Secondo Vettore (B)">Come B</th>
+                <th class="num-col">Totale</th>
+                <th class="bar-cell">Frequenza</th>
+                <th class="date-col" style="text-align: right;">Ultima Uscita</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        for (const t of topics) {
+          const pct = Math.round((t.total / maxTotal) * 100);
+          const isZero = t.total === 0;
+          html += `
+            <tr style="${isZero ? 'opacity: 0.6;' : ''}">
+              <td style="font-weight: 500;">${escapeHtml(t.name)}</td>
+              <td class="num-col ${t.asVectorA === 0 ? 'zero-badge' : ''}">${t.asVectorA}</td>
+              <td class="num-col ${t.asVectorB === 0 ? 'zero-badge' : ''}">${t.asVectorB}</td>
+              <td class="num-col" style="font-weight: 600; color: ${isZero ? 'var(--text-muted)' : 'var(--accent-gold)'};">
+                ${t.total}
+              </td>
+              <td class="bar-cell">
+                <div class="bar-track">
+                  <div class="bar-fill" style="width: ${pct}%;"></div>
+                </div>
+              </td>
+              <td class="date-col" style="text-align: right;">
+                ${t.lastExtracted ? escapeHtml(t.lastExtracted) : '<span class="zero-badge">Mai</span>'}
+              </td>
+            </tr>
+          `;
+        }
+
+        html += '</tbody></table>';
+        wrapper.innerHTML = html;
+      }
+
+      function renderChronicle(chronicle) {
+        const wrapper = document.getElementById('chronicle-table-wrapper');
+        const filterVal = (document.getElementById('filter-chronicle').value || '').toLowerCase();
+
+        const filtered = chronicle.filter(c => 
+          (c.solarDateKey && c.solarDateKey.toLowerCase().includes(filterVal)) ||
+          (c.vectorA && c.vectorA.toLowerCase().includes(filterVal)) ||
+          (c.vectorB && c.vectorB.toLowerCase().includes(filterVal))
+        );
+
+        if (filtered.length === 0) {
+          wrapper.innerHTML = '<div class="loading">Nessuna collisione corrisponde alla ricerca.</div>';
+          return;
+        }
+
+        let html = `
+          <table>
+            <thead>
+              <tr>
+                <th class="date-col" style="width: 18%;">Data Solare</th>
+                <th style="width: 41%;">Primo Argomento (A)</th>
+                <th style="width: 41%;">Secondo Argomento (B)</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        for (const c of filtered) {
+          html += `
+            <tr>
+              <td class="date-col">${escapeHtml(c.solarDateKey)}</td>
+              <td><span class="tag-vector-a">A</span>${escapeHtml(c.vectorA)}</td>
+              <td><span class="tag-vector-b">B</span>${escapeHtml(c.vectorB)}</td>
+            </tr>
+          `;
+        }
+
+        html += '</tbody></table>';
+        wrapper.innerHTML = html;
+      }
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      document.getElementById('filter-chronicle').addEventListener('input', () => {
+        if (statsData) renderChronicle(statsData.chronicle || []);
+      });
+
+      fetchStats();
+    </script>
+  </body>
+</html>

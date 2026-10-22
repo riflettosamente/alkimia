@@ -271,17 +271,18 @@ Rispondi RIGOROSAMENTE con un oggetto JSON valido avente questa struttura:
 }
 
 /**
- * Prompt per lo STADIO 6 (ex Passo 2): Composizione Letteraria Pura (Fase 6: Saggio del Giorno).
- * Riceve come input l'intero dossier analitico delle Fasi 1, 2, 3, 4 e 5 ed esegue la trasfigurazione letteraria.
+ * Prompt per lo STADIO 6 (Fase 6: Saggio del Giorno).
+ * Riceve come input ESCLUSIVAMENTE la Fase 5 (L'Affondo Finale: Cui Prodest, Scoperta di frontiera,
+ * Bias inesplorato, Intersezione applicativa e Rivelazione Vertiginosa) e i due temi.
+ * Questa distillazione riduce il prompt a ~1.200 token, liberando massima capienza (3.500+ token)
+ * per la scrittura distesa e profonda del saggio su Groq 120B.
  */
 export function buildStep2LiteraryEssayPrompt(
-  step1Dossier: any,
+  phase5DossierOrStrike: any,
   vectorA: KeyOntologicalTopic,
   vectorB: KeyOntologicalTopic
 ): string {
-  // Funzione interna per rimuovere i marcatori **...** dagli appunti passati al saggio finale,
-  // compattando i campi per rispettare la finestra TPM dei provider LPU (Groq TPM 8000).
-  const stripMdBold = (s?: string, maxChars: number = 110) => {
+  const stripMdBold = (s?: string, maxChars: number = 380) => {
     if (!s) return '';
     const clean = s.replace(/\*\*(.*?)\*\*/g, '$1').trim();
     if (clean.length <= maxChars) return clean;
@@ -290,74 +291,43 @@ export function buildStep2LiteraryEssayPrompt(
 
   const cleanTopicA = vectorA.name.replace(/^\d+\.\s*/, '');
   const cleanTopicB = vectorB.name.replace(/^\d+\.\s*/, '');
-  const syntheticVector = stripMdBold(step1Dossier?.systemPair?.syntheticVector, 140) || `Convergenza tra ${cleanTopicA} e ${cleanTopicB}`;
-  const ontologicalMatrix = stripMdBold(step1Dossier?.systemPair?.ontologicalMatrix, 140) || "Campo d'indagine unificato";
-  
-  const vA = step1Dossier?.phase1Decomposition?.vectorA;
-  const vB = step1Dossier?.phase1Decomposition?.vectorB;
-  const empA = step1Dossier?.phase1EmpiricalArchive?.vectorA;
-  const empB = step1Dossier?.phase1EmpiricalArchive?.vectorB;
-  const empSynthesis = stripMdBold(step1Dossier?.phase1EmpiricalArchive?.crossArchiveSynthesis, 160);
-  const p2 = step1Dossier?.phase2Collision;
-  const p3 = step1Dossier?.phase3FinalStrike;
-  const loopTracks = step1Dossier?.phase2Loop?.tracks || [];
+  const p5 = phase5DossierOrStrike?.phase3FinalStrike || phase5DossierOrStrike;
 
-  const loopInsightsSummary = loopTracks.map((t: any) => {
-    const s1 = t.collision?.step1StrippingFunction || {};
-    const s2 = t.collision?.step2BlindAxis || {};
-    const s3 = t.collision?.step3InvertedDirection || {};
-    const s4 = t.collision?.step4CommonMetaphor || {};
-    return [
-      `- Ambito «${stripMdBold(t.directionTitle || 'Nesso interdisciplinare', 70)}» (Reperti: ${stripMdBold(t.empiricalEvidenceExamined, 95)}):`,
-      `  Dinamica: ${stripMdBold(s1.fundamentalVerbA, 40)} / ${stripMdBold(s1.fundamentalVerbB, 40)} — ${stripMdBold(s1.functionalSynthesis, 110)}`,
-      `  Passaggio critico: ${stripMdBold(s2.creviceContactPoint, 105)} — Ribaltamento: ${stripMdBold(s3.counterIntuitiveInsight, 110)}`,
-      `  Immagine guida: ${stripMdBold(s4.masterMetaphorTitle, 70)} — ${stripMdBold(s4.unifyingVision, 110)}`
-    ].join('\n');
-  }).join('\n');
-
-  return `COMPONI IL SAGGIO DEL GIORNO IN PURA PROSA CONTINUA D'AUTORE (1.200 - 1.800 PAROLE), TRASFORMANDO GLI APPUNTI DI RICERCA SOTTOSTANTI IN UN RACCONTO FILOSOFICO-SCIENTIFICO UNITARIO, SENZA ELENCHI, SENZA LESSICO METODOLOGICO E SENZA ALCUN GRASSETTO (**).
+  return `COMPONI IL SAGGIO DEL GIORNO IN PURA PROSA CONTINUA D'AUTORE (2.000 - 2.500 PAROLE), TRASFIGURANDO IN UN RACCONTO FILOSOFICO-SCIENTIFICO AD AMPIO RESPIRO LA RIVELAZIONE E IL MUTAMENTO DI PARADIGMA RAGGIUNTI NELL'AFFONDO FINALE, SENZA ELENCHI, SENZA LESSICO METODOLOGICO E SENZA ALCUN GRASSETTO (**).
 
 ================================================================================
-MATERIALE DI RICERCA DA Fondere NELLA PROSA CONTINUA DEL SAGGIO
+DISTILLATO DI RICERCA DA SVILUPPARE NEL SAGGIO (AFFONDO FINALE - FASE 5)
 ================================================================================
-TEMA A: ${cleanTopicA}
-TEMA B: ${cleanTopicB}
-NUCLEO CONCETTUALE: ${syntheticVector}
-ORIZZONTE TEORICO: ${ontologicalMatrix}
+PRIMO ARGOMENTO: ${cleanTopicA}
+SECONDO ARGOMENTO: ${cleanTopicB}
 
-A. CONTESTO STORICO E CONFINE EPISTEMOLOGICO:
-- ${cleanTopicA}: ${stripMdBold(vA?.whenWhere)} | Limite: ${stripMdBold(vA?.whichBoundary)} | Zona d'ombra: ${stripMdBold(vA?.whyVeiled)}
-- ${cleanTopicB}: ${stripMdBold(vB?.whenWhere)} | Limite: ${stripMdBold(vB?.whichBoundary)} | Zona d'ombra: ${stripMdBold(vB?.whyVeiled)}
+1. MUTAMENTO DI PARADIGMA (CUI PRODEST):
+${stripMdBold(p5?.cuiProdest, 450)}
 
-B. REPERTI, STUDIOSI, TESTI E STRUMENTI (NON elencarli tutti: seleziona solo 1 o 2 riferimenti cardine per ciascun tema, spiegando brevemente con parole chiare cosa osservavano e che funzione avevano):
-- ${cleanTopicA}: ${stripMdBold(empA?.keyFiguresAndWitnesses, 130)} | Testo: ${stripMdBold(empA?.foundationalTexts, 120)} | Strumento/Misura: ${stripMdBold(empA?.materialEvidenceAndTools, 120)} | Modello: ${stripMdBold(empA?.breakthroughTheories, 120)}
-- ${cleanTopicB}: ${stripMdBold(empB?.keyFiguresAndWitnesses, 130)} | Testo: ${stripMdBold(empB?.foundationalTexts, 120)} | Strumento/Misura: ${stripMdBold(empB?.materialEvidenceAndTools, 120)} | Modello: ${stripMdBold(empB?.breakthroughTheories, 120)}
-- Connessione empirica: ${empSynthesis}
+2. LEGGE SOTTOSTANTE E SCOPERTA DI FRONTIERA:
+${stripMdBold(p5?.groundbreakingDiscovery, 450)}
 
-C. MECCANISMO CONGIUNTO E IPOTESI SPERIMENTALE:
-- Azione reciproca: ${stripMdBold(p2?.step1StrippingFunction?.fundamentalVerbA)} / ${stripMdBold(p2?.step1StrippingFunction?.fundamentalVerbB)} (${stripMdBold(p2?.step1StrippingFunction?.functionalSynthesis)})
-- Soglia strumentale: ${stripMdBold(p2?.step2BlindAxis?.boundaryA)} ⟶ ${stripMdBold(p2?.step2BlindAxis?.accessDoorToB)} (${stripMdBold(p2?.step2BlindAxis?.creviceContactPoint)})
-- Verifica incrociata: ${stripMdBold(p2?.step3InvertedDirection?.methodAAppliedToB)} — ${stripMdBold(p2?.step3InvertedDirection?.counterIntuitiveInsight)}
-- Immagine unificante: ${stripMdBold(p2?.step4CommonMetaphor?.masterMetaphorTitle)} — ${stripMdBold(p2?.step4CommonMetaphor?.unifyingVision)}
+3. OSTACOLO EPISTEMOLOGICO SUPERATO (BIAS INESPLORATO):
+${stripMdBold(p5?.uninvestigatedBias, 450)}
 
-D. APPROFONDIMENTI TEMATICI EMERSI DALL'INDAGINE (fondili nel discorso senza mai dire "cinque prospettive" o "cinque direzioni"):
-${loopInsightsSummary}
+4. PROTOCOLLI DI VERIFICA E INTERSEZIONE APPLICATIVA:
+${stripMdBold(p5?.researchFocusIntersection, 450)}
 
-E. IMPLICAZIONI SCIENTIFICHE, APPLICATIVE E FILOSOFICHE:
-- Mutamento di paradigma: ${stripMdBold(p3?.cuiProdest)}
-- Legge sottostante: ${stripMdBold(p3?.groundbreakingDiscovery)}
-- Ostacolo epistemologico superato: ${stripMdBold(p3?.uninvestigatedBias)}
-- Protocolli di verifica e applicazioni: ${stripMdBold(p3?.researchFocusIntersection)}
-- Visione conclusiva: ${stripMdBold(p3?.dizzyingRevelation)}
+5. VISIONE CONCLUSIVA E RIVELAZIONE VERTIGINOSA:
+${stripMdBold(p5?.dizzyingRevelation, 550)}
 
 ================================================================================
-DIRETTIVE DI COMPOSIZIONE DEL SAGGIO FINALE: IL "NON-MODELLO" ORGANICO
+DIRETTIVE DI COMPOSIZIONE DEL SAGGIO FINALE: IL "NON-MODELLO" ORGANICO AD AMPIO RESPIRO
 ================================================================================
 Il saggio non deve seguire uno schema stereotipato né una divisione a compartimenti stagni. Non usare una scaletta fissa (tipo: paragrafo 1 presentazione separata, 2 limiti, 3 meccanismo, 4 ricadute, 5 cosmologia).
 La narrazione deve fluire come un unico arco argomentativo vivo, in cui ogni paragrafo scaturisce per necessità interna da quello precedente:
-1. Cosa accade quando «${cleanTopicA}» e «${cleanTopicB}» smettono di essere trattati come mondi separati e vengono letti attraverso un unico principio operativo.
+1. Cosa accade quando «${cleanTopicA}» e «${cleanTopicB}» smettono di essere trattati come mondi separati e vengono compresi attraverso l'unico principio operativo scoperto nell'Affondo.
 2. Qual è la scoperta concettuale o empirica che prima rimaneva invisibile a ciascuna disciplina presa singolarmente.
 3. Quali indagini scientifiche, tecnologiche, cliniche, antropologiche o filosofiche diventano concretamente possibili grazie a questa sintesi.
+
+PRATICA L'INDUGIO SPECULATIVO (AMPIO RESPIRO ORGANICO):
+- Non avere alcuna fretta di concludere né di correre all'idea successiva. Quando formuli una tesi, descrivi un'anomalia sperimentale o evochi una faglia dell'Affondo, indugia sulle sue conseguenze filosofiche, fisiche ed umane.
+- Scava nei paradossi; mostra che cosa crolla nelle certezze dell'uomo se quella sintesi è reale; approfondisci la lacerazione e la vertigine concettuale con periodi complessi, musicali e profondi.
 
 CHIAREZZA DIVULGATIVA ED ELIMINAZIONE DEL "NAME-DROPPING":
 - Il lettore comune non conosce trattati rari né sigle astruse: NON fare sfoggio di erudizione sterile né sciorinare liste di nomi o date a vuoto.
@@ -390,7 +360,7 @@ REGOLE TASSATIVE SULLA FORMA E SUL LESSICO (OBBLIGATORIE)
 - NON USARE formule scolastiche o metanarrative come "In questo saggio...", "La domanda che si pone è...", "Il paradosso di partenza è...", "La sintesi di cinque prospettive...", "I nuovi campi di ricerca che emergono sono...".
 - NON USARE parole deformate, neologismi spuri o calchi non italiani (es. "regula", "ipotese", "pinealico", "spaziativa", "piante cerebrale").
 
-COMPUTO TOTALE PAROLE: Rigorosamente compreso tra 1.200 e 1.800 parole, articolato in 5 ampi paragrafi continui di prosa d'autore.
+COMPUTO TOTALE PAROLE: Rigorosamente compreso tra 2.000 e 2.500 parole, articolato in un arco organico e continuo di ampi paragrafi di prosa d'autore (5-7 paragrafi monumentali da circa 350-500 parole ciascuno).
 
 Rispondi RIGOROSAMENTE con questo JSON:
 {
@@ -399,11 +369,12 @@ Rispondi RIGOROSAMENTE con questo JSON:
     "subtitle": "string (sottotitolo essenziale)",
     "ontologicalThesis": "string (la tesi centrale filosofico-scientifica)",
     "narrativeParagraphs": [
-      "string (testo completo del paragrafo 1)",
-      "string (testo completo del paragrafo 2)",
-      "string (testo completo del paragrafo 3)",
-      "string (testo completo del paragrafo 4)",
-      "string (testo completo del paragrafo 5)"
+      "string (testo completo del paragrafo 1 - ampio e denso, circa 350-500 parole)",
+      "string (testo completo del paragrafo 2 - ampio e denso, circa 350-500 parole)",
+      "string (testo completo del paragrafo 3 - ampio e denso, circa 350-500 parole)",
+      "string (testo completo del paragrafo 4 - ampio e denso, circa 350-500 parole)",
+      "string (testo completo del paragrafo 5 - ampio e denso, circa 350-500 parole)",
+      "string (testo completo del paragrafo 6 o successivo, secondo la naturale necessità dell'organismo narrativo)"
     ]
   }
 }`;

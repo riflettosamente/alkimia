@@ -28,6 +28,7 @@ export default defineConfig(() => {
           fase4: path.resolve(__dirname, 'fase-4.html'),
           fase5: path.resolve(__dirname, 'fase-5.html'),
           fase6: path.resolve(__dirname, 'fase-6.html'),
+          statistiche: path.resolve(__dirname, 'statistiche-estrazioni.html'),
         },
       },
     },

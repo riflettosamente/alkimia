@@ -142,3 +142,104 @@ export function recordVectorExtraction(
     return readExtractionHistory();
   }
 }
+
+/**
+ * Sincronizza la cronologia scansionando i file dossier salvati in /data/daily-dossiers
+ */
+export function syncHistoryWithDailyDossiers(): void {
+  try {
+    const dossiersDir = path.join(DATA_DIR, "daily-dossiers");
+    if (!fs.existsSync(dossiersDir)) return;
+
+    const files = fs.readdirSync(dossiersDir);
+    for (const file of files) {
+      if (!file.startsWith("dossier-") || !file.endsWith(".json")) continue;
+      const match = file.match(/^dossier-(\d{4}-\d{2}-\d{2})\.json$/);
+      if (!match) continue;
+      const solarDateKey = match[1];
+
+      try {
+        const content = fs.readFileSync(path.join(dossiersDir, file), "utf-8");
+        const dossier = JSON.parse(content);
+        const pair = dossier?.fullEdition?.systemPair || dossier?.systemPair || dossier?.phase1To4?.systemPair;
+        if (pair?.vectorA && pair?.vectorB) {
+          recordVectorExtraction(solarDateKey, pair.vectorA, pair.vectorB, "daily_edition");
+        }
+      } catch (e) {
+        // Ignora file malformati
+      }
+    }
+  } catch (err) {
+    console.warn("[VectorTracker] Impossibile sincronizzare con i dossier:", err);
+  }
+}
+
+export interface CanonicalTopicStat {
+  id: string;
+  name: string;
+  asVectorA: number;
+  asVectorB: number;
+  total: number;
+  lastExtracted: string | null;
+}
+
+export interface DetailedVectorStats {
+  lastUpdated: string;
+  totalExtractions: number;
+  distinctTopicsExtracted: number;
+  totalCanonicalTopics: number;
+  topicsStats: CanonicalTopicStat[];
+  chronicle: ExtractionRecord[];
+}
+
+export function getDetailedVectorStats(): DetailedVectorStats {
+  syncHistoryWithDailyDossiers();
+  const history = readExtractionHistory();
+
+  // I soli 8 argomenti dei Vettori ontologici ufficiali di Alkimia
+  const canonicalNames = [
+    "La Fisica (dei campi e dei quanti)",
+    "La Transcomunicazione Strumentale (TCI)",
+    "La Tecnologia CRISPR",
+    "La Ghiandola Pineale",
+    "La Spiritualità",
+    "L'Aldilà",
+    "Gli UFO/UAP (Fenomeni Anomali Non Identificati)",
+    "Gli Extraterrestri"
+  ];
+
+  const topicsStats: CanonicalTopicStat[] = canonicalNames.map((fullName, idx) => {
+    const clean = normalizeVectorName(fullName);
+    let stat = history.statistics[clean];
+    if (!stat) {
+      for (const [key, val] of Object.entries(history.statistics)) {
+        if (clean.includes(key) || key.includes(clean)) {
+          stat = val;
+          break;
+        }
+      }
+    }
+    return {
+      id: `CANON_${idx + 1}`,
+      name: fullName,
+      asVectorA: stat?.asVectorA || 0,
+      asVectorB: stat?.asVectorB || 0,
+      total: stat?.total || 0,
+      lastExtracted: stat?.lastExtracted || null
+    };
+  });
+
+  // Ordina: prima i più estratti, poi per nome
+  topicsStats.sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+
+  const distinctTopicsExtracted = topicsStats.filter(t => t.total > 0).length;
+
+  return {
+    lastUpdated: history.lastUpdated,
+    totalExtractions: history.totalExtractions,
+    distinctTopicsExtracted,
+    totalCanonicalTopics: canonicalNames.length,
+    topicsStats,
+    chronicle: history.chronicle
+  };
+}

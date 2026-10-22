@@ -229,7 +229,7 @@ Il tuo saggio deve essere PLASTICO e modellarsi con intelligenza sulla coppia di
 3. DIVIETO DI AUTOREFERENZIALITÀ EDITORIALE: Non usare mai nel titolo, nel sottotitolo, nella tesi o nei paragrafi le parole "Alkimia", "alkimia", "alchimia", "alchemico", "alchemica", "trasformazione alchemica" o "trasmutazione alchemica". Non nominare mai la rivista né usare formule metanarrative ("In questo saggio...", "La domanda che si pone è...", "Il paradosso di partenza è...", "I nuovi campi di ricerca che emergono sono..."). Entra direttamente nelle cose.
 
 ================================================================================
-5. FORMA ORGANICA ED EMERGENTE: IL "NON-MODELLO" EVOLUTIVO (1.200 - 1.800 PAROLE)
+5. FORMA ORGANICA ED EMERGENTE: IL "NON-MODELLO" EVOLUTIVO (2.000 - 2.500 PAROLE)
 ================================================================================
 Il saggio non deve seguire alcuno schema prefissato, né compilare a stampino caselle argomentative uguali giorno dopo giorno. La forma deve scaturire liberamente ed organicamente dalla specifica tensione viva tra i due temi indagati:
 
@@ -239,12 +239,13 @@ Il saggio non deve seguire alcuno schema prefissato, né compilare a stampino ca
    - Non trattare mai i due fenomeni come due binari separati che procedono affiancati. Entra direttamente in medias res nella materia viva: esordisci da una scena o testimonianza storica precisa, da un reperto o strumento anomalo, da una crepa sperimentale concreta o dall'attrito immediato in cui i due campi già si toccano e si contraddicono.
 
 2. PROGRESSIONE ORGANICA PER RISONANZA INTERNA (NESSUNA SCALETTA MECCANICA):
-   - Elimina la rigida ripartizione schematica a compartimenti stagni (non dividere artificiosamente il saggio in "presentazione separata -> limite del primo -> meccanismo comune -> ricadute -> cosmologia").
+   - Elimina la rigida ripartizione schematica a compartimenti stagni (non dividere artificiosamente il saggio in tappe fisse imposte).
    - L'arco argomentativo deve essere ORGANICO E VIVO: ogni paragrafo deve scaturire per necessità interna, attrito e approfondimento da quello precedente, come una riflessione continua che acquisisce slancio e profondità man mano che procede.
    - Distribuisci testimonianze, scienziati, date, strumenti e intuizioni filosofiche in modo plastico e naturale, seguendo il respiro del pensiero e l'unicità della coppia del giorno.
 
-3. ARCHITETTURA DELLA PROSA:
-   - Articola il saggio in 5 ampi paragrafi continui di pura prosa d'autore, densi, avvolgenti e distesi (lunghezza complessiva rigorosamente compresa tra 1.200 e 1.800 parole).
+3. ARCHITETTURA DELLA PROSA AD AMPIO RESPIRO (INDUGIO SPECULATIVO):
+   - Articola il saggio in un arco fluido di 5-7 ampi paragrafi continui di pura prosa d'autore, densi, avvolgenti e monumentali (lunghezza complessiva rigorosamente compresa tra 2.000 e 2.500 parole, circa 350-500 parole per paragrafo).
+   - PRATICA L'INDUGIO SPECULATIVO: non avere fretta di concludere né di saltare da un concetto all'altro. Quando tocchi un'intuizione o una faglia dell'Affondo, indugia sulle sue conseguenze filosofiche, fisiche ed esistenziali; sviscerane i paradossi e il prezzo concettuale con periodi complessi, musicali e profondi.
    - Nessuna intestazione o segnaposto visibile: la pagina deve avere il respiro, la purezza stilistica e la potenza letteraria dei grandi saggi del pensiero contemporaneo.
 
 RISPONDI ESCLUSIVAMENTE CON UN OGGETTO JSON STRUTTURATO E VALIDO.`;

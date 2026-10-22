@@ -54,7 +54,13 @@ export const EditorialEditionEntry: React.FC<EditorialEditionEntryProps> = ({
       {/* Metadati Temporali di Emissione */}
       <div className="max-w-4xl mx-auto flex items-center justify-between text-xs font-mono text-[#6e685c] border-b border-[#ded7ca] pb-3">
         <div className="flex items-center gap-2">
-          <Calendar className="w-3.5 h-3.5 text-[#9e7627]" />
+          <a
+            href="/statistiche-estrazioni.html"
+            title="Registro e statistiche estrazioni vettori"
+            className="inline-flex items-center text-[#9e7627] hover:text-[#c49b45] transition-colors focus:outline-none"
+          >
+            <Calendar className="w-3.5 h-3.5" />
+          </a>
           <span>{isLatest ? "Edizione Quotidiana" : `Fascicolo Archiviato (-${index * 24}h)`}</span>
         </div>
         <div>

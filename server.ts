@@ -32,7 +32,7 @@ import { normalizePhase2Collision } from "./src/utils/phase2CollisionUtils";
 import { buildPhase2LoopFiveDirections } from "./src/data/canonicalLoopFiveDirections";
 import { normalizePhase2Loop } from "./src/utils/phase2LoopUtils";
 import { buildPhase3FinalStrike } from "./src/data/canonicalFinalStrikes";
-import { recordVectorExtraction } from "./src/server/vectorTracker";
+import { recordVectorExtraction, getDetailedVectorStats } from "./src/server/vectorTracker";
 import { saveDossierStep, readDossier, deleteDossier } from "./src/server/dossierTracker";
 import { fetchTopicWebContext } from "./src/server/webSearchService";
 import {
@@ -228,7 +228,7 @@ async function generateWithGroq(
         const estPromptTokens = Math.round((systemPrompt.length + userPrompt.length) / 3.8);
         const effectiveMaxTokens = model.includes("qwen") 
           ? 950 
-          : (model.includes("120b") ? Math.min(2200, Math.max(1024, 7800 - estPromptTokens)) : 4096);
+          : (model.includes("120b") ? Math.min(4600, Math.max(1024, 7800 - estPromptTokens)) : 4096);
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
           signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
@@ -1876,7 +1876,7 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
       markPhaseGenerating(6);
       console.log(`[ALKIMIA] [Stadio 6/6] Redazione FASE 6 (Saggio del Giorno) in corso... Attesa protettiva di 65s per azzerare il TPM di Groq...`);
       await new Promise((r) => setTimeout(r, 65000));
-      const step2Prompt = buildStep2LiteraryEssayPrompt(parsedStep1, selectedA, selectedB);
+      const step2Prompt = buildStep2LiteraryEssayPrompt(currentFinalStrike, selectedA, selectedB);
 
       const stage6Strict = await runStrictSequentialStep(
         'Fase 6 (Saggio del Giorno)',
@@ -2387,6 +2387,16 @@ app.post("/api/blogger/publish-daily", async (req, res) => {
   }
 });
 
+// 6f. Statistiche e cronologia delle estrazioni dei vettori ontologici
+app.get("/api/vector-extractions", (_req, res) => {
+  try {
+    const stats = getDetailedVectorStats();
+    res.json({ success: true, ...stats });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Trigger automatico di rotazione solare alle ore 00:00 UTC.
 // Nota: su un piano che manda l'istanza in sleep questo timer non è affidabile; il ripristino
 // avviene comunque al primo risveglio grazie al warm-up in `startServer` e al polling del client.
@@ -2438,6 +2448,9 @@ async function startServer() {
     app.get("*", (req, res, next) => {
       // Non mascherare mai un errore API restituendo l'HTML dell'SPA.
       if (req.path.startsWith("/api/")) return next();
+      if (req.path === "/statistiche-estrazioni.html" || req.path === "/statistiche-estrazioni") {
+        return res.sendFile(path.join(distPath, "statistiche-estrazioni.html"));
+      }
       const phaseMatch = req.path.match(/^\/fase-([1-6])\.html$/);
       if (phaseMatch) {
         return res.sendFile(path.join(distPath, `fase-${phaseMatch[1]}.html`));
