@@ -229,7 +229,7 @@ async function generateWithGroq(
         const estPromptTokens = Math.round((systemPrompt.length + userPrompt.length) / 3.8);
         const effectiveMaxTokens = model.includes("qwen") 
           ? 950 
-          : (model.includes("120b") ? Math.min(2600, Math.max(1200, 7000 - estPromptTokens)) : 4096);
+          : (model.includes("120b") ? Math.min(3600, Math.max(1200, 7800 - estPromptTokens)) : 4096);
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
           signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),

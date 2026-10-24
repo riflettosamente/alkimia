@@ -293,7 +293,7 @@ export function buildStep2LiteraryEssayPrompt(
   const cleanTopicB = vectorB.name.replace(/^\d+\.\s*/, '');
   const p5 = phase5DossierOrStrike?.phase3FinalStrike || phase5DossierOrStrike;
 
-  return `COMPONI IL SAGGIO DEL GIORNO IN PURA PROSA CONTINUA D'AUTORE (1.200 - 1.500 PAROLE), TRASFIGURANDO IN UN RACCONTO FILOSOFICO-SCIENTIFICO AD AMPIO RESPIRO LA RIVELAZIONE E IL MUTAMENTO DI PARADIGMA RAGGIUNTI NELL'AFFONDO FINALE.
+  return `COMPONI IL SAGGIO DEL GIORNO IN PURA PROSA CONTINUA D'AUTORE (1.600 - 2.000 PAROLE), TRASFIGURANDO IN UN RACCONTO FILOSOFICO-SCIENTIFICO AD AMPIO RESPIRO LA RIVELAZIONE E IL MUTAMENTO DI PARADIGMA RAGGIUNTI NELL'AFFONDO FINALE.
 
 ================================================================================
 DISTILLATO DI RICERCA DA SVILUPPARE NEL SAGGIO (AFFONDO FINALE - FASE 5)
@@ -319,23 +319,22 @@ ${stripMdBold(p5?.dizzyingRevelation, 550)}
 ================================================================================
 CONSEGNA SPECIFICA PER IL SAGGIO DEL GIORNO
 ================================================================================
-Componi il saggio organico (1.200 - 1.500 parole in 4-6 ampi paragrafi continui, circa 250-300 parole ciascuno) sviluppando la collisione ontologica tra «${cleanTopicA}» e «${cleanTopicB}» a partire dal distillato sopra riportato.
-Segui fedelmente le direttive permanenti ricevute nel System Prompt (prosa continua d'autore, nessun elenco o grassetto, invisibilità metodologica, ponte causale esplicito, zero name-dropping sterile).
+Componi il saggio organico (1.600 - 2.000 parole in 5-7 ampi paragrafi continui, circa 250-350 parole ciascuno) sviluppando la Terza Idea scaturita dall'interazione tra «${cleanTopicA}» e «${cleanTopicB}» a partire dal distillato sopra riportato.
+Segui fedelmente le direttive del System Prompt: la Fase 5 è la tua fonte esclusiva, genera una nuova intuizione concettuale con percorso causale rigoroso, mantieni totale invisibilità metodologica e scrivi in alta prosa letteraria.
 
 Rispondi RIGOROSAMENTE con questo JSON:
 {
-  "essay": {
-    "title": "string (titolo originale, privo di numeri e senza asterischi)",
-    "subtitle": "string (sottotitolo essenziale)",
-    "ontologicalThesis": "string (la tesi centrale filosofico-scientifica)",
-    "narrativeParagraphs": [
-      "string (testo completo del paragrafo 1 - ampio e denso, circa 250-300 parole)",
-      "string (testo completo del paragrafo 2 - ampio e denso, circa 250-300 parole)",
-      "string (testo completo del paragrafo 3 - ampio e denso, circa 250-300 parole)",
-      "string (testo completo del paragrafo 4 - ampio e denso, circa 250-300 parole)",
-      "string (testo completo del paragrafo 5 o successivo, secondo la naturale necessità dell'organismo narrativo)"
-    ]
-  }
+  "title": "string (titolo originale, privo di numeri e senza asterischi)",
+  "subtitle": "string (sottotitolo essenziale)",
+  "ontologicalThesis": "string (la tesi centrale filosofico-scientifica)",
+  "paragraphs": [
+    "string (testo completo del paragrafo 1 - ampio e denso, circa 250-350 parole)",
+    "string (testo completo del paragrafo 2 - ampio e denso, circa 250-350 parole)",
+    "string (testo completo del paragrafo 3 - ampio e denso, circa 250-350 parole)",
+    "string (testo completo del paragrafo 4 - ampio e denso, circa 250-350 parole)",
+    "string (testo completo del paragrafo 5 - ampio e denso, circa 250-350 parole)",
+    "string (testo completo del paragrafo 6 o 7, secondo la naturale necessità dell'organismo narrativo)"
+  ]
 }`;
 }
 
