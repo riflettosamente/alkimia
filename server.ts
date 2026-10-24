@@ -40,6 +40,7 @@ import {
   getBloggerConfigStatus,
   findBloggerPostByDate
 } from "./src/server/bloggerPublisher";
+import { fetchDossierFromGitHub } from "./src/server/githubSyncService";
 
 dotenv.config();
 
@@ -228,7 +229,7 @@ async function generateWithGroq(
         const estPromptTokens = Math.round((systemPrompt.length + userPrompt.length) / 3.8);
         const effectiveMaxTokens = model.includes("qwen") 
           ? 950 
-          : (model.includes("120b") ? Math.min(4600, Math.max(1024, 7800 - estPromptTokens)) : 4096);
+          : (model.includes("120b") ? Math.min(2600, Math.max(1200, 7000 - estPromptTokens)) : 4096);
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
           signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
@@ -596,8 +597,8 @@ async function runAiProviderChain(
     }
   | { ok: false; error: string; attempts: string[] }
 > {
-  // OpenAI disabilitato su richiesta (crediti API esauriti / assenza di piano free)
-  const hasOpenAI = false;
+  // Supporto OpenAI per la Fase 6 (Saggio del Giorno)
+  const hasOpenAI = Boolean(process.env.OPENAI_API_KEY?.trim());
   const hasGroq = Boolean(
     process.env.GROQ_API_KEY?.trim() ||
     (process.env.GROQ_MODEL?.trim() && process.env.GROQ_MODEL.trim().startsWith("gsk_"))
@@ -626,8 +627,13 @@ async function runAiProviderChain(
   // - Fase 3 (La Collisione): OpenRouter -> Cloudflare -> Groq -> Gemini
   // - Fase 4 (Loop a 5 Direzioni): Groq -> OpenRouter -> Cloudflare -> Gemini
   // - Fase 5 (L'Affondo Finale): Cloudflare -> OpenRouter -> Groq -> Gemini
-  // - Fase 6 (Saggio del Giorno): Groq esclusivo con regola 61s TPM (oppure OpenRouter/Cloudflare solo come estrema emergenza)
-  let defaultChain = [providers.groq, providers.cloudflare, providers.openrouter, providers.gemini];
+  // - Fase 6 (Saggio del Giorno): OpenAI prioritario (se configurato) -> Groq (con fallback a 61s TPM)
+  let defaultChain: Array<(typeof providers)[keyof typeof providers]> = [
+    providers.groq,
+    providers.cloudflare,
+    providers.openrouter,
+    providers.gemini
+  ];
 
   if (step === 'phase1') {
     defaultChain = [providers.groq, providers.cloudflare, providers.openrouter, providers.gemini];
@@ -640,8 +646,8 @@ async function runAiProviderChain(
   } else if (step === 'phase5') {
     defaultChain = [providers.cloudflare, providers.openrouter, providers.groq, providers.gemini];
   } else if (step === 'phase6' || step === 'literary') {
-    // Fase 6: Groq è il redattore primario obbligatorio per il saggio. Se 429 attende 61s
-    defaultChain = [providers.groq];
+    // Fase 6: OpenAI è il redattore primario d'eccellenza per il saggio; Groq come fallback immediato
+    defaultChain = hasOpenAI ? [providers.openai, providers.groq] : [providers.groq];
   }
 
   // Esclusione rigida di Gemini su richiesta esplicita
@@ -1376,20 +1382,30 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
     return Promise.resolve();
   }
 
-  // Blocco ferreo: se esiste già un dossier valido e integro salvato su disco, non avviare alcuna produzione
+  // Blocco ferreo: se esiste già un dossier valido e integro salvato su disco o su GitHub, non avviare alcuna produzione
   const savedDossier = readDossier(solarDateKey);
-  const existingDossierEssay = extractNormalizedEssay(
+  let existingDossierEssay = extractNormalizedEssay(
     savedDossier?.fullEdition?.essay || savedDossier?.essay,
     solarDateKey
   );
-  if (existingDossierEssay) {
-    console.log(
-      `[ALKIMIA] Saggio del Giorno per ${solarDateKey} già presente e sigillato su disco («${existingDossierEssay.title}»). Produzione bloccata.`
-    );
-    return Promise.resolve();
-  }
 
   const run = (async () => {
+    if (!existingDossierEssay) {
+      const ghDossier = await fetchDossierFromGitHub(solarDateKey);
+      if (ghDossier) {
+        existingDossierEssay = extractNormalizedEssay(
+          ghDossier?.fullEdition?.essay || ghDossier?.essay,
+          solarDateKey
+        );
+      }
+    }
+
+    if (existingDossierEssay) {
+      console.log(
+        `[ALKIMIA] Saggio del Giorno per ${solarDateKey} già presente e confermato («${existingDossierEssay.title}»). Produzione AI evitata.`
+      );
+      return;
+    }
     if (cached) {
       cached.status = 'generating';
       cached.error = null;
@@ -1984,17 +2000,31 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
   // Costruzione dell'edizione provvisoria, deterministica e allineata alla data solare.
   const formattedDate = formatItalianDateServer(solarDateKey);
 
-  // Se esiste un dossier salvato su disco con l'edizione generata, la ripristiniamo immediatamente
+  // 1. Verifica su disco locale
   const savedDossier = readDossier(solarDateKey);
   const candidateEssay = savedDossier?.fullEdition?.essay || savedDossier?.essay;
-  const verifiedEssay = candidateEssay ? extractNormalizedEssay(candidateEssay, solarDateKey) : null;
+  let verifiedEssay = candidateEssay ? extractNormalizedEssay(candidateEssay, solarDateKey) : null;
+  let activeDossier = (savedDossier && verifiedEssay) ? savedDossier : null;
+  let sourceLabel = "disco locale";
 
-  if (savedDossier && verifiedEssay) {
-    const fe = savedDossier.fullEdition;
+  // 2. Se non presente su disco locale, verifica su GitHub (riflettosamente/alkimia)
+  if (!activeDossier) {
+    const ghDossier = await fetchDossierFromGitHub(solarDateKey);
+    const candidateGHEssay = ghDossier?.fullEdition?.essay || ghDossier?.essay;
+    const verifiedGHEssay = candidateGHEssay ? extractNormalizedEssay(candidateGHEssay, solarDateKey) : null;
+    if (ghDossier && verifiedGHEssay) {
+      activeDossier = ghDossier;
+      verifiedEssay = verifiedGHEssay;
+      sourceLabel = "GitHub (riflettosamente/alkimia)";
+    }
+  }
+
+  if (activeDossier && verifiedEssay) {
+    const fe = activeDossier.fullEdition;
     const fallbackPair = getOrDrawDailyVectorPair(solarDateKey);
     const vAName = fe?.systemPair?.vectorA || fallbackPair.vectorA.name;
     const vBName = fe?.systemPair?.vectorB || fallbackPair.vectorB.name;
-    const restoredTelemetry = buildCompletedTelemetryFromSavedDossier(savedDossier, fe);
+    const restoredTelemetry = buildCompletedTelemetryFromSavedDossier(activeDossier, fe);
 
     const loadedEntry: DailyEditionEntry = {
       solarDateKey,
@@ -2020,31 +2050,31 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
           derivationTimestamp: formattedDate
         },
         phase1Decomposition:
-          savedDossier.phase1_decomposition?.phase1Decomposition ||
-          (savedDossier.phase1_decomposition?.vectorA ? savedDossier.phase1_decomposition : null) ||
+          activeDossier.phase1_decomposition?.phase1Decomposition ||
+          (activeDossier.phase1_decomposition?.vectorA ? activeDossier.phase1_decomposition : null) ||
           fe?.phase1Decomposition?.phase1Decomposition ||
           fe?.phase1Decomposition ||
           buildPhase1Decomposition(vAName, vBName),
         phase1EmpiricalArchive:
-          savedDossier.phase2_empiricalArchive?.phase1EmpiricalArchive ||
-          (savedDossier.phase2_empiricalArchive?.vectorA ? savedDossier.phase2_empiricalArchive : null) ||
-          savedDossier.phase1_5_empiricalArchive?.phase1EmpiricalArchive ||
-          (savedDossier.phase1_5_empiricalArchive?.vectorA ? savedDossier.phase1_5_empiricalArchive : null) ||
+          activeDossier.phase2_empiricalArchive?.phase1EmpiricalArchive ||
+          (activeDossier.phase2_empiricalArchive?.vectorA ? activeDossier.phase2_empiricalArchive : null) ||
+          activeDossier.phase1_5_empiricalArchive?.phase1EmpiricalArchive ||
+          (activeDossier.phase1_5_empiricalArchive?.vectorA ? activeDossier.phase1_5_empiricalArchive : null) ||
           fe?.phase1EmpiricalArchive ||
           buildPhase1EmpiricalArchive(vAName, vBName),
         phase2Collision:
-          savedDossier.phase3_collision?.phase2Collision ||
-          (savedDossier.phase3_collision?.step1StrippingFunction ? savedDossier.phase3_collision : null) ||
+          activeDossier.phase3_collision?.phase2Collision ||
+          (activeDossier.phase3_collision?.step1StrippingFunction ? activeDossier.phase3_collision : null) ||
           fe?.phase2Collision ||
           buildPhase2Collision(vAName, vBName),
         phase2Loop:
-          savedDossier.phase4_loop?.phase2Loop ||
-          (savedDossier.phase4_loop?.tracks ? savedDossier.phase4_loop : null) ||
+          activeDossier.phase4_loop?.phase2Loop ||
+          (activeDossier.phase4_loop?.tracks ? activeDossier.phase4_loop : null) ||
           fe?.phase2Loop ||
           buildPhase2LoopFiveDirections(vAName, vBName),
         phase3FinalStrike:
-          savedDossier.phase5_finalStrike?.phase3FinalStrike ||
-          (savedDossier.phase5_finalStrike?.cuiProdest ? savedDossier.phase5_finalStrike : null) ||
+          activeDossier.phase5_finalStrike?.phase3FinalStrike ||
+          (activeDossier.phase5_finalStrike?.cuiProdest ? activeDossier.phase5_finalStrike : null) ||
           fe?.phase3FinalStrike ||
           buildPhase3FinalStrike(vAName, vBName),
         essay: verifiedEssay,
@@ -2067,7 +2097,7 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
       finishedAt: Date.now()
     };
     dailyEditionsCache[solarDateKey] = loadedEntry;
-    console.log(`[ALKIMIA] Edizione del ${solarDateKey} ripristinata con successo dal dossier salvato («${verifiedEssay.title}»). Nessuna nuova produzione necessaria.`);
+    console.log(`[ALKIMIA] Edizione del ${solarDateKey} caricata con successo da ${sourceLabel} («${verifiedEssay.title}»). Nessuna nuova produzione necessaria.`);
     return stampSolarDate(syncEditionWithEntry(loadedEntry), solarDateKey);
   }
 

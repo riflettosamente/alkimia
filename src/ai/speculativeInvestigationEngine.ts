@@ -293,7 +293,7 @@ export function buildStep2LiteraryEssayPrompt(
   const cleanTopicB = vectorB.name.replace(/^\d+\.\s*/, '');
   const p5 = phase5DossierOrStrike?.phase3FinalStrike || phase5DossierOrStrike;
 
-  return `COMPONI IL SAGGIO DEL GIORNO IN PURA PROSA CONTINUA D'AUTORE (2.000 - 2.500 PAROLE), TRASFIGURANDO IN UN RACCONTO FILOSOFICO-SCIENTIFICO AD AMPIO RESPIRO LA RIVELAZIONE E IL MUTAMENTO DI PARADIGMA RAGGIUNTI NELL'AFFONDO FINALE, SENZA ELENCHI, SENZA LESSICO METODOLOGICO E SENZA ALCUN GRASSETTO (**).
+  return `COMPONI IL SAGGIO DEL GIORNO IN PURA PROSA CONTINUA D'AUTORE (1.200 - 1.500 PAROLE), TRASFIGURANDO IN UN RACCONTO FILOSOFICO-SCIENTIFICO AD AMPIO RESPIRO LA RIVELAZIONE E IL MUTAMENTO DI PARADIGMA RAGGIUNTI NELL'AFFONDO FINALE.
 
 ================================================================================
 DISTILLATO DI RICERCA DA SVILUPPARE NEL SAGGIO (AFFONDO FINALE - FASE 5)
@@ -317,50 +317,10 @@ ${stripMdBold(p5?.researchFocusIntersection, 450)}
 ${stripMdBold(p5?.dizzyingRevelation, 550)}
 
 ================================================================================
-DIRETTIVE DI COMPOSIZIONE DEL SAGGIO FINALE: IL "NON-MODELLO" ORGANICO AD AMPIO RESPIRO
+CONSEGNA SPECIFICA PER IL SAGGIO DEL GIORNO
 ================================================================================
-Il saggio non deve seguire uno schema stereotipato né una divisione a compartimenti stagni. Non usare una scaletta fissa (tipo: paragrafo 1 presentazione separata, 2 limiti, 3 meccanismo, 4 ricadute, 5 cosmologia).
-La narrazione deve fluire come un unico arco argomentativo vivo, in cui ogni paragrafo scaturisce per necessità interna da quello precedente:
-1. Cosa accade quando «${cleanTopicA}» e «${cleanTopicB}» smettono di essere trattati come mondi separati e vengono compresi attraverso l'unico principio operativo scoperto nell'Affondo.
-2. Qual è la scoperta concettuale o empirica che prima rimaneva invisibile a ciascuna disciplina presa singolarmente.
-3. Quali indagini scientifiche, tecnologiche, cliniche, antropologiche o filosofiche diventano concretamente possibili grazie a questa sintesi.
-
-PRATICA L'INDUGIO SPECULATIVO (AMPIO RESPIRO ORGANICO):
-- Non avere alcuna fretta di concludere né di correre all'idea successiva. Quando formuli una tesi, descrivi un'anomalia sperimentale o evochi una faglia dell'Affondo, indugia sulle sue conseguenze filosofiche, fisiche ed umane.
-- Scava nei paradossi; mostra che cosa crolla nelle certezze dell'uomo se quella sintesi è reale; approfondisci la lacerazione e la vertigine concettuale con periodi complessi, musicali e profondi.
-
-CHIAREZZA DIVULGATIVA ED ELIMINAZIONE DEL "NAME-DROPPING":
-- Il lettore comune non conosce trattati rari né sigle astruse: NON fare sfoggio di erudizione sterile né sciorinare liste di nomi o date a vuoto.
-- REGOLA DEL "MENO MA RACCONTATO VIVO": seleziona pochissimi riferimenti (1 o 2 per tema). Ogni volta che nomini uno scienziato o un'apparecchiatura, spiega in 1-2 frasi limpide: cosa cercava quella persona e come funzionava quello strumento in parole semplici e tangibili.
-- OBBLIGO DEL PONTE CAUSALE: non accostare mai due ricerche dicendo solo che "convergono"; spiega sempre il legame di causa-effetto (perché il limite del primo campo apre la porta alla scoperta del secondo). Il saggio deve essere autosufficiente al 100% senza che il lettore debba consultare enciclopedie.
-
-REGOLA DI PLASTICITÀ SU MISURA PER «${cleanTopicA}» E «${cleanTopicB}»:
-- Se gli argomenti sono fisici, genetici o neurobiologici, approfondisci i meccanismi sperimentali, biofisici e tecnologici.
-- Se riguardano l'esperienza interiore, la Spiritualità o l'Aldilà, non forzare gerghi di laboratorio dove suonerebbero artificiosi: esplora con rigore la fenomenologia della coscienza, le scienze contemplative, la trasformazione interiore dell'uomo e le domande sul vivere e sul morire.
-- Se toccano anomalie di frontiera (UFO/UAP, Extraterrestri, Transcomunicazione), metti al centro il problema della percezione, della decodifica del segnale, dei limiti degli strumenti umani e dell'incontro con l'alterità cosmica.
-
-================================================================================
-REGOLE TASSATIVE SULLA FORMA E SUL LESSICO (OBBLIGATORIE)
-================================================================================
-1. DIVIETO TOTALE DI IMPALCATURE: Non utilizzare mai elenchi puntati, elenchi numerati, schemi, tabelle o titoletti di paragrafo. Non usare mai asterischi o grassetti Markdown (**...**) né simboli (§).
-
-2. DIVIETO DI LESSICO METODOLOGICO: Non nominare mai le fasi ("Fase 1", "Fase 2", "Fase 3", "Fase 4", "Fase 5", "Fase 6", "Passo 1", "Passo 2", "Loop", "Loop cognitivo", "Faglia 3", "Faglia", "Affondo", "Affondo finale", "Interrogativo", "Asse cieco", "Verbo fondamentale", "Cui prodest", "Collisione", "Cassetto", "Cassetto 1", "Cassetto 2", "Vettore A", "Vettore B", "Direzione", "5 direzioni", "cinque direzioni", "cinque prospettive", "5 prospettive", "Sintesi funzionale", "Crepa asimmetrica", "Intuizione contro-intuitiva", "intuizioni controintuitive", "Paradosso di partenza", "Soglia condivisa", "Punto di contatto"). L'apparato metodologico deve essere completamente invisibile, come le ossa sotto la pelle viva.
-
-3. DIVIETO CATEGORICO DI SCHEMI BINARI E CONNETTIVI MECCANICI («PARALLELAMENTE»):
-- È SEVERAMENTE VIETATO aprire il saggio o collegare i due temi con la struttura binaria simmetrica: "da un lato argomento A, e parallelamente argomento B".
-- È VIETATO usare connettivi pigri o formule di transizione stereotipate come "parallelamente", "simmetricamente", "d'altro canto", "sul versante opposto", "dal canto suo", "allo stesso modo", "mentre da una parte... dall'altra".
-- L'incipit deve essere organico e vivo: entra direttamente in medias res da una scena storica, da un reperto, da uno strumento, da una faglia sperimentale o dall'attrito immediato tra i due mondi.
-
-4. DIVIETO DI NAME-DROPPING E CATALOGHI STERILI:
-- È vietato accumulare elenchi di nomi propri, date o trattati a scopo puramente ornamentale.
-- Ogni elemento citato deve spiegare la propria funzione pratica in parole comprensibili ed essere integrato nel filo causale del ragionamento.
-
-5. DIVIETO DI AUTOREFERENZIALITÀ E METACOMMENTO:
-- NON USARE MAI le parole "Alkimia", "alkimia", "alchimia", "alchemico", "alchemica", "trasformazione alchemica" o "trasmutazione alchemica" né nel titolo, né nel sottotitolo, né nella tesi, né nei paragrafi!
-- NON USARE formule scolastiche o metanarrative come "In questo saggio...", "La domanda che si pone è...", "Il paradosso di partenza è...", "La sintesi di cinque prospettive...", "I nuovi campi di ricerca che emergono sono...".
-- NON USARE parole deformate, neologismi spuri o calchi non italiani (es. "regula", "ipotese", "pinealico", "spaziativa", "piante cerebrale").
-
-COMPUTO TOTALE PAROLE: Rigorosamente compreso tra 2.000 e 2.500 parole, articolato in un arco organico e continuo di ampi paragrafi di prosa d'autore (5-7 paragrafi monumentali da circa 350-500 parole ciascuno).
+Componi il saggio organico (1.200 - 1.500 parole in 4-6 ampi paragrafi continui, circa 250-300 parole ciascuno) sviluppando la collisione ontologica tra «${cleanTopicA}» e «${cleanTopicB}» a partire dal distillato sopra riportato.
+Segui fedelmente le direttive permanenti ricevute nel System Prompt (prosa continua d'autore, nessun elenco o grassetto, invisibilità metodologica, ponte causale esplicito, zero name-dropping sterile).
 
 Rispondi RIGOROSAMENTE con questo JSON:
 {
@@ -369,12 +329,11 @@ Rispondi RIGOROSAMENTE con questo JSON:
     "subtitle": "string (sottotitolo essenziale)",
     "ontologicalThesis": "string (la tesi centrale filosofico-scientifica)",
     "narrativeParagraphs": [
-      "string (testo completo del paragrafo 1 - ampio e denso, circa 350-500 parole)",
-      "string (testo completo del paragrafo 2 - ampio e denso, circa 350-500 parole)",
-      "string (testo completo del paragrafo 3 - ampio e denso, circa 350-500 parole)",
-      "string (testo completo del paragrafo 4 - ampio e denso, circa 350-500 parole)",
-      "string (testo completo del paragrafo 5 - ampio e denso, circa 350-500 parole)",
-      "string (testo completo del paragrafo 6 o successivo, secondo la naturale necessità dell'organismo narrativo)"
+      "string (testo completo del paragrafo 1 - ampio e denso, circa 250-300 parole)",
+      "string (testo completo del paragrafo 2 - ampio e denso, circa 250-300 parole)",
+      "string (testo completo del paragrafo 3 - ampio e denso, circa 250-300 parole)",
+      "string (testo completo del paragrafo 4 - ampio e denso, circa 250-300 parole)",
+      "string (testo completo del paragrafo 5 o successivo, secondo la naturale necessità dell'organismo narrativo)"
     ]
   }
 }`;

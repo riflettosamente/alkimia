@@ -38,6 +38,26 @@ export function saveDossierStep(
 }
 
 /**
+ * Salva l'intero payload di un dossier su disco (usato ad esempio per la sincronizzazione da GitHub).
+ */
+export function saveCompleteDossier(
+  solarDateKey: string,
+  dossierData: any
+): void {
+  try {
+    if (!fs.existsSync(DOSSIER_DIR)) {
+      fs.mkdirSync(DOSSIER_DIR, { recursive: true });
+    }
+    const filePath = path.join(DOSSIER_DIR, `dossier-${solarDateKey}.json`);
+    fs.writeFileSync(filePath, JSON.stringify(dossierData, null, 2), "utf-8");
+    console.log(`[DossierTracker] Dossier completo salvato su file per ${solarDateKey}.`);
+    pruneOldDossiers(30);
+  } catch (err) {
+    console.warn(`[DossierTracker] Impossibile salvare dossier completo per ${solarDateKey}:`, err);
+  }
+}
+
+/**
  * Mantiene una finestra scorrevole a 30 giorni, rimuovendo automaticamente i dossier più vecchi.
  */
 export function pruneOldDossiers(maxKeep: number = 30): string[] {
