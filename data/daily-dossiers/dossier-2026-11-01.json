@@ -1,6 +1,6 @@
 {
   "solarDateKey": "2026-11-01",
-  "lastUpdated": "2026-11-01T19:05:55.597Z",
+  "lastUpdated": "2026-11-01T19:16:08.345Z",
   "webSearchContext": {
     "vectorA": {
       "topic": "Gli UFO/UAP (Fenomeni Anomali Non Identificati)",
@@ -1126,5 +1126,12 @@
     "generationStatus": "generated",
     "generationError": null,
     "generationAttempts": 1
+  },
+  "bloggerPost": {
+    "postId": "2934506814001811533",
+    "url": "https://alkimiatoday.blogspot.com/2026/11/linguaggi-incisi-nelletere-e-nel-genoma.html",
+    "title": "Linguaggi incisi nell’etere e nel genoma",
+    "publishedAt": "2026-11-01T19:16:08.343Z",
+    "solarDateKey": "2026-11-01"
   }
 }

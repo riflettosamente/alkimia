@@ -1394,6 +1394,13 @@ async function testPhase6Generation(solarDateKey: string): Promise<any> {
         saveDossierStep(solarDateKey, 'fullEdition', fullSaved.fullEdition);
       }
       
+      // Pubblicazione o allineamento immediato su Blogger
+      void publishDailyEssayToBlogger(solarDateKey, essay, {
+        vectorA: selectedA.name,
+        vectorB: selectedB.name,
+        force: true
+      });
+
       return {
         essay,
         provider: res.provider,
@@ -1463,6 +1470,11 @@ function startDailyAiDrafting(solarDateKey: string, force = false): Promise<void
       console.log(
         `[ALKIMIA] Saggio del Giorno per ${solarDateKey} già presente e confermato («${existingDossierEssay.title}»). Produzione AI evitata.`
       );
+      const pair = getOrDrawDailyVectorPair(solarDateKey);
+      void publishDailyEssayToBlogger(solarDateKey, existingDossierEssay, {
+        vectorA: pair.vectorA.name,
+        vectorB: pair.vectorB.name
+      });
       return;
     }
     if (cached) {
