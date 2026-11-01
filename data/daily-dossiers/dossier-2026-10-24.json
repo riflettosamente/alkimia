@@ -1,6 +1,6 @@
 {
   "solarDateKey": "2026-10-24",
-  "lastUpdated": "2026-10-24T03:55:06.346Z",
+  "lastUpdated": "2026-10-24T15:16:55.639Z",
   "webSearchContext": {
     "vectorA": {
       "topic": "La Transcomunicazione Strumentale (TCI)",
@@ -1154,5 +1154,12 @@
     "generationStatus": "generated",
     "generationError": null,
     "generationAttempts": 1
+  },
+  "bloggerPost": {
+    "postId": "3013323929236132699",
+    "url": "https://alkimiatoday.blogspot.com/2026/10/oltre-il-rumore-la-voce-dellinvisibile.html",
+    "title": "Oltre il Rumore: la Voce dell'Invisibile",
+    "publishedAt": "2026-10-24T15:16:55.636Z",
+    "solarDateKey": "2026-10-24"
   }
 }

@@ -282,7 +282,7 @@ export function buildStep2LiteraryEssayPrompt(
   vectorA: KeyOntologicalTopic,
   vectorB: KeyOntologicalTopic
 ): string {
-  const stripMdBold = (s?: string, maxChars: number = 380) => {
+  const stripMdBold = (s?: string, maxChars: number = 600) => {
     if (!s) return '';
     const clean = s.replace(/\*\*(.*?)\*\*/g, '$1').trim();
     if (clean.length <= maxChars) return clean;
@@ -293,34 +293,42 @@ export function buildStep2LiteraryEssayPrompt(
   const cleanTopicB = vectorB.name.replace(/^\d+\.\s*/, '');
   const p5 = phase5DossierOrStrike?.phase3FinalStrike || phase5DossierOrStrike;
 
-  return `COMPONI IL SAGGIO DEL GIORNO IN PURA PROSA CONTINUA D'AUTORE (1.600 - 2.000 PAROLE), TRASFIGURANDO IN UN RACCONTO FILOSOFICO-SCIENTIFICO AD AMPIO RESPIRO LA RIVELAZIONE E IL MUTAMENTO DI PARADIGMA RAGGIUNTI NELL'AFFONDO FINALE.
+  const dossierFindings = [
+    p5?.cuiProdest,
+    p5?.groundbreakingDiscovery,
+    p5?.uninvestigatedBias,
+    p5?.researchFocusIntersection,
+    p5?.dizzyingRevelation
+  ]
+    .filter(Boolean)
+    .map((section) => stripMdBold(section, 650))
+    .join('\n\n');
+
+  return `SEI UN AUTORE E FILOSOFO DELLA SCIENZA CONTEMPORANEO. IL TUO COMPITO È TRASFORMARE I REPERTI DI UN'INDAGINE IN UN SAGGIO ORIGINALE, RIGOROSO, APPASSIONANTE E LETTERARIAMENTE COMPIUTO.
 
 ================================================================================
-DISTILLATO DI RICERCA DA SVILUPPARE NEL SAGGIO (AFFONDO FINALE - FASE 5)
+REPERTI E RISULTANZE ACQUISITI DALL'INDAGINE PRELIMINARE (FONTE ESCLUSIVA):
 ================================================================================
-PRIMO ARGOMENTO: ${cleanTopicA}
-SECONDO ARGOMENTO: ${cleanTopicB}
+ARGOMENTI INDAGATI: «${cleanTopicA}» e «${cleanTopicB}»
 
-1. MUTAMENTO DI PARADIGMA (CUI PRODEST):
-${stripMdBold(p5?.cuiProdest, 450)}
-
-2. LEGGE SOTTOSTANTE E SCOPERTA DI FRONTIERA:
-${stripMdBold(p5?.groundbreakingDiscovery, 450)}
-
-3. OSTACOLO EPISTEMOLOGICO SUPERATO (BIAS INESPLORATO):
-${stripMdBold(p5?.uninvestigatedBias, 450)}
-
-4. PROTOCOLLI DI VERIFICA E INTERSEZIONE APPLICATIVA:
-${stripMdBold(p5?.researchFocusIntersection, 450)}
-
-5. VISIONE CONCLUSIVA E RIVELAZIONE VERTIGINOSA:
-${stripMdBold(p5?.dizzyingRevelation, 550)}
+${dossierFindings}
 
 ================================================================================
-CONSEGNA SPECIFICA PER IL SAGGIO DEL GIORNO
+DISCIPLINA DELLE AFFERMAZIONI E OBIETTIVO CENTRALE (LA TERZA IDEA)
 ================================================================================
-Componi il saggio organico (1.600 - 2.000 parole in 5-7 ampi paragrafi continui, circa 250-350 parole ciascuno) sviluppando la Terza Idea scaturita dall'interazione tra «${cleanTopicA}» e «${cleanTopicB}» a partire dal distillato sopra riportato.
-Segui fedelmente le direttive del System Prompt: la Fase 5 è la tua fonte esclusiva, genera una nuova intuizione concettuale con percorso causale rigoroso, mantieni totale invisibilità metodologica e scrivi in alta prosa letteraria.
+1. FONTE ESCLUSIVA: Il dossier sopra riportato è la tua unica fonte documentale. Utilizza esclusivamente i reperti che contiene. È vietato introdurre nuove fonti, autori o studi esterni. Distingui con precisione i fatti documentati dalle interpretazioni e dalle ipotesi.
+
+2. GENERARE UNA TERZA IDEA: Non devi limitarti a confrontare i due argomenti o illustrarne le somiglianze. Devi ricavare dalla loro interazione una nuova intuizione concettuale capace di modificare il modo in cui entrambi possono essere compresi. L'intuizione deve derivare da elementi identificabili nel dossier, essere sostenuta da un percorso logico rigoroso e aprire una nuova possibilità d'indagine.
+
+================================================================================
+REGOLE DI SCRITTURA: LIBERTÀ PLASTICA E FORMA ORGANICA (COME UN ALBERO)
+================================================================================
+1. IL PATTO DI ACCOGLIENZA E LUCIDITÀ: Il lettore non deve mai essere aggredito "a gamba tesa" con sigle di apparati o dettagli tecnici slegati da una premessa di senso. L'incipit deve accoglierlo, facendogli comprendere subito qual è la posta in gioco del pensiero, il paradosso concettuale o l'abitudine mentale che i due argomenti mettono in crisi.
+2. CRESCITA ORGANICA (ANTI-SERIALITÀ): Non applicare alcuno schema prefissato o cliché ripetitivo. La forma del saggio cresce dal terreno unico di questa indagine: a volte scaturisce da una riflessione culturale, a volte da un'anomalia empirica o da una domanda radicale.
+3. CONSEGUENZIALITÀ INTERNA: Ogni capoverso si sviluppa dal precedente per necessità viva di pensiero. Gli scienziati, i testi e gli strumenti entrano nel testo solo quando la loro presenza è richiesta per verificare, complicare o dimostrare il ragionamento.
+4. DIVIETO DI SCANSIONI ORDINALI E FORMULE PIGRE: Non usare marcatori di metodo («La prima fase...», «La seconda fase...») né connettivi binari pigri («Allo stesso tempo...», «Parallelamente...»).
+5. DIVIETO DI PSEUDO-POETICA: Niente metafore vuote da romanzo fantasy («occhi di legno», «teatro di leggende»). Sii un filosofo della scienza: limpido, denso, rigoroso e intellettualmente affascinante.
+6. LUNGHEZZA: 1.100 - 1.500 parole in 3-5 ampi paragrafi coesi, assecondando la naturale respirazione del pensiero.
 
 Rispondi RIGOROSAMENTE con questo JSON:
 {
@@ -328,12 +336,11 @@ Rispondi RIGOROSAMENTE con questo JSON:
   "subtitle": "string (sottotitolo essenziale)",
   "ontologicalThesis": "string (la tesi centrale filosofico-scientifica)",
   "paragraphs": [
-    "string (testo completo del paragrafo 1 - ampio e denso, circa 250-350 parole)",
-    "string (testo completo del paragrafo 2 - ampio e denso, circa 250-350 parole)",
-    "string (testo completo del paragrafo 3 - ampio e denso, circa 250-350 parole)",
-    "string (testo completo del paragrafo 4 - ampio e denso, circa 250-350 parole)",
-    "string (testo completo del paragrafo 5 - ampio e denso, circa 250-350 parole)",
-    "string (testo completo del paragrafo 6 o 7, secondo la naturale necessità dell'organismo narrativo)"
+    "string (paragrafo 1 - accoglie il lettore e apre con chiarezza la posta in gioco concettuale)",
+    "string (paragrafo 2 - sviluppo organico del nodo filosofico-scientifico)",
+    "string (paragrafo 3 - sviluppo della Terza Idea attraverso i reperti dell'indagine)",
+    "string (paragrafo 4 - conseguenze epistemologiche, prove e orizzonte futuro aperto)",
+    "string (paragrafo 5 facoltativo, se richiesto dal respiro naturale dell'opera)"
   ]
 }`;
 }

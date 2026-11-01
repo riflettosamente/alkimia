@@ -42,7 +42,7 @@ import {
 } from "./src/server/bloggerPublisher";
 import { fetchDossierFromGitHub } from "./src/server/githubSyncService";
 
-dotenv.config();
+dotenv.config({ override: true });
 
 const app = express();
 /**
@@ -1347,6 +1347,65 @@ function syncEditionWithEntry(entry: DailyEditionEntry): DailyEditionEntry {
 }
 
 /** Riepilogo dello stato di redazione, esposto dagli endpoint di diagnostica. */
+async function testPhase6Generation(solarDateKey: string): Promise<any> {
+  const savedDossier = readDossier(solarDateKey) || dailyEditionsCache[solarDateKey]?.edition;
+  if (!savedDossier) {
+    throw new Error(`Dossier non trovato per la data ${solarDateKey}.`);
+  }
+
+  const currentFinalStrike =
+    savedDossier.phase3FinalStrike ||
+    savedDossier.phase5_finalStrike ||
+    savedDossier.fullEdition?.phase3FinalStrike ||
+    savedDossier.fullEdition?.phase5_finalStrike;
+
+  if (!currentFinalStrike) {
+    console.warn("[TEST] Dossier keys found:", Object.keys(savedDossier));
+    throw new Error("Fase 5 (Final Strike) mancante nel dossier per questa data solare.");
+  }
+
+  const pair = getOrDrawDailyVectorPair(solarDateKey);
+  const selectedA = pair.vectorA;
+  const selectedB = pair.vectorB;
+  
+  // Normalizzazione se annidato
+  const strikeData = currentFinalStrike.phase3FinalStrike || currentFinalStrike;
+
+  const literarySystemPrompt = buildLiteraryEssaySystemPrompt();
+  const step2Prompt = buildStep2LiteraryEssayPrompt(strikeData, selectedA, selectedB);
+
+  console.log(`[TEST] Avvio generazione Fase 6 (V21) via LLM per ${solarDateKey}...`);
+  const res = await runAiProviderChain(literarySystemPrompt, step2Prompt, { step: 'phase6' });
+  
+  if (res.ok) {
+    const parsed = cleanAndParseJson(res.text);
+    const essay = extractNormalizedEssay(parsed, solarDateKey);
+    if (essay) {
+      console.log(`[TEST] Fase 6 generata con successo via ${res.provider} (${res.model}).`);
+      saveDossierStep(solarDateKey, 'essay', essay);
+      
+      // Se esiste già un fullEdition, lo aggiorniamo
+      const fullSaved = readDossier(solarDateKey);
+      if (fullSaved?.fullEdition) {
+        fullSaved.fullEdition.essay = essay;
+        fullSaved.fullEdition.aiProvider = res.provider;
+        fullSaved.fullEdition.aiModel = res.model;
+        fullSaved.fullEdition.generationStatus = 'generated';
+        saveDossierStep(solarDateKey, 'fullEdition', fullSaved.fullEdition);
+      }
+      
+      return {
+        essay,
+        provider: res.provider,
+        model: res.model,
+        usage: res.usage
+      };
+    }
+  }
+  
+  throw new Error(`Generazione fallita: ${(res as any).error || 'errore sconosciuto'}`);
+}
+
 function describeGeneration(entry: DailyEditionEntry) {
   return {
     status: entry.status,
@@ -2313,6 +2372,21 @@ app.get("/api/daily-edition/status", async (req, res) => {
   }
 });
 
+// Endpoint di TEST per rigenerare solo la Fase 6 (Saggio) a partire da una Fase 5 esistente
+app.get("/api/test-phase6", async (req, res) => {
+  try {
+    const solarDateKey =
+      typeof req.query.solarDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.solarDate)
+        ? req.query.solarDate
+        : new Date().toISOString().split('T')[0];
+
+    const result = await testPhase6Generation(solarDateKey);
+    res.json({ success: true, solarDateKey, ...result });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // 6c. Endpoint per il download del dossier completo (usato da GitHub Actions per l'archiviazione storica)
 app.get("/api/daily-edition/dossier", (req, res) => {
   try {
@@ -2359,12 +2433,140 @@ app.post("/api/daily-edition/regenerate", (_req, res) => {
   });
 });
 
-// 6d. Endpoint di rigenerazione Fase 6 disattivato permanentemente.
-app.post("/api/daily-edition/regenerate-phase6", (_req, res) => {
-  res.status(403).json({
-    success: false,
-    error: "Comando di rigenerazione disattivato in modo permanente: ogni data solare ammette un unico saggio originale e immutabile."
-  });
+// 6d. Endpoint di rigenerazione/test Fase 6 (Saggio del Giorno) a partire dalla Fase 5 esistente
+app.post("/api/daily-edition/regenerate-phase6", async (req, res) => {
+  try {
+    const solarDateKey =
+      typeof req.query.solarDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.solarDate)
+        ? req.query.solarDate
+        : (typeof req.body?.solarDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.body.solarDate)
+            ? req.body.solarDate
+            : new Date().toISOString().split('T')[0]);
+
+    const savedDossier = readDossier(solarDateKey) || dailyEditionsCache[solarDateKey]?.edition;
+    if (!savedDossier) {
+      return res.status(404).json({
+        success: false,
+        error: `Nessun dossier trovato per la data solare ${solarDateKey}.`
+      });
+    }
+
+    const currentFinalStrike =
+      savedDossier.phase5_finalStrike?.phase3FinalStrike ||
+      savedDossier.phase5_finalStrike ||
+      savedDossier.phase3FinalStrike ||
+      savedDossier.fullEdition?.phase3FinalStrike;
+
+    if (!currentFinalStrike) {
+      return res.status(400).json({
+        success: false,
+        error: `Dossier privo dei dati della Fase 5 per la data solare ${solarDateKey}.`
+      });
+    }
+
+    const pair = getOrDrawDailyVectorPair(solarDateKey);
+    const selectedA = pair.vectorA;
+    const selectedB = pair.vectorB;
+
+    const literarySystemPrompt = buildLiteraryEssaySystemPrompt();
+    const step2Prompt = buildStep2LiteraryEssayPrompt(currentFinalStrike, selectedA, selectedB);
+
+    console.log(`[ALKIMIA] Test rigenerazione Fase 6 per ${solarDateKey} (Vettore A: ${selectedA.name}, Vettore B: ${selectedB.name})...`);
+
+    // Priorità esplicita a Groq per verificare il prompt e i limiti dei token
+    const preferredProvider = req.body?.provider || req.query?.provider || 'groq';
+    let stage6Result: {
+      ok: true;
+      data: any;
+      provider: 'openai' | 'groq' | 'openrouter' | 'cloudflare' | 'gemini';
+      model: string;
+      usage: TokenUsageStats;
+    };
+
+    if (preferredProvider === 'groq') {
+      const groqRes = await generateWithGroq(literarySystemPrompt, step2Prompt, true);
+      const parsed = cleanAndParseJson(groqRes.text);
+      const normalized = extractNormalizedEssay(parsed, solarDateKey);
+      if (!normalized) {
+        throw new Error("Estrazione del saggio normalizzato da Groq fallita.");
+      }
+      stage6Result = {
+        ok: true,
+        data: normalized,
+        provider: 'groq',
+        model: groqRes.model,
+        usage: groqRes.usage
+      };
+    } else {
+      const runChain = await runAiProviderChain(literarySystemPrompt, step2Prompt, { step: 'phase6' });
+      if (!runChain.ok) throw new Error(runChain.error);
+      const parsed = cleanAndParseJson(runChain.text);
+      const normalized = extractNormalizedEssay(parsed, solarDateKey);
+      if (!normalized) {
+        throw new Error("Estrazione del saggio normalizzato fallita.");
+      }
+      stage6Result = {
+        ok: true,
+        data: normalized,
+        provider: runChain.provider,
+        model: runChain.model,
+        usage: runChain.usage
+      };
+    }
+
+    if (!stage6Result.data || !stage6Result.data.title || !stage6Result.data.narrativeParagraphs?.length) {
+      throw new Error("Il payload del saggio non rispetta la struttura minima richiesta.");
+    }
+
+    const finalEssay = stage6Result.data;
+    saveDossierStep(solarDateKey, 'essay', finalEssay);
+
+    // Se esiste fullEdition salvata, aggiorna anche lì
+    if (savedDossier.fullEdition) {
+      savedDossier.fullEdition.essay = finalEssay;
+      saveDossierStep(solarDateKey, 'fullEdition', savedDossier.fullEdition);
+    }
+
+    // Aggiorna anche la cache in memoria
+    if (dailyEditionsCache[solarDateKey]) {
+      dailyEditionsCache[solarDateKey].edition.essay = finalEssay;
+      dailyEditionsCache[solarDateKey].status = 'generated';
+      dailyEditionsCache[solarDateKey].aiProvider = stage6Result.provider;
+      dailyEditionsCache[solarDateKey].aiModel = stage6Result.model;
+      dailyEditionsCache[solarDateKey].phaseTelemetry = dailyEditionsCache[solarDateKey].phaseTelemetry.map(t =>
+        t.phaseNumber === 6
+          ? {
+              ...t,
+              status: 'completed',
+              provider: stage6Result.provider,
+              model: stage6Result.model,
+              promptTokens: stage6Result.usage.promptTokens,
+              completionTokens: stage6Result.usage.completionTokens,
+              totalTokens: stage6Result.usage.totalTokens,
+              completedAt: new Date().toISOString()
+            }
+          : t
+      );
+    }
+
+    const wordCount = finalEssay.narrativeParagraphs.join(" ").split(/\s+/).filter(Boolean).length;
+
+    res.json({
+      success: true,
+      solarDateKey,
+      provider: stage6Result.provider,
+      model: stage6Result.model,
+      usage: stage6Result.usage,
+      essay: finalEssay,
+      stats: {
+        paragraphCount: finalEssay.narrativeParagraphs.length,
+        totalWords: wordCount
+      }
+    });
+  } catch (err: any) {
+    console.error("[ALKIMIA] Errore rigenerazione Fase 6:", err);
+    res.status(500).json({ success: false, error: err.message || String(err) });
+  }
 });
 
 // 6e. Stato e test di pubblicazione su Google Blogger (alkimiatoday.blogspot.com)

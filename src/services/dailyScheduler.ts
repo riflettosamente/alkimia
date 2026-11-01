@@ -20,9 +20,9 @@ import {
 export { getSolarDateKey, formatItalianDate, formatTimeUntilNextCycle };
 export const getTimeUntilNextSolarCycle = getTimeUntilNextSolarMidnight;
 
-// v19: vettori ontologici purificati da numerazione e suffissi obsoleti.
-const CACHE_KEY_CURRENT = 'alkimia_daily_edition_cache_v19';
-const CACHE_KEY_ARCHIVE = 'alkimia_chronological_archive_v19';
+// v24: saggio a libertà plastica (principio dell'albero, accoglienza del lettore).
+const CACHE_KEY_CURRENT = 'alkimia_daily_edition_cache_v24';
+const CACHE_KEY_ARCHIVE = 'alkimia_chronological_archive_v24';
 
 export interface DailyCachedPayload {
   solarDateKey: string;
@@ -57,7 +57,17 @@ export function getLocalDailyCache(): DailyCachedPayload | null {
       'alkimia_daily_edition_cache_v17',
       'alkimia_chronological_archive_v17',
       'alkimia_daily_edition_cache_v18',
-      'alkimia_chronological_archive_v18'
+      'alkimia_chronological_archive_v18',
+      'alkimia_daily_edition_cache_v19',
+      'alkimia_chronological_archive_v19',
+      'alkimia_daily_edition_cache_v20',
+      'alkimia_chronological_archive_v20',
+      'alkimia_daily_edition_cache_v21',
+      'alkimia_chronological_archive_v21',
+      'alkimia_daily_edition_cache_v22',
+      'alkimia_chronological_archive_v22',
+      'alkimia_daily_edition_cache_v23',
+      'alkimia_chronological_archive_v23'
     ].forEach(k => {
       if (localStorage.getItem(k)) localStorage.removeItem(k);
     });

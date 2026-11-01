@@ -1,6 +1,6 @@
 {
   "solarDateKey": "2026-10-22",
-  "lastUpdated": "2026-10-22T03:56:32.355Z",
+  "lastUpdated": "2026-10-24T15:16:55.626Z",
   "webSearchContext": {
     "vectorA": {
       "topic": "Gli Extraterrestri",
@@ -1181,5 +1181,12 @@
     "generationStatus": "generated",
     "generationError": null,
     "generationAttempts": 1
+  },
+  "bloggerPost": {
+    "postId": "6709266991881219801",
+    "url": "https://alkimiatoday.blogspot.com/2026/10/il-sussurro-quantico-delle-stelle.html",
+    "title": "Il sussurro quantico delle stelle lontane",
+    "publishedAt": "2026-10-24T15:16:55.620Z",
+    "solarDateKey": "2026-10-22"
   }
 }

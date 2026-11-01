@@ -1,6 +1,6 @@
 {
   "solarDateKey": "2026-10-23",
-  "lastUpdated": "2026-10-23T04:00:09.302Z",
+  "lastUpdated": "2026-10-24T15:16:55.633Z",
   "webSearchContext": {
     "vectorA": {
       "topic": "La Fisica (dei campi e dei quanti)",
@@ -1190,5 +1190,12 @@
     "generationStatus": "generated",
     "generationError": null,
     "generationAttempts": 1
+  },
+  "bloggerPost": {
+    "postId": "7546873620798933801",
+    "url": "https://alkimiatoday.blogspot.com/2026/10/il-canto-dei-campi-oltre-la-soglia.html",
+    "title": "Il canto dei campi oltre la soglia",
+    "publishedAt": "2026-10-24T15:16:55.631Z",
+    "solarDateKey": "2026-10-23"
   }
 }

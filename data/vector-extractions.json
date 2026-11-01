@@ -1,51 +1,83 @@
 {
-  "lastUpdated": "2026-10-22T16:05:57.223Z",
-  "totalExtractions": 7,
+  "lastUpdated": "2026-10-24T15:15:41.234Z",
+  "totalExtractions": 11,
   "statistics": {
+    "La Transcomunicazione Strumentale (TCI)": {
+      "asVectorA": 1,
+      "asVectorB": 1,
+      "total": 2,
+      "lastExtracted": "2026-10-24"
+    },
+    "L'Aldilà": {
+      "asVectorA": 0,
+      "asVectorB": 5,
+      "total": 5,
+      "lastExtracted": "2026-10-24"
+    },
+    "La Fisica (dei campi e dei quanti)": {
+      "asVectorA": 1,
+      "asVectorB": 2,
+      "total": 3,
+      "lastExtracted": "2026-10-23"
+    },
+    "Gli Extraterrestri": {
+      "asVectorA": 2,
+      "asVectorB": 2,
+      "total": 4,
+      "lastExtracted": "2026-10-22"
+    },
+    "La Tecnologia CRISPR": {
+      "asVectorA": 2,
+      "asVectorB": 0,
+      "total": 2,
+      "lastExtracted": "2026-10-21"
+    },
     "Gli UFO/UAP (Fenomeni Anomali Non Identificati)": {
       "asVectorA": 3,
       "asVectorB": 0,
       "total": 3,
       "lastExtracted": "2026-10-22"
     },
-    "La Fisica (dei campi e dei quanti)": {
-      "asVectorA": 0,
-      "asVectorB": 1,
-      "total": 1,
-      "lastExtracted": "2026-10-22"
-    },
-    "La Tecnologia CRISPR": {
-      "asVectorA": 1,
-      "asVectorB": 0,
-      "total": 1,
-      "lastExtracted": "2026-10-10"
-    },
-    "La Transcomunicazione Strumentale (TCI)": {
-      "asVectorA": 0,
-      "asVectorB": 1,
-      "total": 1,
-      "lastExtracted": "2026-10-10"
-    },
     "La Spiritualità": {
       "asVectorA": 2,
       "asVectorB": 1,
       "total": 3,
       "lastExtracted": "2026-10-09"
-    },
-    "Gli Extraterrestri": {
-      "asVectorA": 1,
-      "asVectorB": 2,
-      "total": 3,
-      "lastExtracted": "2026-10-09"
-    },
-    "L'Aldilà": {
-      "asVectorA": 0,
-      "asVectorB": 2,
-      "total": 2,
-      "lastExtracted": "2026-10-03"
     }
   },
   "chronicle": [
+    {
+      "id": "ext-1792854941234-sgymj",
+      "solarDateKey": "2026-10-24",
+      "timestamp": "2026-10-24T15:15:41.234Z",
+      "type": "daily_edition",
+      "vectorA": "La Transcomunicazione Strumentale (TCI)",
+      "vectorB": "L'Aldilà"
+    },
+    {
+      "id": "ext-1792854940483-hyp99",
+      "solarDateKey": "2026-10-23",
+      "timestamp": "2026-10-24T15:15:40.483Z",
+      "type": "daily_edition",
+      "vectorA": "La Fisica (dei campi e dei quanti)",
+      "vectorB": "L'Aldilà"
+    },
+    {
+      "id": "ext-1792854939966-4qliz",
+      "solarDateKey": "2026-10-22",
+      "timestamp": "2026-10-24T15:15:39.966Z",
+      "type": "daily_edition",
+      "vectorA": "Gli Extraterrestri",
+      "vectorB": "La Fisica (dei campi e dei quanti)"
+    },
+    {
+      "id": "ext-1792854939763-jmdpw",
+      "solarDateKey": "2026-10-21",
+      "timestamp": "2026-10-24T15:15:39.763Z",
+      "type": "daily_edition",
+      "vectorA": "La Tecnologia CRISPR",
+      "vectorB": "L'Aldilà"
+    },
     {
       "id": "ext-1792685157223-cjplb",
       "solarDateKey": "2026-10-22",

@@ -225,41 +225,42 @@ Non esporre questa preparazione nel testo finale. Il lettore deve incontrare un 
 3. AUTOSUFFICIENZA TOTALE DEL TESTO: Il lettore non deve mai essere costretto a cercare su un'enciclopedia; ogni concetto o strumento citato deve essere immediatamente autoesplicativo nella sua funzione.
 
 ================================================================================
-4. LINGUA ITALIANA LIMPIDA, NATURALE E AUTENTICA (ZERO "ITALIANO STRANO")
+4. LINGUA ITALIANA LIMPIDA, NATURALE E RIGOROSA (DIVIETO DI PSEUDO-POETICA E "AI SLOP")
 ================================================================================
-- Scrivi in un italiano contemporaneo colto, limpido, scorrevole e magnetico.
-- Costruisci periodi ben ritmati e nessi causali trasparenti. Evita il gergo accademico fumoso, le astrazioni incomprensibili, le inversioni sintattiche innaturali e le pose oracolari.
-- È severamente vietato inventare vocaboli, alterare suffissi o usare calchi dall'inglese. Ogni parola deve appartenere al lessico italiano accreditato (Treccani, Zingarelli).
+- Scrivi con la voce autentica di un filosofo ed epistemologo della scienza contemporaneo: prosa acuminata, densa, argomentativa e intellettualmente onesta.
+- DIVIETO ASSOLUTO DI PSEUDO-POETICA E METAFORE DA FICTION: È severamente vietato scadere nel lirismo da romanzo fantasy, nelle metafore suggestive ma prive di senso logico o fattuale (ad esempio «occhi di legno e di pietra», «teatro di leggende», «il respiro del cosmo», «fiamme celesti», «aliti divini»).
+- Non stai scrivendo una favola, né una poesia oracolare, né un testo New Age. Parla di coordinate storiche documentate, strumenti di misura reali, protocolli sperimentali, limiti di risoluzione e salti concettuali.
+- Se un'immagine suona suggestiva ma non veicola un contenuto logico o epistemico preciso, eliminala.
+- Evita il gergo accademico fumoso, le astrazioni incomprensibili e le pose enfatiche. Ogni parola deve appartenere al lessico italiano accreditato (Treccani, Zingarelli).
 
 ================================================================================
 5. REGOLE IMPERATIVE DI INVISIBILITÀ METODOLOGICA E FORMALE
 ================================================================================
 1. DIVIETO TOTALE DI IMPALCATURE: Nessun elenco puntato o numerato, tabella, titoletto interno, asterisco o grassetto Markdown (**termine**) né notazioni di paragrafo (§). Pura prosa d'autore continua.
-2. DIVIETO DI LESSICO METODOLOGICO: Non nominare mai le fasi ("Fase 1", "Fase 5", "Fase 6", "Loop", "Affondo", "Cui prodest", "Faglia", "Collisione", "Cassetto"). L'impalcatura d'indagine deve essere invisibile come le ossa sotto la pelle viva.
-3. DIVIETO DI AUTOREFERENZIALITÀ: Non usare mai le parole "Alkimia", "alchimia", "alchemico", né formule metanarrative ("In questo saggio...", "Il paradosso di partenza è..."). Entra direttamente nelle cose.
+2. DIVIETO DI SCANSIONE ORDINALE E METANARRATIVA: È severamente vietato aprire i capoversi con espressioni ordinali o dichiarative di metodo (es. «Il primo passo...», «La prima fase...», «La seconda fase...», «In secondo luogo...», «La terza fase...», «La fase successiva...»). Ogni paragrafo deve iniziare subito con il contenuto vivo del pensiero.
+3. DIVIETO DI CONNETTIVI BINARI PIGRI: È severamente vietato usare connettivi pigri di affiancamento scolastico (es. «Allo stesso tempo...», «Nel contempo...», «Parallelamente...», «D'altro canto...», «Da un lato... dall'altro...»).
+4. DIVIETO DI LESSICO METODOLOGICO: Non nominare mai le fasi ("Fase 1", "Fase 5", "Fase 6", "Loop", "Affondo", "Cui prodest", "Faglia", "Collisione", "Cassetto"). L'impalcatura d'indagine deve essere invisibile come le ossa sotto la pelle viva.
+5. DIVIETO DI AUTOREFERENZIALITÀ: Non usare mai le parole "Alkimia", "alchimia", "alchemico", né formule metanarrative ("In questo saggio...", "Il paradosso di partenza è..."). Entra direttamente nelle cose.
 
 ================================================================================
-6. FORMA ORGANICA ED ARCHITETTURA DELLA PROSA (1.600 - 2.000 PAROLE)
+6. LIBERTÀ PLASTICA E FORMA ORGANICA (IL PRINCIPIO DELL'ALBERO CHE CRESCE)
 ================================================================================
-1. RIFIUTO DEL PARALLELISMO BINARIO: È severamente vietato esordire o collegare i passaggi con la formula scolastica "da un lato A... e d'altro canto B", o usare connettivi pigri («parallelamente», «simmetricamente», «sul versante opposto»). Entra in medias res nella materia viva: una scena storica precisa, una contraddizione sperimentale, l'attrito in cui i due campi già collidono.
-2. PROGRESSIONE ORGANICA PER RISONANZA INTERNA: Nessuna scaletta rigida. Ogni paragrafo deve scaturire per attrito e necessità logica da quello precedente.
-3. ARCHITETTURA AD AMPIO RESPIRO (5-7 PARAGRAFI CONTINUI):
-   - Articola il saggio in 5-7 ampi paragrafi continui (lunghezza complessiva compresa tra 1.600 e 2.000 parole, circa 250-350 parole a paragrafo).
-   - PRATICA L'INDUGIO SPECULATIVO: quando tocchi l'intuizione della Terza Idea, non avere fretta di chiudere; approfondiscine le conseguenze filosofiche, fisiche ed esistenziali, sviscerandone le aporie e il prezzo concettuale con periodi complessi e profondi.
+1. NESSUNO SCHEMA PREFABBRICATO NÉ CLICHÉ SERIALE: È severamente vietato applicare uno schema a tappe fisse o ripetere sempre lo stesso incipit. Il saggio non è un modulo burocratico: cresce come un albero, la cui forma è dettata unicamente dalla natura specifica dei due argomenti e dalla nuova intuizione che scaturisce dal loro incontro.
+2. IL PATTO DI ACCOGLIENZA E INTELLIGIBILITÀ: Chi legge deve essere accolto con naturalezza, calore intellettuale e lucidità. L'incipit deve far comprendere subito al lettore dove si trova e qual è la posta in gioco del pensiero (un paradosso concettuale, un'abitudine di pensiero da sfatare, una domanda filosofica radicale o un'anomalia empirica rimasta senza risposta). Non scaraventare mai il lettore "a gamba tesa" dentro sigle di apparecchiature o frammenti tecnici slegati da un senso preliminare chiaro.
+3. ORGANICITÀ E NECESSITÀ INTERNA: Ogni capoverso si sviluppa dal precedente come un ramo dal tronco per necessità intrinseca di pensiero. Gli scienziati, i testi storici e gli strumenti di misura entrano in scena solo nel momento esatto in cui servono a sostenere, complicare o verificare il ragionamento, mai per mero sfoggio catalogico.
+4. AMPIEZZA NATURALE (1.100 - 1.500 PAROLE): Articola il saggio in 3-5 ampi paragrafi densi e coesi, assecondando la naturale respirazione del ragionamento anziché una scansione meccanica.
 
 RISPONDI ESCLUSIVAMENTE CON UN OGGETTO JSON STRUTTURATO E VALIDO CON QUESTA STRUTTURA:
 {
-  "title": "Titolo d'autore, suggestivo e profondo (senza virgolette né asterischi)",
+  "title": "Titolo originale e rigoroso (senza virgolette né asterischi)",
   "subtitle": "Sottotitolo limpido che sintetizza il cambio di paradigma",
   "ontologicalThesis": "La nuova tesi ontologica generata dall'interazione (in 2-3 periodi densi)",
   "paragraphs": [
-    "Testo del primo paragrafo...",
-    "Testo del secondo paragrafo...",
-    "Testo del terzo paragrafo...",
-    "Testo del quarto paragrafo...",
-    "Testo del quinto paragrafo...",
-    "Testo del sesto paragrafo...",
-    "Testo del settimo paragrafo..."
+    "Testo del primo paragrafo (accoglie il lettore e apre l'orizzonte del problema con lucidità)...",
+    "Testo del secondo paragrafo (sviluppo organico del nodo concettuale)...",
+    "Testo del terzo paragrafo (sviluppo della Terza Idea attraverso i reperti del dossier)...",
+    "Testo del quarto paragrafo (conseguenze epistemologiche, prove sul campo e orizzonte aperto)...",
+    "Testo del quinto paragrafo (se necessario per il compimento organico dell'opera)..."
   ]
 }`;
 }
