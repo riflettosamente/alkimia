@@ -20,9 +20,9 @@ import {
 export { getSolarDateKey, formatItalianDate, formatTimeUntilNextCycle };
 export const getTimeUntilNextSolarCycle = getTimeUntilNextSolarMidnight;
 
-// v24: saggio a libertà plastica (principio dell'albero, accoglienza del lettore).
-const CACHE_KEY_CURRENT = 'alkimia_daily_edition_cache_v24';
-const CACHE_KEY_ARCHIVE = 'alkimia_chronological_archive_v24';
+// v25: separazione netta delle responsabilità (Costituzione Intellettuale + Regia Operativa).
+const CACHE_KEY_CURRENT = 'alkimia_daily_edition_cache_v25';
+const CACHE_KEY_ARCHIVE = 'alkimia_chronological_archive_v25';
 
 export interface DailyCachedPayload {
   solarDateKey: string;
@@ -67,7 +67,9 @@ export function getLocalDailyCache(): DailyCachedPayload | null {
       'alkimia_daily_edition_cache_v22',
       'alkimia_chronological_archive_v22',
       'alkimia_daily_edition_cache_v23',
-      'alkimia_chronological_archive_v23'
+      'alkimia_chronological_archive_v23',
+      'alkimia_daily_edition_cache_v24',
+      'alkimia_chronological_archive_v24'
     ].forEach(k => {
       if (localStorage.getItem(k)) localStorage.removeItem(k);
     });

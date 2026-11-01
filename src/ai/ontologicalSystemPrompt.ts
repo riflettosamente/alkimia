@@ -243,26 +243,13 @@ Non esporre questa preparazione nel testo finale. Il lettore deve incontrare un 
 5. DIVIETO DI AUTOREFERENZIALITÀ: Non usare mai le parole "Alkimia", "alchimia", "alchemico", né formule metanarrative ("In questo saggio...", "Il paradosso di partenza è..."). Entra direttamente nelle cose.
 
 ================================================================================
-6. LIBERTÀ PLASTICA E FORMA ORGANICA (IL PRINCIPIO DELL'ALBERO CHE CRESCE)
+6. LIBERTÀ PLASTICA E FORMA ORGANICA
 ================================================================================
 1. NESSUNO SCHEMA PREFABBRICATO NÉ CLICHÉ SERIALE: È severamente vietato applicare uno schema a tappe fisse o ripetere sempre lo stesso incipit. Il saggio non è un modulo burocratico: cresce come un albero, la cui forma è dettata unicamente dalla natura specifica dei due argomenti e dalla nuova intuizione che scaturisce dal loro incontro.
-2. IL PATTO DI ACCOGLIENZA E INTELLIGIBILITÀ: Chi legge deve essere accolto con naturalezza, calore intellettuale e lucidità. L'incipit deve far comprendere subito al lettore dove si trova e qual è la posta in gioco del pensiero (un paradosso concettuale, un'abitudine di pensiero da sfatare, una domanda filosofica radicale o un'anomalia empirica rimasta senza risposta). Non scaraventare mai il lettore "a gamba tesa" dentro sigle di apparecchiature o frammenti tecnici slegati da un senso preliminare chiaro.
-3. ORGANICITÀ E NECESSITÀ INTERNA: Ogni capoverso si sviluppa dal precedente come un ramo dal tronco per necessità intrinseca di pensiero. Gli scienziati, i testi storici e gli strumenti di misura entrano in scena solo nel momento esatto in cui servono a sostenere, complicare o verificare il ragionamento, mai per mero sfoggio catalogico.
-4. AMPIEZZA NATURALE (1.100 - 1.500 PAROLE): Articola il saggio in 3-5 ampi paragrafi densi e coesi, assecondando la naturale respirazione del ragionamento anziché una scansione meccanica.
+2. ORGANICITÀ E NECESSITÀ INTERNA: Ogni capoverso si sviluppa dal precedente come un ramo dal tronco per necessità intrinseca di pensiero. Gli scienziati, i testi storici e gli strumenti di misura entrano in scena solo nel momento esatto in cui servono a sostenere, complicare o verificare il ragionamento, mai per mero sfoggio catalogico.
+3. COESIONE E RESPIRO: Asseconda la naturale respirazione del ragionamento filosofico anziché una scansione meccanica.
 
-RISPONDI ESCLUSIVAMENTE CON UN OGGETTO JSON STRUTTURATO E VALIDO CON QUESTA STRUTTURA:
-{
-  "title": "Titolo originale e rigoroso (senza virgolette né asterischi)",
-  "subtitle": "Sottotitolo limpido che sintetizza il cambio di paradigma",
-  "ontologicalThesis": "La nuova tesi ontologica generata dall'interazione (in 2-3 periodi densi)",
-  "paragraphs": [
-    "Testo del primo paragrafo (accoglie il lettore e apre l'orizzonte del problema con lucidità)...",
-    "Testo del secondo paragrafo (sviluppo organico del nodo concettuale)...",
-    "Testo del terzo paragrafo (sviluppo della Terza Idea attraverso i reperti del dossier)...",
-    "Testo del quarto paragrafo (conseguenze epistemologiche, prove sul campo e orizzonte aperto)...",
-    "Testo del quinto paragrafo (se necessario per il compimento organico dell'opera)..."
-  ]
-}`;
+Rispondi esclusivamente con un oggetto JSON valido strutturato secondo le specifiche della consegna operativa.`;
 }
 
 /**
