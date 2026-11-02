@@ -1,6 +1,6 @@
 {
   "solarDateKey": "2026-10-30",
-  "lastUpdated": "2026-10-30T05:00:10.248Z",
+  "lastUpdated": "2026-11-01T19:23:56.018Z",
   "webSearchContext": {
     "vectorA": {
       "topic": "L'Aldilà",
@@ -1170,5 +1170,12 @@
     "generationStatus": "generated",
     "generationError": null,
     "generationAttempts": 1
+  },
+  "bloggerPost": {
+    "postId": "2639263347766373579",
+    "url": "https://alkimiatoday.blogspot.com/2026/11/il-ponte-della-pineale.html",
+    "title": "Il ponte della pineale",
+    "publishedAt": "2026-11-01T19:23:56.016Z",
+    "solarDateKey": "2026-10-30"
   }
 }

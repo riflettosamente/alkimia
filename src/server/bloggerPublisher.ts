@@ -156,6 +156,7 @@ export async function findBloggerPostByDate(solarDateKey: string): Promise<{
   url: string;
   title: string;
   publishedAt: string;
+  content?: string;
 } | null> {
   if (!isBloggerConfigured()) return null;
 
@@ -180,7 +181,8 @@ export async function findBloggerPostByDate(solarDateKey: string): Promise<{
           postId: String(item.id),
           url: String(item.url),
           title: String(item.title || "Saggio del Giorno"),
-          publishedAt: String(item.published || "")
+          publishedAt: String(item.published || ""),
+          content: String(item.content || "")
         };
       }
     }
@@ -203,7 +205,8 @@ export async function findBloggerPostByDate(solarDateKey: string): Promise<{
               postId: String(item.id),
               url: String(item.url),
               title: String(item.title || "Saggio del Giorno"),
-              publishedAt: String(item.published || "")
+              publishedAt: String(item.published || ""),
+              content: String(item.content || "")
             };
           }
         }
@@ -215,6 +218,97 @@ export async function findBloggerPostByDate(solarDateKey: string): Promise<{
     console.warn(`[Blogger] Verifica remota non riuscita per ${solarDateKey} (${err.message}). Si procede con il controllo locale.`);
     return null;
   }
+}
+
+function cleanHtmlText(html: string): string {
+  return html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#8209;/g, "-")
+    .replace(/&#8211;/g, "–")
+    .replace(/&#8212;/g, "—")
+    .replace(/&#8216;/g, "‘")
+    .replace(/&#8217;/g, "’")
+    .replace(/&#8220;/g, "“")
+    .replace(/&#8221;/g, "”")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Ricostruisce la struttura del Saggio (titolo, tesi ontologica, sottotitolo, paragrafi narrativi)
+ * partendo dal contenuto HTML pubblicato su Blogger.
+ */
+export function parseBloggerPostHtml(
+  html: string,
+  title?: string,
+  url?: string
+): {
+  id?: string;
+  cycleId?: string;
+  title: string;
+  subtitle: string;
+  ontologicalThesis: string;
+  preamble: string;
+  narrativeParagraphs: string[];
+  sections: any[];
+  corollaries: any[];
+  openAporias: any[];
+  bibliographicResonances: any[];
+} | null {
+  if (!html || typeof html !== "string") return null;
+
+  // 1. Tesi ontologica da <blockquote>...</blockquote>
+  let ontologicalThesis = "";
+  const bqMatch = html.match(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/i);
+  if (bqMatch) {
+    ontologicalThesis = cleanHtmlText(bqMatch[1]);
+  }
+
+  // 2. Paragrafi <p>
+  const pRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+  const pMatches: { full: string; inner: string; isItalic: boolean }[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = pRegex.exec(html)) !== null) {
+    const isItalic = /font-style:\s*italic/i.test(m[0]) || /<em>/i.test(m[1]);
+    pMatches.push({ full: m[0], inner: m[1], isItalic });
+  }
+
+  let subtitle = "";
+  const narrativeParagraphs: string[] = [];
+
+  for (let i = 0; i < pMatches.length; i++) {
+    const item = pMatches[i];
+    const text = cleanHtmlText(item.inner);
+    if (!text) continue;
+
+    // Se è il primo paragrafo ed è in corsivo o ha lo stile tipico del sottotitolo:
+    if (i === 0 && item.isItalic && !subtitle) {
+      subtitle = text;
+      continue;
+    }
+
+    narrativeParagraphs.push(text);
+  }
+
+  if (narrativeParagraphs.length === 0) return null;
+
+  return {
+    title: title || "Saggio del Giorno",
+    subtitle: subtitle || (url ? `Saggio pubblicato su Blogger: ${url}` : ""),
+    ontologicalThesis: ontologicalThesis || narrativeParagraphs[0],
+    preamble: "",
+    narrativeParagraphs,
+    sections: [],
+    corollaries: [],
+    openAporias: [],
+    bibliographicResonances: []
+  };
 }
 
 /**

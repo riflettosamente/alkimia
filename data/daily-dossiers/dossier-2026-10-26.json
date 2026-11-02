@@ -1,6 +1,6 @@
 {
   "solarDateKey": "2026-10-26",
-  "lastUpdated": "2026-10-26T03:56:53.333Z",
+  "lastUpdated": "2026-11-01T19:22:41.155Z",
   "webSearchContext": {
     "vectorA": {
       "topic": "Gli Extraterrestri",
@@ -1157,5 +1157,12 @@
     "generationStatus": "generated",
     "generationError": null,
     "generationAttempts": 1
+  },
+  "bloggerPost": {
+    "postId": "2798727470314086460",
+    "url": "https://alkimiatoday.blogspot.com/2026/11/leco-cosmica-del-codice.html",
+    "title": "L'eco cosmica del codice",
+    "publishedAt": "2026-11-01T19:22:41.153Z",
+    "solarDateKey": "2026-10-26"
   }
 }

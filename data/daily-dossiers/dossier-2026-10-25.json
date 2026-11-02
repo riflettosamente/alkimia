@@ -1,6 +1,6 @@
 {
   "solarDateKey": "2026-10-25",
-  "lastUpdated": "2026-10-25T03:54:23.435Z",
+  "lastUpdated": "2026-11-01T19:22:30.138Z",
   "webSearchContext": {
     "vectorA": {
       "topic": "L'Aldilà",
@@ -1167,5 +1167,12 @@
     "generationStatus": "generated",
     "generationError": null,
     "generationAttempts": 1
+  },
+  "bloggerPost": {
+    "postId": "1968216016007017639",
+    "url": "https://alkimiatoday.blogspot.com/2026/11/il-ponte-di-luce-tra-corpo-e-oltre.html",
+    "title": "Il ponte di luce tra corpo e oltre",
+    "publishedAt": "2026-11-01T19:22:30.136Z",
+    "solarDateKey": "2026-10-25"
   }
 }

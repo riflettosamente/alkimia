@@ -38,7 +38,8 @@ import { fetchTopicWebContext } from "./src/server/webSearchService";
 import {
   publishDailyEssayToBlogger,
   getBloggerConfigStatus,
-  findBloggerPostByDate
+  findBloggerPostByDate,
+  parseBloggerPostHtml
 } from "./src/server/bloggerPublisher";
 import { fetchDossierFromGitHub } from "./src/server/githubSyncService";
 
@@ -2214,21 +2215,33 @@ async function getOrCreateDailyEdition(solarDateKey: string): Promise<DailyEditi
           phase2Collision: buildPhase2Collision(fallbackPair.vectorA.name, fallbackPair.vectorB.name),
           phase2Loop: buildPhase2LoopFiveDirections(fallbackPair.vectorA.name, fallbackPair.vectorB.name),
           phase3FinalStrike: buildPhase3FinalStrike(fallbackPair.vectorA.name, fallbackPair.vectorB.name),
-          essay: {
-            id: `saggio-${solarDateKey}`,
-            cycleId: `cycle-${solarDateKey}`,
-            title: remotePost.title,
-            subtitle: `Saggio pubblicato su Blogger: ${remotePost.url}`,
-            ontologicalThesis: `Saggio del Giorno diffuso attraverso Google Blogger per la data solare ${solarDateKey}.`,
-            preamble: "",
-            narrativeParagraphs: [
-              `L'edizione odierna è stata redatta e pubblicata su Google Blogger all'indirizzo: ${remotePost.url}`
-            ],
-            sections: [],
-            corollaries: [],
-            openAporias: [],
-            bibliographicResonances: []
-          },
+          essay: (() => {
+            const parsed = remotePost.content
+              ? parseBloggerPostHtml(remotePost.content, remotePost.title, remotePost.url)
+              : null;
+            if (parsed && parsed.narrativeParagraphs.length >= 3) {
+              return {
+                id: `saggio-${solarDateKey}`,
+                cycleId: `cycle-${solarDateKey}`,
+                ...parsed
+              };
+            }
+            return {
+              id: `saggio-${solarDateKey}`,
+              cycleId: `cycle-${solarDateKey}`,
+              title: remotePost.title,
+              subtitle: `Saggio pubblicato su Blogger: ${remotePost.url}`,
+              ontologicalThesis: `Saggio del Giorno diffuso attraverso Google Blogger per la data solare ${solarDateKey}.`,
+              preamble: "",
+              narrativeParagraphs: [
+                `L'edizione odierna è stata redatta e pubblicata su Google Blogger all'indirizzo: ${remotePost.url}`
+              ],
+              sections: [],
+              corollaries: [],
+              openAporias: [],
+              bibliographicResonances: []
+            };
+          })(),
           pins: [],
           tensions: [],
           aiProvider: 'groq',

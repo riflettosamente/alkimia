@@ -1,6 +1,6 @@
 {
   "solarDateKey": "2026-10-31",
-  "lastUpdated": "2026-10-31T04:48:03.333Z",
+  "lastUpdated": "2026-11-01T19:24:07.655Z",
   "webSearchContext": {
     "vectorA": {
       "topic": "La Transcomunicazione Strumentale (TCI)",
@@ -1141,5 +1141,12 @@
     "generationStatus": "generated",
     "generationError": null,
     "generationAttempts": 1
+  },
+  "bloggerPost": {
+    "postId": "6704252254970389558",
+    "url": "https://alkimiatoday.blogspot.com/2026/11/leco-del-vuoto-fecondo.html",
+    "title": "L'eco del vuoto fecondo",
+    "publishedAt": "2026-11-01T19:24:07.653Z",
+    "solarDateKey": "2026-10-31"
   }
 }

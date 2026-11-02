@@ -1,6 +1,6 @@
 {
   "solarDateKey": "2026-10-27",
-  "lastUpdated": "2026-10-27T04:18:55.979Z",
+  "lastUpdated": "2026-11-01T19:22:44.776Z",
   "webSearchContext": {
     "vectorA": {
       "topic": "Gli UFO/UAP (Fenomeni Anomali Non Identificati)",
@@ -1147,5 +1147,12 @@
     "generationStatus": "generated",
     "generationError": null,
     "generationAttempts": 1
+  },
+  "bloggerPost": {
+    "postId": "5421183287212614890",
+    "url": "https://alkimiatoday.blogspot.com/2026/11/il-fuoco-celeste-dellignoto.html",
+    "title": "Il Fuoco Celeste dell'Ignoto",
+    "publishedAt": "2026-11-01T19:22:44.774Z",
+    "solarDateKey": "2026-10-27"
   }
 }

@@ -1,6 +1,6 @@
 {
   "solarDateKey": "2026-10-28",
-  "lastUpdated": "2026-10-28T04:47:48.552Z",
+  "lastUpdated": "2026-11-01T19:22:48.319Z",
   "webSearchContext": {
     "vectorA": {
       "topic": "Gli Extraterrestri",
@@ -1108,5 +1108,12 @@
     "generationStatus": "generated",
     "generationError": null,
     "generationAttempts": 1
+  },
+  "bloggerPost": {
+    "postId": "4366844369210828452",
+    "url": "https://alkimiatoday.blogspot.com/2026/11/il-filo-invisibile-della-presenza.html",
+    "title": "Il filo invisibile della presenza",
+    "publishedAt": "2026-11-01T19:22:48.317Z",
+    "solarDateKey": "2026-10-28"
   }
 }
