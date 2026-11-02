@@ -282,7 +282,7 @@ export function buildStep2LiteraryEssayPrompt(
   vectorA: KeyOntologicalTopic,
   vectorB: KeyOntologicalTopic
 ): string {
-  const stripMdBold = (s?: string, maxChars: number = 600) => {
+  const stripMdBold = (s?: string, maxChars: number = 700) => {
     if (!s) return '';
     const clean = s.replace(/\*\*(.*?)\*\*/g, '$1').trim();
     if (clean.length <= maxChars) return clean;
@@ -301,46 +301,35 @@ export function buildStep2LiteraryEssayPrompt(
     p5?.dizzyingRevelation
   ]
     .filter(Boolean)
-    .map((section) => stripMdBold(section, 650))
+    .map((section) => stripMdBold(section, 700))
     .join('\n\n');
 
-  return `SEI UN AUTORE E FILOSOFO DELLA SCIENZA CONTEMPORANEO. IL TUO COMPITO È TRASFORMARE I REPERTI DI UN'INDAGINE IN UN SAGGIO ORIGINALE, RIGOROSO, APPASSIONANTE E LETTERARIAMENTE COMPIUTO.
+  return `CONSEGNA OPERATIVA PER IL SAGGIO DEL GIORNO (FASE 6)
 
-================================================================================
-REPERTI E RISULTANZE ACQUISITI DALL'INDAGINE PRELIMINARE (FONTE ESCLUSIVA):
-================================================================================
-ARGOMENTI INDAGATI: «${cleanTopicA}» e «${cleanTopicB}»
+1. ARGOMENTI SELEZIONATI
+«${cleanTopicA}» e «${cleanTopicB}»
 
+2. I CINQUE REPERTI DISTILLATI DALLA FASE 5 (FONTE ESCLUSIVA)
 ${dossierFindings}
 
-================================================================================
-DISCIPLINA DELLE AFFERMAZIONI E OBIETTIVO CENTRALE (LA TERZA IDEA)
-================================================================================
-1. FONTE ESCLUSIVA: Il dossier sopra riportato è la tua unica fonte documentale. Utilizza esclusivamente i reperti che contiene. È vietato introdurre nuove fonti, autori o studi esterni. Distingui con precisione i fatti documentati dalle interpretazioni e dalle ipotesi.
+3. CONSEGNA: GENERARE LA TERZA IDEA
+Fai entrare in collisione i due argomenti selezionati utilizzando esclusivamente i reperti sopra riportati. Dalla loro interazione devi ricavare una Terza Idea: una nuova intuizione concettuale e rigorosa, non una semplice sintesi o un elenco di somiglianze, che modifichi la comprensione di entrambi i domini e apra una prospettiva interpretativa inedita.
 
-2. GENERARE UNA TERZA IDEA: Non devi limitarti a confrontare i due argomenti o illustrarne le somiglianze. Devi ricavare dalla loro interazione una nuova intuizione concettuale capace di modificare il modo in cui entrambi possono essere compresi. L'intuizione deve derivare da elementi identificabili nel dossier, essere sostenuta da un percorso logico rigoroso e aprire una nuova possibilità d'indagine.
+4. RICHIESTA DI PRODUZIONE DEL SAGGIO
+Componi il Saggio del Giorno in pura prosa d'autore continua (1.100 - 1.500 parole complessive, articolate in 3-5 ampi capoversi narrativi), conforme alla costituzione intellettuale del System Prompt.
 
-================================================================================
-REGOLE DI SCRITTURA: LIBERTÀ PLASTICA E FORMA ORGANICA (COME UN ALBERO)
-================================================================================
-1. IL PATTO DI ACCOGLIENZA E LUCIDITÀ: Il lettore non deve mai essere aggredito "a gamba tesa" con sigle di apparati o dettagli tecnici slegati da una premessa di senso. L'incipit deve accoglierlo, facendogli comprendere subito qual è la posta in gioco del pensiero, il paradosso concettuale o l'abitudine mentale che i due argomenti mettono in crisi.
-2. CRESCITA ORGANICA (ANTI-SERIALITÀ): Non applicare alcuno schema prefissato o cliché ripetitivo. La forma del saggio cresce dal terreno unico di questa indagine: a volte scaturisce da una riflessione culturale, a volte da un'anomalia empirica o da una domanda radicale.
-3. CONSEGUENZIALITÀ INTERNA: Ogni capoverso si sviluppa dal precedente per necessità viva di pensiero. Gli scienziati, i testi e gli strumenti entrano nel testo solo quando la loro presenza è richiesta per verificare, complicare o dimostrare il ragionamento.
-4. DIVIETO DI SCANSIONI ORDINALI E FORMULE PIGRE: Non usare marcatori di metodo («La prima fase...», «La seconda fase...») né connettivi binari pigri («Allo stesso tempo...», «Parallelamente...»).
-5. DIVIETO DI PSEUDO-POETICA: Niente metafore vuote da romanzo fantasy («occhi di legno», «teatro di leggende»). Sii un filosofo della scienza: limpido, denso, rigoroso e intellettualmente affascinante.
-6. LUNGHEZZA: 1.100 - 1.500 parole in 3-5 ampi paragrafi coesi, assecondando la naturale respirazione del pensiero.
-
-Rispondi RIGOROSAMENTE con questo JSON:
+5. FORMATO DI RISPOSTA JSON
+Rispondi RIGOROSAMENTE ed ESCLUSIVAMENTE con questo oggetto JSON valido:
 {
   "title": "string (titolo originale, privo di numeri e senza asterischi)",
   "subtitle": "string (sottotitolo essenziale)",
   "ontologicalThesis": "string (la tesi centrale filosofico-scientifica)",
   "paragraphs": [
-    "string (paragrafo 1 - accoglie il lettore e apre con chiarezza la posta in gioco concettuale)",
-    "string (paragrafo 2 - sviluppo organico del nodo filosofico-scientifico)",
-    "string (paragrafo 3 - sviluppo della Terza Idea attraverso i reperti dell'indagine)",
-    "string (paragrafo 4 - conseguenze epistemologiche, prove e orizzonte futuro aperto)",
-    "string (paragrafo 5 facoltativo, se richiesto dal respiro naturale dell'opera)"
+    "string (primo paragrafo narrativo)",
+    "string (secondo paragrafo narrativo)",
+    "string (terzo paragrafo narrativo)",
+    "string (quarto paragrafo narrativo)",
+    "string (quinto paragrafo narrativo, facoltativo se necessario al respiro dell'opera)"
   ]
 }`;
 }

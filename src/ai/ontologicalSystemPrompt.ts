@@ -247,7 +247,8 @@ Non esporre questa preparazione nel testo finale. Il lettore deve incontrare un 
 ================================================================================
 1. NESSUNO SCHEMA PREFABBRICATO NÉ CLICHÉ SERIALE: È severamente vietato applicare uno schema a tappe fisse o ripetere sempre lo stesso incipit. Il saggio non è un modulo burocratico: cresce come un albero, la cui forma è dettata unicamente dalla natura specifica dei due argomenti e dalla nuova intuizione che scaturisce dal loro incontro.
 2. ORGANICITÀ E NECESSITÀ INTERNA: Ogni capoverso si sviluppa dal precedente come un ramo dal tronco per necessità intrinseca di pensiero. Gli scienziati, i testi storici e gli strumenti di misura entrano in scena solo nel momento esatto in cui servono a sostenere, complicare o verificare il ragionamento, mai per mero sfoggio catalogico.
-3. COESIONE E RESPIRO: Asseconda la naturale respirazione del ragionamento filosofico anziché una scansione meccanica.
+3. PATTO DI ACCOGLIENZA E LUCIDITÀ: Il lettore non deve mai essere aggredito "a gamba tesa" con sigle di apparati o dettagli tecnici slegati da una premessa di senso. L'incipit deve accoglierlo con limpidezza, facendo comprendere subito qual è la posta in gioco del pensiero, il paradosso concettuale o l'abitudine mentale che i due argomenti mettono in crisi, prima di introdurre strumenti o casi specifici.
+4. COESIONE E RESPIRO: Asseconda la naturale respirazione del ragionamento filosofico anziché una scansione meccanica.
 
 Rispondi esclusivamente con un oggetto JSON valido strutturato secondo le specifiche della consegna operativa.`;
 }
